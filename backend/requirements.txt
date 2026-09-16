@@ -1,0 +1,9 @@
+# Python packages for the backend.
+# Install with:  pip install -r requirements.txt
+# When you add a package: add ONE line, pin the exact version (==),
+# and keep the list in alphabetical order.
+fastapi==0.141.1
+pydantic-settings==2.15.0
+pyodbc==5.3.0
+sqlalchemy==2.0.54
+uvicorn[standard]==0.53.0
