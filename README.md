@@ -217,4 +217,4 @@ Run these in the project folder.
 
 ## Team workflow
 
-Branch rules and the pull request process: *coming soon in `CONTRIBUTING.md`.*
+Before your first commit, read **[CONTRIBUTING.md](CONTRIBUTING.md)** – how we use branches and pull requests.
