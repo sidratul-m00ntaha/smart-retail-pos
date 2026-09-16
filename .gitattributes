@@ -1,0 +1,18 @@
+# Store all text files with LF line endings, on every computer.
+# Stops "every line changed" diffs and scripts breaking inside Linux Docker containers.
+* text=auto eol=lf
+
+# Windows-only scripts keep Windows (CRLF) line endings
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files: never change, never try to merge line-by-line
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.docx binary
+*.xlsx binary

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in · Smart Retail POS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F6F2;
+    --paper:#FFFFFF;
+    --ink:#16231F;
+    --ink-soft:#5B655F;
+    --teal:#1F5D4E;
+    --teal-dark:#123A30;
+    --amber:#E2A63B;
+    --amber-dark:#8A5A16;
+    --border:#DCDFD5;
+    --danger:#B54F45;
+    --danger-bg:#FBEDEB;
+    --success:#2F7A4D;
+    --radius:10px;
+    --font-display:'Fraunces', serif;
+    --font-sans:'Work Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font-sans);
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    display:grid;
+    grid-template-columns: 1fr 1.15fr;
+  }
+  a{color:var(--teal-dark);}
+
+  /* ---------- Left: brand / receipt panel ---------- */
+  .brand-panel{
+    background:var(--teal);
+    color:#F2F5F1;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding:48px 56px;
+    position:relative;
+    overflow:hidden;
+  }
+  .brand-mark{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .brand-mark .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:0.03em;
+    color:#B9D6C9;
+  }
+  .brand-mark h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:34px;
+    margin:2px 0 0;
+    line-height:1.05;
+  }
+  .brand-tagline{
+    font-size:15px;
+    color:#CFE3D8;
+    max-width:30ch;
+    line-height:1.55;
+    margin-top:14px;
+  }
+
+  .receipt-wrap{
+    display:flex;
+    justify-content:center;
+    padding:20px 0;
+  }
+  .receipt{
+    background:var(--paper);
+    color:var(--ink);
+    width:260px;
+    padding:22px 22px 26px;
+    clip-path: polygon(0 0,100% 0,100% 96%,95% 100%,90% 96%,85% 100%,80% 96%,75% 100%,70% 96%,65% 100%,60% 96%,55% 100%,50% 96%,45% 100%,40% 96%,35% 100%,30% 96%,25% 100%,20% 96%,15% 100%,10% 96%,5% 100%,0 96%);
+    box-shadow: 0 30px 60px rgba(10,30,24,0.35);
+  }
+  .receipt h2{
+    font-family:var(--font-mono);
+    font-size:13px;
+    font-weight:500;
+    text-align:center;
+    margin:0 0 2px;
+    letter-spacing:0.02em;
+  }
+  .receipt .rc-sub{
+    font-family:var(--font-mono);
+    font-size:11px;
+    text-align:center;
+    color:var(--ink-soft);
+    margin:0 0 12px;
+  }
+  .rc-rule{
+    border:none;
+    border-top:1px dashed #C7CBC0;
+    margin:10px 0;
+  }
+  .rc-lines{
+    font-family:var(--font-mono);
+    font-size:12px;
+    min-height:96px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .rc-line{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    opacity:0;
+    animation:rc-fade 0.35s ease forwards;
+  }
+  @keyframes rc-fade{ to{opacity:1;} }
+  .rc-total{
+    display:flex;
+    justify-content:space-between;
+    font-family:var(--font-mono);
+    font-size:13px;
+    font-weight:500;
+    margin-top:4px;
+  }
+  .rc-barcode{
+    height:34px;
+    margin-top:16px;
+    background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 5px);
+  }
+  .rc-barcode-label{
+    font-family:var(--font-mono);
+    font-size:10px;
+    text-align:center;
+    color:var(--ink-soft);
+    margin-top:6px;
+    letter-spacing:0.08em;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .rc-line{ opacity:1; animation:none; }
+  }
+
+  .brand-footer{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:#9FC2B0;
+  }
+
+  /* ---------- Right: auth panel ---------- */
+  .auth-panel{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px;
+  }
+  .auth-card{
+    width:100%;
+    max-width:380px;
+  }
+  .auth-card h2{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:28px;
+    margin:0 0 6px;
+  }
+  .auth-card .sub{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin:0 0 26px;
+  }
+
+  .role-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .role-chip{
+    flex:1;
+    padding:9px 0;
+    text-align:center;
+    font-size:13px;
+    font-family:var(--font-sans);
+    font-weight:500;
+    background:var(--paper);
+    border:1px solid var(--border);
+    border-radius:8px;
+    cursor:pointer;
+    color:var(--ink-soft);
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .role-chip:hover{ border-color:var(--teal); color:var(--ink); }
+  .role-chip.active{
+    background:var(--teal);
+    border-color:var(--teal);
+    color:#fff;
+  }
+  .role-hint{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    min-height:32px;
+    margin:6px 0 20px;
+    line-height:1.5;
+  }
+
+  form{ display:flex; flex-direction:column; gap:16px; }
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:500;
+    margin-bottom:6px;
+  }
+  .field-input{
+    position:relative;
+  }
+  .field input{
+    width:100%;
+    padding:10px 12px;
+    font-size:14px;
+    font-family:var(--font-sans);
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+  }
+  .field input:focus{
+    border-color:var(--teal);
+    box-shadow:0 0 0 3px rgba(31,93,78,0.12);
+  }
+  .field.has-error input{
+    border-color:var(--danger);
+  }
+  .field-error{
+    font-size:12.5px;
+    color:var(--danger);
+    margin-top:5px;
+    display:none;
+  }
+  .field.has-error .field-error{ display:block; }
+
+  .toggle-visibility{
+    position:absolute;
+    right:8px;
+    top:50%;
+    transform:translateY(-50%);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:6px;
+    color:var(--ink-soft);
+    line-height:0;
+  }
+  .toggle-visibility:hover{ color:var(--ink); }
+
+  .row-between{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:13px;
+  }
+  .remember{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    color:var(--ink-soft);
+  }
+  .remember input{ width:14px; height:14px; }
+  .forgot{ font-size:13px; text-decoration:none; }
+  .forgot:hover{ text-decoration:underline; }
+
+  .btn-primary{
+    margin-top:4px;
+    padding:11px 0;
+    background:var(--amber);
+    color:#3A2606;
+    border:none;
+    border-radius:8px;
+    font-size:14.5px;
+    font-weight:600;
+    font-family:var(--font-sans);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:background .15s ease;
+  }
+  .btn-primary:hover{ background:var(--amber-dark); color:#fff; }
+  .btn-primary:disabled{ cursor:default; opacity:0.85; }
+
+  .spinner{
+    width:15px; height:15px;
+    border:2px solid rgba(58,38,6,0.35);
+    border-top-color:#3A2606;
+    border-radius:50%;
+    animation:spin 0.7s linear infinite;
+    display:none;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .banner{
+    display:none;
+    font-size:13px;
+    padding:10px 12px;
+    border-radius:8px;
+    margin-bottom:14px;
+    line-height:1.5;
+  }
+  .banner.show{ display:block; }
+  .banner.error{ background:var(--danger-bg); color:var(--danger); border:1px solid #F0CFC9; }
+
+  .divider{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:var(--ink-soft);
+    font-size:12px;
+    margin:22px 0 14px;
+  }
+  .divider::before, .divider::after{
+    content:"";
+    flex:1;
+    border-top:1px solid var(--border);
+  }
+
+  .demo-row{ display:flex; gap:8px; }
+  .btn-ghost{
+    flex:1;
+    padding:9px 0;
+    background:transparent;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .btn-ghost:hover{ border-color:var(--ink-soft); color:var(--ink); }
+
+  .footnote{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-soft);
+    text-align:center;
+    margin-top:26px;
+  }
+
+  /* ---------- Success state ---------- */
+  .success-state{
+    display:none;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:16px;
+  }
+  .success-state.show{ display:flex; }
+  .auth-card.success-mode form,
+  .auth-card.success-mode .role-row,
+  .auth-card.success-mode .role-hint,
+  .auth-card.success-mode .divider,
+  .auth-card.success-mode .demo-row,
+  .auth-card.success-mode .sub,
+  .auth-card.success-mode > h2{ display:none; }
+
+  .check-badge{
+    width:44px; height:44px;
+    border-radius:50%;
+    background:#E4F0E7;
+    color:var(--success);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .success-title{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:22px;
+    margin:0;
+  }
+  .success-sub{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin:0;
+  }
+  .progress-track{
+    width:100%;
+    height:4px;
+    background:var(--border);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:var(--teal);
+    border-radius:4px;
+    transition:width 1.1s linear;
+  }
+  .reset-link{
+    font-size:13px;
+    background:none;
+    border:none;
+    color:var(--teal-dark);
+    cursor:pointer;
+    padding:0;
+    text-decoration:underline;
+  }
+
+  @media (max-width: 860px){
+    body{ grid-template-columns: 1fr; }
+    .brand-panel{ padding:36px 28px; }
+    .receipt{ width:220px; }
+  }
+</style>
+</head>
+<body>
+
+  <aside class="brand-panel">
+    <div class="brand-mark">
+      <span class="eyebrow">Smart Retail</span>
+      <h1>Point of Sale</h1>
+      <p class="brand-tagline">One counter for products, purchases, inventory, sales and the numbers behind them.</p>
+    </div>
+
+    <div class="receipt-wrap">
+      <div class="receipt">
+        <h2>SMART RETAIL STORE</h2>
+        <p class="rc-sub">Terminal 03 · Dhaka Central</p>
+        <hr class="rc-rule">
+        <div class="rc-lines" id="rcLines"></div>
+        <hr class="rc-rule">
+        <div class="rc-total"><span>Total</span><span id="rcTotal">Tk 0</span></div>
+        <div class="rc-barcode"></div>
+        <p class="rc-barcode-label">INV-2026-00125</p>
+      </div>
+    </div>
+
+    <p class="brand-footer">Products → Purchases → Inventory → POS → Reports</p>
+  </aside>
+
+  <main class="auth-panel">
+    <div class="auth-card" id="authCard">
+
+      <h2>Sign in</h2>
+      <p class="sub">Sign in to manage your store.</p>
+
+      <div class="banner error" id="errorBanner"></div>
+
+      <div class="role-row" role="group" aria-label="Sign in as">
+        <button type="button" class="role-chip" data-role="Admin">Admin</button>
+        <button type="button" class="role-chip active" data-role="Manager">Manager</button>
+        <button type="button" class="role-chip" data-role="Cashier">Cashier</button>
+      </div>
+      <p class="role-hint" id="roleHint">Runs day-to-day operations: purchases, inventory, customers and reports.</p>
+
+      <form id="loginForm" novalidate>
+        <div class="field" id="userField">
+          <label for="username">Username or email</label>
+          <div class="field-input">
+            <input type="text" id="username" name="username" placeholder="rahim@smartretail.store" autocomplete="username">
+          </div>
+          <p class="field-error">Enter your username or email.</p>
+        </div>
+
+        <div class="field" id="passField">
+          <label for="password">Password</label>
+          <div class="field-input">
+            <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password">
+            <button type="button" class="toggle-visibility" id="togglePass" aria-label="Show password">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <p class="field-error">Enter your password.</p>
+        </div>
+
+        <div class="row-between">
+          <label class="remember"><input type="checkbox" id="remember"> Remember this device</label>
+          <a href="#" class="forgot" onclick="return false;">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submitBtn">
+          <span class="spinner" id="spinner"></span>
+          <span id="submitLabel">Sign in</span>
+        </button>
+      </form>
+
+      <div class="divider">demo states</div>
+      <div class="demo-row">
+        <button type="button" class="btn-ghost" id="demoInactive">Inactive account</button>
+        <button type="button" class="btn-ghost" id="demoInvalid">Wrong password</button>
+      </div>
+
+      <p class="footnote">Session secured · JWT</p>
+
+      <div class="success-state" id="successState">
+        <div class="check-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h2 class="success-title">Signed in</h2>
+        <p class="success-sub" id="successSub">Redirecting to the manager dashboard…</p>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <a href="dashboard.html" class="btn-primary" id="continueLink" style="text-decoration:none;width:100%;">Continue to dashboard</a>
+        <button type="button" class="reset-link" id="resetProto">Return to sign in</button>
+      </div>
+
+    </div>
+  </main>
+
+<script>
+  var roleHints = {
+    Admin: "Full control: users, roles, products, store settings, reports and the AI assistant.",
+    Manager: "Runs day-to-day operations: purchases, inventory, customers and reports.",
+    Cashier: "Handles the counter: POS sales, payments and invoices."
+  };
+  var currentRole = "Manager";
+
+  var chips = document.querySelectorAll(".role-chip");
+  var roleHint = document.getElementById("roleHint");
+  chips.forEach(function(chip){
+    chip.addEventListener("click", function(){
+      chips.forEach(function(c){ c.classList.remove("active"); });
+      chip.classList.add("active");
+      currentRole = chip.getAttribute("data-role");
+      roleHint.textContent = roleHints[currentRole];
+    });
+  });
+
+  var passInput = document.getElementById("password");
+  var toggleBtn = document.getElementById("togglePass");
+  toggleBtn.addEventListener("click", function(){
+    var isPw = passInput.type === "password";
+    passInput.type = isPw ? "text" : "password";
+    toggleBtn.setAttribute("aria-label", isPw ? "Hide password" : "Show password");
+  });
+
+  var userField = document.getElementById("userField");
+  var passField = document.getElementById("passField");
+  var usernameInput = document.getElementById("username");
+  var errorBanner = document.getElementById("errorBanner");
+  var submitBtn = document.getElementById("submitBtn");
+  var spinner = document.getElementById("spinner");
+  var submitLabel = document.getElementById("submitLabel");
+  var authCard = document.getElementById("authCard");
+  var successState = document.getElementById("successState");
+  var successSub = document.getElementById("successSub");
+  var progressFill = document.getElementById("progressFill");
+
+  function clearErrors(){
+    userField.classList.remove("has-error");
+    passField.classList.remove("has-error");
+    errorBanner.classList.remove("show");
+    errorBanner.textContent = "";
+  }
+
+  function runSignIn(mode){
+    clearErrors();
+    var validationFailed = false;
+    if(mode === "normal"){
+      if(!usernameInput.value.trim()){ userField.classList.add("has-error"); validationFailed = true; }
+      if(!passInput.value.trim()){ passField.classList.add("has-error"); validationFailed = true; }
+      if(validationFailed) return;
+    }
+
+    submitBtn.disabled = true;
+    spinner.style.display = "inline-block";
+    submitLabel.textContent = "Signing in…";
+
+    setTimeout(function(){
+      spinner.style.display = "none";
+      submitBtn.disabled = false;
+      submitLabel.textContent = "Sign in";
+
+      if(mode === "inactive"){
+        errorBanner.textContent = "This account is inactive. Contact your administrator to reactivate it.";
+        errorBanner.classList.add("show");
+        return;
+      }
+      if(mode === "invalid"){
+        errorBanner.textContent = "That username or password is incorrect.";
+        errorBanner.classList.add("show");
+        return;
+      }
+
+      authCard.classList.add("success-mode");
+      successState.classList.add("show");
+      successSub.textContent = "Redirecting to the " + currentRole.toLowerCase() + " dashboard…";
+      requestAnimationFrame(function(){
+        progressFill.style.width = "100%";
+      });
+    }, 1100);
+  }
+
+  document.getElementById("loginForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    runSignIn("normal");
+  });
+  document.getElementById("demoInactive").addEventListener("click", function(){ runSignIn("inactive"); });
+  document.getElementById("demoInvalid").addEventListener("click", function(){ runSignIn("invalid"); });
+
+  document.getElementById("resetProto").addEventListener("click", function(){
+    authCard.classList.remove("success-mode");
+    successState.classList.remove("show");
+    progressFill.style.width = "0%";
+    usernameInput.value = "";
+    passInput.value = "";
+    clearErrors();
+  });
+
+  /* ---------- Receipt ticker ---------- */
+  var items = [
+    ["Rice 5kg x2", "Tk 1,100"],
+    ["Oil 1L x1", "Tk 180"],
+    ["Milk 1L x2", "Tk 200"],
+    ["Biscuit x3", "Tk 150"]
+  ];
+  var rcLines = document.getElementById("rcLines");
+  var rcTotal = document.getElementById("rcTotal");
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function renderAllLines(){
+    rcLines.innerHTML = "";
+    var sum = 0;
+    items.forEach(function(it){
+      var row = document.createElement("div");
+      row.className = "rc-line";
+      row.innerHTML = "<span>" + it[0] + "</span><span>" + it[1] + "</span>";
+      rcLines.appendChild(row);
+      sum += parseInt(it[1].replace(/[^0-9]/g,""), 10);
+    });
+    rcTotal.textContent = "Tk " + sum.toLocaleString();
+  }
+
+  function playTicker(){
+    rcLines.innerHTML = "";
+    rcTotal.textContent = "Tk 0";
+    var i = 0;
+    var sum = 0;
+    var iv = setInterval(function(){
+      if(i >= items.length){ clearInterval(iv); return; }
+      var row = document.createElement("div");
+      row.className = "rc-line";
+      row.innerHTML = "<span>" + items[i][0] + "</span><span>" + items[i][1] + "</span>";
+      rcLines.appendChild(row);
+      sum += parseInt(items[i][1].replace(/[^0-9]/g,""), 10);
+      rcTotal.textContent = "Tk " + sum.toLocaleString();
+      i++;
+    }, 500);
+  }
+
+  if(reduceMotion){
+    renderAllLines();
+  } else {
+    playTicker();
+    setInterval(playTicker, 6000);
+  }
+</script>
+
+</body>
+</html>

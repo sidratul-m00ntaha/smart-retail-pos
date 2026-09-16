@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports · Smart Retail POS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F5F6F2; --paper:#FFFFFF; --ink:#16231F; --ink-soft:#5B655F;
+    --teal:#1F5D4E; --teal-dark:#123A30; --teal-tint:#E7F0EB;
+    --amber:#E2A63B; --amber-tint:#FBF0DA; --amber-dark:#8A5A16;
+    --border:#DCDFD5; --danger:#B54F45; --danger-tint:#FBEDEB;
+    --success:#2F7A4D; --success-tint:#E4F0E7; --radius:12px;
+    --font-display:'Fraunces', serif; --font-sans:'Work Sans', sans-serif; --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ font-family:var(--font-sans); background:var(--bg); color:var(--ink); display:flex; min-height:100vh; }
+  button,input,select{font-family:var(--font-sans);}
+
+  .sidebar{ width:208px; flex-shrink:0; background:var(--teal); color:#EAF2ED; display:flex; flex-direction:column; padding:22px 12px; position:sticky; top:0; height:100vh; }
+  .brand{ display:flex; flex-direction:column; padding:4px 8px 20px; }
+  .brand .eyebrow{ font-family:var(--font-mono); font-size:11px; color:#AFD1C0; }
+  .brand h1{ font-family:var(--font-display); font-weight:600; font-size:18px; margin:2px 0 0; }
+  nav{ display:flex; flex-direction:column; gap:2px; flex:1; }
+  .nav-item{ display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; color:#CFE3D8; font-size:13px; cursor:pointer; border:none; background:none; text-align:left; width:100%; }
+  .nav-item svg{ flex-shrink:0; opacity:0.9; }
+  .nav-item:hover{ background:rgba(255,255,255,0.08); color:#fff; }
+  .nav-item.active{ background:var(--amber); color:#3A2606; font-weight:500; }
+  .nav-item.active svg{ opacity:1; }
+  .sidebar-footer{ font-family:var(--font-mono); font-size:10.5px; color:#8FB6A2; padding:12px 10px 4px; border-top:1px solid rgba(255,255,255,0.12); margin-top:10px; }
+
+  .main{ flex:1; min-width:0; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:18px 32px; border-bottom:1px solid var(--border); background:var(--paper); position:sticky; top:0; z-index:5; }
+  .topbar h2{ font-family:var(--font-display); font-weight:600; font-size:21px; margin:0; }
+  .topbar .date{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+  .top-right{ display:flex; align-items:center; gap:14px; }
+  .role-pill{ font-size:12px; font-family:var(--font-mono); background:var(--teal-tint); color:var(--teal-dark); padding:5px 10px; border-radius:20px; }
+  .avatar{ width:34px; height:34px; border-radius:50%; background:var(--amber); color:#3A2606; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; }
+
+  .content{ padding:24px 32px 48px; max-width:1280px; }
+
+  .page-tabs{ display:flex; gap:4px; background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:4px; margin-bottom:20px; width:fit-content; flex-wrap:wrap; }
+  .page-tab{ border:none; background:none; padding:8px 16px; font-size:13px; border-radius:7px; cursor:pointer; color:var(--ink-soft); }
+  .page-tab.active{ background:var(--paper); color:var(--ink); font-weight:500; box-shadow:0 1px 2px rgba(0,0,0,0.08); }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  .toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .range-tabs{ display:flex; gap:4px; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:3px; }
+  .range-tab{ border:none; background:none; padding:6px 13px; font-size:12.5px; border-radius:6px; cursor:pointer; color:var(--ink-soft); }
+  .range-tab.active{ background:var(--paper); color:var(--ink); font-weight:500; box-shadow:0 1px 2px rgba(0,0,0,0.08); }
+  .custom-dates{ display:none; align-items:center; gap:6px; }
+  .custom-dates.show{ display:flex; }
+  .custom-dates input{ padding:7px 9px; border:1px solid var(--border); border-radius:7px; font-size:12.5px; }
+  .spacer{ flex:1; }
+  .btn-export{ padding:9px 14px; background:var(--paper); border:1px solid var(--border); border-radius:9px; font-size:13px; cursor:pointer; color:var(--ink); display:flex; align-items:center; gap:7px; }
+  .btn-export:hover{ border-color:var(--teal); color:var(--teal); }
+
+  .metrics{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:20px; }
+  .metrics.four{ grid-template-columns:repeat(4, 1fr); }
+  .metric-card{ background:var(--paper); border:1px solid var(--border); border-radius:var(--radius); padding:16px 16px 14px; }
+  .metric-card .m-label{ font-size:12.5px; color:var(--ink-soft); margin:0 0 8px; }
+  .metric-card .m-value{ font-family:var(--font-display); font-weight:600; font-size:22px; margin:0; }
+  .metric-card .m-sub{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; font-family:var(--font-mono); }
+
+  .grid-2{ display:grid; grid-template-columns:1.4fr 1fr; gap:16px; margin-bottom:16px; }
+  .card{ background:var(--paper); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; }
+  .card h3{ font-family:var(--font-display); font-weight:600; font-size:15px; margin:0 0 12px; }
+  .chart-wrap{ position:relative; height:210px; }
+  .chart-wrap.small{ height:180px; }
+
+  .pm-row{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .pm-label{ width:64px; font-size:12.5px; color:var(--ink-soft); flex-shrink:0; }
+  .pm-track{ flex:1; height:8px; background:var(--bg); border-radius:5px; overflow:hidden; }
+  .pm-fill{ height:100%; border-radius:5px; }
+  .pm-value{ width:70px; text-align:right; font-family:var(--font-mono); font-size:12px; flex-shrink:0; }
+
+  .table-card{ background:var(--paper); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  table{ width:100%; border-collapse:collapse; }
+  thead th{ text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-soft); font-weight:500; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg); }
+  tbody td{ padding:11px 16px; border-bottom:1px solid var(--border); font-size:13.5px; vertical-align:middle; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:#FAFBF9; }
+  .mono{ font-family:var(--font-mono); font-size:12.5px; }
+  .rank{ font-family:var(--font-mono); font-size:11px; color:var(--ink-soft); }
+
+  .pill{ font-size:11.5px; padding:3px 10px; border-radius:20px; font-weight:500; display:inline-block; }
+  .pill.Active{ background:var(--success-tint); color:var(--success); }
+  .pill.Inactive{ background:var(--bg); color:var(--ink-soft); }
+  .pill.Confirmed{ background:var(--success-tint); color:var(--success); }
+  .tier-pill{ font-size:11px; padding:3px 9px; border-radius:20px; font-weight:500; display:inline-block; }
+  .tier-pill.Regular{ background:var(--bg); color:var(--ink-soft); }
+  .tier-pill.Silver{ background:#EFEFEF; color:#555; }
+  .tier-pill.Gold{ background:var(--amber-tint); color:var(--amber-dark); }
+  .status-pill{ font-size:11.5px; padding:3px 10px; border-radius:20px; font-weight:500; display:inline-block; }
+  .status-pill.Normal{ background:var(--success-tint); color:var(--success); }
+  .status-pill.Low{ background:var(--amber-tint); color:var(--amber-dark); }
+  .status-pill.Out{ background:var(--danger-tint); color:var(--danger); }
+
+  .section-gap{ margin-top:18px; }
+
+  .alert-filter-chips{ display:flex; gap:8px; margin-bottom:16px; }
+  .af-chip{ padding:7px 14px; border-radius:20px; border:1px solid var(--border); background:var(--paper); font-size:12.5px; color:var(--ink-soft); cursor:pointer; }
+  .af-chip:hover{ border-color:var(--teal); }
+  .af-chip.active{ background:var(--teal); border-color:var(--teal); color:#fff; }
+  .expiry-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:14px; }
+  .expiry-card{ background:var(--paper); border:1px solid var(--border); border-radius:var(--radius); padding:16px; border-left:4px solid var(--border); }
+  .expiry-card.Expired{ border-left-color:var(--danger); }
+  .expiry-card.Within7{ border-left-color:var(--amber); }
+  .expiry-card.Within30{ border-left-color:var(--teal); }
+  .ec-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  .ec-name{ font-weight:500; font-size:13.5px; margin:0; }
+  .ec-batch{ font-size:11.5px; color:var(--ink-soft); font-family:var(--font-mono); margin:2px 0 0; }
+  .ec-tag{ font-size:10.5px; padding:3px 8px; border-radius:6px; font-weight:500; white-space:nowrap; }
+  .ec-tag.Expired{ background:var(--danger-tint); color:var(--danger); }
+  .ec-tag.Within7{ background:var(--amber-tint); color:var(--amber-dark); }
+  .ec-tag.Within30{ background:var(--teal-tint); color:var(--teal-dark); }
+  .ec-meta{ display:flex; justify-content:space-between; font-size:12px; color:var(--ink-soft); margin-top:10px; }
+  .ec-meta span:last-child{ font-family:var(--font-mono); }
+
+  .toast{ position:fixed; bottom:22px; left:50%; transform:translate(-50%, 20px); background:var(--ink); color:#fff; padding:10px 18px; border-radius:8px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; z-index:60; }
+  .toast.show{ opacity:1; transform:translate(-50%, 0); }
+
+  @media (max-width: 1080px){ .metrics, .metrics.four{ grid-template-columns:repeat(2,1fr); } .grid-2{ grid-template-columns:1fr; } }
+  @media (max-width: 720px){ .sidebar{ display:none; } .metrics, .metrics.four{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="eyebrow">Smart Retail</span>
+      <h1>Point of Sale</h1>
+    </div>
+    <nav>
+      <a class="nav-item" href="dashboard.html" data-label="Dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="pos.html" data-label="POS">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+        POS
+      </a>
+      <a class="nav-item" href="products.html" data-label="Products">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+        Products
+      </a>
+      <a class="nav-item" href="purchasing.html" data-label="Purchasing">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 3h3l2.4 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 7H5"/><circle cx="9" cy="21" r="1.4"/><circle cx="17" cy="21" r="1.4"/></svg>
+        Purchasing
+      </a>
+      <a class="nav-item" href="inventory.html" data-label="Inventory">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="5" rx="1.2"/><rect x="3" y="10" width="18" height="5" rx="1.2"/><rect x="3" y="17" width="18" height="4" rx="1.2"/></svg>
+        Inventory
+      </a>
+      <a class="nav-item" href="customers.html" data-label="Customers">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="8.5" r="2.6"/><path d="M15.5 14.2c2.8.3 5 2.5 5 5.8"/></svg>
+        Customers
+      </a>
+      <button class="nav-item" data-label="Sales">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h12v19l-3-2-3 2-3-2-3 2Z"/><path d="M9 8h6M9 12h6"/></svg>
+        Sales
+      </button>
+      <a class="nav-item active" href="reports.html" data-label="Reports">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+        Reports
+      </a>
+      <a class="nav-item" href="ai-assistant.html" data-label="AI Assistant">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="12" rx="3"/><path d="M8 21l3-4h2l3 4"/><circle cx="8.5" cy="11" r="1"/><circle cx="15.5" cy="11" r="1"/></svg>
+        AI Assistant
+      </a>
+      <a class="nav-item" href="users.html" data-label="Users">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c0-4.1 3.4-6.6 7.5-6.6s7.5 2.5 7.5 6.6"/></svg>
+        Users
+      </a>
+      <a class="nav-item" href="settings.html" data-label="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.7 7.7 0 0 0 0-2l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-1.7-1L15 3h-6l-.4 2.9a7.6 7.6 0 0 0-1.7 1l-2.3-.9-2 3.4L4.6 11a7.7 7.7 0 0 0 0 2l-2 1.5 2 3.4 2.3-.9c.5.4 1.1.8 1.7 1L9 21h6l.4-2.9c.6-.2 1.2-.6 1.7-1l2.3.9 2-3.4-2-1.5Z"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="sidebar-footer">Terminal 03 · Dhaka Central</div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h2>Reports</h2>
+        <p class="date" id="todayDate"></p>
+      </div>
+      <div class="top-right">
+        <a href="login.html" style="font-size:12px;color:var(--ink-soft);text-decoration:none;">Log out</a>
+        <span class="role-pill">Manager</span>
+        <div class="avatar">MA</div>
+      </div>
+    </header>
+
+    <section class="content">
+
+      <div class="page-tabs" id="pageTabs">
+        <button class="page-tab active" data-panel="sales">Sales</button>
+        <button class="page-tab" data-panel="purchases">Purchases</button>
+        <button class="page-tab" data-panel="inventory">Inventory</button>
+        <button class="page-tab" data-panel="expiry">Expiry</button>
+        <button class="page-tab" data-panel="customers">Customers</button>
+      </div>
+
+      <!-- SALES -->
+      <div class="panel active" id="panel-sales">
+        <div class="toolbar">
+          <div class="range-tabs" id="salesRangeTabs">
+            <button class="range-tab active" data-range="today">Today</button>
+            <button class="range-tab" data-range="yesterday">Yesterday</button>
+            <button class="range-tab" data-range="week">This week</button>
+            <button class="range-tab" data-range="month">This month</button>
+            <button class="range-tab" data-range="custom">Custom</button>
+          </div>
+          <div class="custom-dates" id="customDates">
+            <input type="date" id="dateFrom"> <span style="color:var(--ink-soft);">to</span> <input type="date" id="dateTo">
+            <button class="btn-export" id="applyCustom">Apply</button>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn-export" id="exportTopProducts">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+            Export CSV
+          </button>
+        </div>
+
+        <div class="metrics" id="salesMetrics"></div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Sales over time</h3>
+            <div class="chart-wrap"><canvas id="salesChart"></canvas></div>
+          </div>
+          <div class="card">
+            <h3>Payment methods</h3>
+            <div id="paymentBreakdown"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Top products</h3>
+          <div class="table-card">
+            <table>
+              <thead><tr><th>#</th><th>Product</th><th>Units sold</th><th>Revenue</th></tr></thead>
+              <tbody id="topProductsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PURCHASES -->
+      <div class="panel" id="panel-purchases">
+        <div class="toolbar">
+          <p style="font-size:13px;color:var(--ink-soft);margin:0;">Purchasing activity across all suppliers.</p>
+          <div class="spacer"></div>
+          <button class="btn-export" id="exportPurchases">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+            Export CSV
+          </button>
+        </div>
+        <div class="metrics" id="purchaseMetrics"></div>
+
+        <div class="card">
+          <h3>Purchases by supplier</h3>
+          <div class="table-card">
+            <table>
+              <thead><tr><th>Supplier</th><th>Total purchases</th><th>Paid</th><th>Outstanding</th></tr></thead>
+              <tbody id="bySupplierBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card section-gap">
+          <h3>Purchase history</h3>
+          <div class="table-card">
+            <table>
+              <thead><tr><th>Purchase no.</th><th>Supplier</th><th>Date</th><th>Total</th><th>Paid</th><th>Due</th><th>Status</th></tr></thead>
+              <tbody id="purchaseHistoryBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- INVENTORY -->
+      <div class="panel" id="panel-inventory">
+        <div class="toolbar">
+          <p style="font-size:13px;color:var(--ink-soft);margin:0;">Stock position and recent movement.</p>
+          <div class="spacer"></div>
+          <button class="btn-export" id="exportStock">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+            Export CSV
+          </button>
+        </div>
+        <div class="metrics four" id="inventoryMetrics"></div>
+
+        <div class="card">
+          <h3>Current stock</h3>
+          <div class="table-card">
+            <table>
+              <thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Reorder level</th><th>Status</th></tr></thead>
+              <tbody id="currentStockBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card section-gap">
+          <h3>Recent stock movements</h3>
+          <div class="table-card">
+            <table>
+              <thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty in</th><th>Qty out</th><th>Balance</th><th>Reference</th></tr></thead>
+              <tbody id="recentMovementsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPIRY -->
+      <div class="panel" id="panel-expiry">
+        <div class="alert-filter-chips" id="alertFilterChips">
+          <button class="af-chip active" data-level="All">All</button>
+          <button class="af-chip" data-level="Expired">Expired</button>
+          <button class="af-chip" data-level="Within7">Within 7 days</button>
+          <button class="af-chip" data-level="Within30">Within 30 days</button>
+        </div>
+        <div class="expiry-grid" id="expiryGrid"></div>
+      </div>
+
+      <!-- CUSTOMERS -->
+      <div class="panel" id="panel-customers">
+        <div class="toolbar">
+          <p style="font-size:13px;color:var(--ink-soft);margin:0;">Spending, dues, and loyalty standing.</p>
+          <div class="spacer"></div>
+          <button class="btn-export" id="exportCustomers">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+            Export CSV
+          </button>
+        </div>
+        <div class="metrics" id="customerMetrics"></div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Top customers by spend</h3>
+            <div class="table-card">
+              <table>
+                <thead><tr><th>#</th><th>Customer</th><th>Tier</th><th>Total spent</th></tr></thead>
+                <tbody id="topCustomersBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Loyalty tier distribution</h3>
+            <div class="chart-wrap small"><canvas id="loyaltyChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Outstanding customer due</h3>
+          <div class="table-card">
+            <table>
+              <thead><tr><th>Customer</th><th>Credit limit</th><th>Outstanding due</th></tr></thead>
+              <tbody id="customerDueBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  document.getElementById("todayDate").textContent = new Date().toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  document.querySelectorAll("button.nav-item").forEach(function(item){
+    item.addEventListener("click", function(){ showToast(item.getAttribute("data-label") + " page — not built yet in this prototype"); });
+  });
+
+  var teal = "#1F5D4E", amber = "#E2A63B", gray = "#C7CCC4";
+  Chart.defaults.font.family = "'Work Sans', sans-serif";
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.color = "#5B655F";
+
+  /* ---------- Page tabs ---------- */
+  document.querySelectorAll(".page-tab").forEach(function(tab){
+    tab.addEventListener("click", function(){
+      document.querySelectorAll(".page-tab").forEach(function(t){ t.classList.remove("active"); });
+      tab.classList.add("active");
+      document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
+      document.getElementById("panel-" + tab.getAttribute("data-panel")).classList.add("active");
+    });
+  });
+
+  /* ================= SALES ================= */
+  var salesData = {
+    today:      { total:85450, tx:124, items:463, chartLabels:["9am","11am","1pm","3pm","5pm","7pm","9pm"], chartData:[8,10,14,12,15,16,10.45] },
+    yesterday:  { total:78200, tx:110, items:410, chartLabels:["9am","11am","1pm","3pm","5pm","7pm","9pm"], chartData:[7,9,12,11,14,15,10.2] },
+    week:       { total:512000, tx:780, items:2870, chartLabels:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], chartData:[62,58,71,66,80,95,80] },
+    month:      { total:2040000, tx:3100, items:11400, chartLabels:["W1","W2","W3","W4"], chartData:[420,480,510,630] },
+    custom:     { total:2040000, tx:3100, items:11400, chartLabels:["W1","W2","W3","W4"], chartData:[420,480,510,630] }
+  };
+  var topProducts = [
+    ["Rice 5kg", 42, 550], ["Cooking oil 1L", 31, 180], ["Milk 1L", 27, 80], ["Biscuit pack", 19, 60]
+  ];
+  var paymentMethods = [
+    { label:"Cash", value:42000, color: teal },
+    { label:"Card", value:18420, color: amber },
+    { label:"Digital", value:25000, color: gray }
+  ];
+
+  var salesChart;
+  function renderSalesMetrics(range){
+    var d = salesData[range];
+    document.getElementById("salesMetrics").innerHTML =
+      '<div class="metric-card"><p class="m-label">Total sales</p><p class="m-value">Tk ' + d.total.toLocaleString() + '</p><p class="m-sub">' + d.tx + ' transactions</p></div>' +
+      '<div class="metric-card"><p class="m-label">Transactions</p><p class="m-value">' + d.tx + '</p><p class="m-sub">' + d.items + ' items sold</p></div>' +
+      '<div class="metric-card"><p class="m-label">Avg transaction value</p><p class="m-value">Tk ' + Math.round(d.total/d.tx) + '</p><p class="m-sub">per sale</p></div>';
+  }
+  function renderSalesChart(range){
+    var d = salesData[range];
+    if(salesChart){
+      salesChart.data.labels = d.chartLabels;
+      salesChart.data.datasets[0].data = d.chartData;
+      salesChart.update();
+      return;
+    }
+    salesChart = new Chart(document.getElementById("salesChart"), {
+      type:"line",
+      data:{ labels:d.chartLabels, datasets:[{ data:d.chartData, borderColor:teal, backgroundColor:"rgba(31,93,78,0.08)", fill:true, tension:0.35, pointRadius:3, pointBackgroundColor:teal }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
+        scales:{ y:{ grid:{ color:"#EDEFE9" }, ticks:{ callback:function(v){ return "Tk "+v+"k"; } } }, x:{ grid:{ display:false } } } }
+    });
+  }
+  function renderPaymentBreakdown(){
+    var total = paymentMethods.reduce(function(s,p){ return s+p.value; }, 0);
+    var box = document.getElementById("paymentBreakdown");
+    box.innerHTML = "";
+    paymentMethods.forEach(function(p){
+      var pct = Math.round((p.value/total)*100);
+      var row = document.createElement("div");
+      row.className = "pm-row";
+      row.innerHTML =
+        '<span class="pm-label">' + p.label + '</span>' +
+        '<div class="pm-track"><div class="pm-fill" style="width:' + pct + '%;background:' + p.color + '"></div></div>' +
+        '<span class="pm-value">Tk ' + p.value.toLocaleString() + '</span>';
+      box.appendChild(row);
+    });
+  }
+  function renderTopProducts(){
+    var tbody = document.getElementById("topProductsBody");
+    tbody.innerHTML = "";
+    topProducts.forEach(function(p, i){
+      var tr = document.createElement("tr");
+      tr.innerHTML = '<td class="rank">' + (i+1) + '</td><td>' + p[0] + '</td><td class="mono">' + p[1] + '</td><td class="mono">Tk ' + (p[1]*p[2]).toLocaleString() + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.querySelectorAll("#salesRangeTabs .range-tab").forEach(function(tab){
+    tab.addEventListener("click", function(){
+      document.querySelectorAll("#salesRangeTabs .range-tab").forEach(function(t){ t.classList.remove("active"); });
+      tab.classList.add("active");
+      var range = tab.getAttribute("data-range");
+      document.getElementById("customDates").classList.toggle("show", range === "custom");
+      renderSalesMetrics(range);
+      renderSalesChart(range);
+    });
+  });
+  document.getElementById("applyCustom").addEventListener("click", function(){
+    renderSalesMetrics("custom"); renderSalesChart("custom");
+    showToast("Custom range applied.");
+  });
+
+  /* ================= PURCHASES ================= */
+  var suppliers = [
+    { name:"ABC Traders", totalPurchases:250000, due:40000, status:"Active" },
+    { name:"Rupchanda Distributors", totalPurchases:120000, due:0, status:"Active" },
+    { name:"Partex Beverage Co.", totalPurchases:85000, due:25000, status:"Active" },
+    { name:"Metro FMCG Suppliers", totalPurchases:40000, due:0, status:"Inactive" }
+  ];
+  var purchases = [
+    { no:"PUR-2026-0143", supplier:"ABC Traders", date:"Sep 11, 2026", total:21000, paid:15000, due:6000, status:"Confirmed" },
+    { no:"PUR-2026-0142", supplier:"Rupchanda Distributors", date:"Sep 11, 2026", total:3570, paid:3570, due:0, status:"Confirmed" },
+    { no:"PUR-2026-0139", supplier:"Partex Beverage Co.", date:"Sep 10, 2026", total:2835, paid:2835, due:0, status:"Confirmed" },
+    { no:"PUR-2026-0131", supplier:"Metro FMCG Suppliers", date:"Sep 08, 2026", total:2992.5, paid:2992.5, due:0, status:"Confirmed" }
+  ];
+  function renderPurchaseMetrics(){
+    var totalPurchases = suppliers.reduce(function(s,x){ return s+x.totalPurchases; }, 0);
+    var totalDue = suppliers.reduce(function(s,x){ return s+x.due; }, 0);
+    document.getElementById("purchaseMetrics").innerHTML =
+      '<div class="metric-card"><p class="m-label">Total purchases</p><p class="m-value">Tk ' + totalPurchases.toLocaleString() + '</p><p class="m-sub">all suppliers</p></div>' +
+      '<div class="metric-card"><p class="m-label">Outstanding payable</p><p class="m-value">Tk ' + totalDue.toLocaleString() + '</p><p class="m-sub">across ' + suppliers.filter(function(s){return s.due>0;}).length + ' suppliers</p></div>' +
+      '<div class="metric-card"><p class="m-label">Purchases logged</p><p class="m-value">' + purchases.length + '</p><p class="m-sub">this month</p></div>';
+  }
+  function renderBySupplier(){
+    var tbody = document.getElementById("bySupplierBody");
+    tbody.innerHTML = "";
+    suppliers.forEach(function(s){
+      var paid = s.totalPurchases - s.due;
+      var tr = document.createElement("tr");
+      tr.innerHTML = '<td>' + s.name + '</td><td class="mono">Tk ' + s.totalPurchases.toLocaleString() + '</td><td class="mono">Tk ' + paid.toLocaleString() + '</td><td class="mono">Tk ' + s.due.toLocaleString() + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  function renderPurchaseHistory(){
+    var tbody = document.getElementById("purchaseHistoryBody");
+    tbody.innerHTML = "";
+    purchases.forEach(function(p){
+      var tr = document.createElement("tr");
+      tr.innerHTML = '<td class="mono">' + p.no + '</td><td>' + p.supplier + '</td><td class="mono">' + p.date + '</td><td class="mono">Tk ' + p.total.toLocaleString() + '</td><td class="mono">Tk ' + p.paid.toLocaleString() + '</td><td class="mono">Tk ' + p.due.toLocaleString() + '</td><td><span class="pill ' + p.status + '">' + p.status + '</span></td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  /* ================= INVENTORY ================= */
+  var products = [
+    { name:"Rice 5kg", category:"Grocery", stock:42, reorder:15, purchase:480 },
+    { name:"Cooking oil 1L", category:"Grocery", stock:7, reorder:10, purchase:150 },
+    { name:"Milk 1L", category:"Dairy", stock:0, reorder:12, purchase:65 },
+    { name:"Biscuit pack", category:"Snacks", stock:120, reorder:20, purchase:45 },
+    { name:"Cola 500ml", category:"Beverage", stock:80, reorder:24, purchase:35 },
+    { name:"Soap bar", category:"Personal care", stock:65, reorder:15, purchase:40 },
+    { name:"Toothpaste", category:"Personal care", stock:30, reorder:10, purchase:95 },
+    { name:"Detergent 1kg", category:"Household", stock:18, reorder:8, purchase:170 }
+  ];
+  var movements = [
+    { date:"Sep 12, 09:40", product:"Rice 5kg", type:"Sale", qtyIn:0, qtyOut:2, balance:42, ref:"INV-2026-00121" },
+    { date:"Sep 12, 09:10", product:"Cola 500ml", type:"Sale", qtyIn:0, qtyOut:6, balance:80, ref:"INV-2026-00118" },
+    { date:"Sep 11, 16:20", product:"Cooking oil 1L", type:"Sale", qtyIn:0, qtyOut:3, balance:7, ref:"INV-2026-00109" },
+    { date:"Sep 11, 11:05", product:"Detergent 1kg", type:"Purchase", qtyIn:20, qtyOut:0, balance:18, ref:"PUR-2026-0142" },
+    { date:"Sep 10, 15:40", product:"Milk 1L", type:"Sale", qtyIn:0, qtyOut:14, balance:0, ref:"INV-2026-00095" }
+  ];
+  function stockStatus(p){ if(p.stock===0) return "Out"; if(p.stock<=p.reorder) return "Low"; return "Normal"; }
+  function renderInventoryMetrics(){
+    var low = products.filter(function(p){ return p.stock>0 && p.stock<=p.reorder; }).length;
+    var out = products.filter(function(p){ return p.stock===0; }).length;
+    var stockValue = products.reduce(function(s,p){ return s + p.stock*p.purchase; }, 0);
+    document.getElementById("inventoryMetrics").innerHTML =
+      '<div class="metric-card"><p class="m-label">Tracked SKUs</p><p class="m-value">' + products.length + '</p></div>' +
+      '<div class="metric-card"><p class="m-label">Low stock</p><p class="m-value">' + low + '</p></div>' +
+      '<div class="metric-card"><p class="m-label">Out of stock</p><p class="m-value">' + out + '</p></div>' +
+      '<div class="metric-card"><p class="m-label">Stock value (cost)</p><p class="m-value">Tk ' + stockValue.toLocaleString() + '</p></div>';
+  }
+  function renderCurrentStock(){
+    var tbody = document.getElementById("currentStockBody");
+    tbody.innerHTML = "";
+    products.forEach(function(p){
+      var status = stockStatus(p);
+      var tr = document.createElement("tr");
+      tr.innerHTML = '<td>' + p.name + '</td><td>' + p.category + '</td><td class="mono">' + p.stock + '</td><td class="mono">' + p.reorder + '</td><td><span class="status-pill ' + status + '">' + status + ' stock</span></td>';
+      tbody.appendChild(tr);
+    });
+  }
+  function renderRecentMovements(){
+    var tbody = document.getElementById("recentMovementsBody");
+    tbody.innerHTML = "";
+    movements.forEach(function(m){
+      var tr = document.createElement("tr");
+      tr.innerHTML = '<td class="mono">' + m.date + '</td><td>' + m.product + '</td><td>' + m.type + '</td><td class="mono">' + (m.qtyIn?"+"+m.qtyIn:"—") + '</td><td class="mono">' + (m.qtyOut?"-"+m.qtyOut:"—") + '</td><td class="mono">' + m.balance + '</td><td class="mono">' + m.ref + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  /* ================= EXPIRY ================= */
+  var TODAY = new Date("2026-09-12");
+  var expiryBatches = [
+    { product:"Milk 1L", batch:"MLK-0906", qty:6, expiry:"2026-09-10" },
+    { product:"Milk 1L", batch:"MLK-0912", qty:24, expiry:"2026-09-16" },
+    { product:"Biscuit pack", batch:"BSC-0815", qty:30, expiry:"2026-09-18" },
+    { product:"Biscuit pack", batch:"BSC-0828", qty:60, expiry:"2026-10-05" },
+    { product:"Milk 1L", batch:"MLK-0908", qty:10, expiry:"2026-09-30" }
+  ];
+  function daysUntil(dateStr){ return Math.round((new Date(dateStr) - TODAY) / 86400000); }
+  function expiryLevel(days){ if(days<0) return "Expired"; if(days<=7) return "Within7"; return "Within30"; }
+  var levelLabel = { Expired:"Expired", Within7:"Within 7 days", Within30:"Within 30 days" };
+  var expiryFilter = "All";
+  document.querySelectorAll(".af-chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      document.querySelectorAll(".af-chip").forEach(function(c){ c.classList.remove("active"); });
+      chip.classList.add("active");
+      expiryFilter = chip.getAttribute("data-level");
+      renderExpiry();
+    });
+  });
+  function renderExpiry(){
+    var grid = document.getElementById("expiryGrid");
+    var rows = expiryBatches.filter(function(b){ var lvl = expiryLevel(daysUntil(b.expiry)); return expiryFilter==="All" || lvl===expiryFilter; });
+    if(rows.length===0){ grid.innerHTML = '<p style="color:var(--ink-soft);font-size:13px;">No batches in this range.</p>'; return; }
+    grid.innerHTML = "";
+    rows.forEach(function(b){
+      var days = daysUntil(b.expiry); var lvl = expiryLevel(days);
+      var daysLabel = days<0 ? Math.abs(days)+"d ago" : days+"d left";
+      var card = document.createElement("div");
+      card.className = "expiry-card " + lvl;
+      card.innerHTML =
+        '<div class="ec-top"><div><p class="ec-name">' + b.product + '</p><p class="ec-batch">Batch ' + b.batch + '</p></div><span class="ec-tag ' + lvl + '">' + levelLabel[lvl] + '</span></div>' +
+        '<div class="ec-meta"><span>Quantity</span><span>' + b.qty + '</span></div>' +
+        '<div class="ec-meta"><span>Expiry date</span><span>' + b.expiry + '</span></div>' +
+        '<div class="ec-meta"><span>Time left</span><span>' + daysLabel + '</span></div>';
+      grid.appendChild(card);
+    });
+  }
+
+  /* ================= CUSTOMERS ================= */
+  var customers = [
+    { name:"Rahim Ahmed", points:1240, creditLimit:5000, due:2000, spent:31000 },
+    { name:"Karim Uddin", points:640, creditLimit:2000, due:1800, spent:15500 },
+    { name:"Nasrin Akter", points:80, creditLimit:500, due:0, spent:6200 },
+    { name:"Farida Yasmin", points:2100, creditLimit:8000, due:0, spent:42000 },
+    { name:"Jahangir Alam", points:20, creditLimit:0, due:0, spent:900 },
+    { name:"Shirin Sultana", points:510, creditLimit:1500, due:1500, spent:18000 },
+    { name:"Tanvir Hasan", points:0, creditLimit:0, due:0, spent:0 }
+  ];
+  function tierForPoints(points){ if(points>=1000) return "Gold"; if(points>=500) return "Silver"; return "Regular"; }
+  function renderCustomerMetrics(){
+    var totalDue = customers.reduce(function(s,c){ return s+c.due; }, 0);
+    var gold = customers.filter(function(c){ return tierForPoints(c.points)==="Gold"; }).length;
+    document.getElementById("customerMetrics").innerHTML =
+      '<div class="metric-card"><p class="m-label">Total customers</p><p class="m-value">' + customers.length + '</p></div>' +
+      '<div class="metric-card"><p class="m-label">Total due</p><p class="m-value">Tk ' + totalDue.toLocaleString() + '</p></div>' +
+      '<div class="metric-card"><p class="m-label">Gold tier customers</p><p class="m-value">' + gold + '</p></div>';
+  }
+  function renderTopCustomers(){
+    var tbody = document.getElementById("topCustomersBody");
+    var sorted = customers.slice().sort(function(a,b){ return b.spent - a.spent; }).slice(0,5);
+    tbody.innerHTML = "";
+    sorted.forEach(function(c, i){
+      var tier = tierForPoints(c.points);
+      var tr = document.createElement("tr");
+      tr.innerHTML = '<td class="rank">' + (i+1) + '</td><td>' + c.name + '</td><td><span class="tier-pill ' + tier + '">' + tier + '</span></td><td class="mono">Tk ' + c.spent.toLocaleString() + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  function renderCustomerDue(){
+    var tbody = document.getElementById("customerDueBody");
+    var rows = customers.filter(function(c){ return c.due > 0; });
+    if(rows.length===0){ tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--ink-soft);padding:24px;">No outstanding customer due.</td></tr>'; return; }
+    tbody.innerHTML = "";
+    rows.forEach(function(c){
+      var tr = document.createElement("tr");
+      tr.innerHTML = '<td>' + c.name + '</td><td class="mono">' + (c.creditLimit>0 ? "Tk "+c.creditLimit.toLocaleString() : "—") + '</td><td class="mono">Tk ' + c.due.toLocaleString() + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  function renderLoyaltyChart(){
+    var regular = customers.filter(function(c){ return tierForPoints(c.points)==="Regular"; }).length;
+    var silver = customers.filter(function(c){ return tierForPoints(c.points)==="Silver"; }).length;
+    var gold = customers.filter(function(c){ return tierForPoints(c.points)==="Gold"; }).length;
+    new Chart(document.getElementById("loyaltyChart"), {
+      type:"doughnut",
+      data:{ labels:["Regular","Silver","Gold"], datasets:[{ data:[regular,silver,gold], backgroundColor:[gray,amber,teal], borderWidth:0 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:"62%", plugins:{ legend:{ position:"bottom", labels:{ boxWidth:10, padding:14 } } } }
+    });
+  }
+
+  /* ================= CSV export ================= */
+  function exportCSV(filename, headers, rows){
+    var csv = headers.join(",") + "\n" + rows.map(function(r){ return r.map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(","); }).join("\n");
+    var blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(filename + " downloaded.");
+  }
+  document.getElementById("exportTopProducts").addEventListener("click", function(){
+    exportCSV("top-products.csv", ["Rank","Product","Units sold","Revenue"], topProducts.map(function(p,i){ return [i+1,p[0],p[1],p[1]*p[2]]; }));
+  });
+  document.getElementById("exportPurchases").addEventListener("click", function(){
+    exportCSV("purchase-history.csv", ["Purchase No","Supplier","Date","Total","Paid","Due","Status"], purchases.map(function(p){ return [p.no,p.supplier,p.date,p.total,p.paid,p.due,p.status]; }));
+  });
+  document.getElementById("exportStock").addEventListener("click", function(){
+    exportCSV("current-stock.csv", ["Product","Category","Stock","Reorder level","Status"], products.map(function(p){ return [p.name,p.category,p.stock,p.reorder,stockStatus(p)]; }));
+  });
+  document.getElementById("exportCustomers").addEventListener("click", function(){
+    exportCSV("customers.csv", ["Customer","Tier","Total spent","Credit limit","Due"], customers.map(function(c){ return [c.name, tierForPoints(c.points), c.spent, c.creditLimit, c.due]; }));
+  });
+
+  /* Toast */
+  var toast = document.getElementById("toast");
+  var toastTimer;
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 2400);
+  }
+
+  /* ---------- Init ---------- */
+  renderSalesMetrics("today");
+  renderSalesChart("today");
+  renderPaymentBreakdown();
+  renderTopProducts();
+
+  renderPurchaseMetrics();
+  renderBySupplier();
+  renderPurchaseHistory();
+
+  renderInventoryMetrics();
+  renderCurrentStock();
+  renderRecentMovements();
+
+  renderExpiry();
+
+  renderCustomerMetrics();
+  renderTopCustomers();
+  renderCustomerDue();
+  renderLoyaltyChart();
+</script>
+
+</body>
+</html>

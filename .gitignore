@@ -1,0 +1,61 @@
+# ==========================================================
+# Secrets & environment files  (NEVER commit these)
+# ==========================================================
+.env
+.env.*
+!.env.example
+
+# ==========================================================
+# Python / FastAPI (backend)
+# ==========================================================
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Uploaded files (product images etc.) - keep the folder, ignore contents
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# ==========================================================
+# Node / React (frontend)
+# ==========================================================
+node_modules/
+dist/
+build/
+coverage/
+npm-debug.log*
+
+# ==========================================================
+# Database files & backups (can contain real data)
+# ==========================================================
+*.mdf
+*.ldf
+*.bak
+
+# ==========================================================
+# Logs
+# ==========================================================
+*.log
+logs/
+
+# ==========================================================
+# Editors / IDEs
+# ==========================================================
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# ==========================================================
+# Operating system & Office temporary files
+# ==========================================================
+Thumbs.db
+desktop.ini
+.DS_Store
+~$*
