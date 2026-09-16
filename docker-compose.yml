@@ -1,0 +1,60 @@
+# ============================================================
+# Local development database for Smart Retail POS
+#
+#   Start:   docker compose up -d
+#   Status:  docker compose ps -a
+#   Stop:    docker compose stop
+#
+# Only SQL Server runs in Docker. The backend and frontend
+# run directly on your computer (see README.md).
+# ============================================================
+name: smart-retail-pos
+
+services:
+  # ---- The SQL Server database ------------------------------
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-CU27-ubuntu-22.04
+    container_name: pos-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?MSSQL_SA_PASSWORD is missing - copy .env.example to .env first}
+      MSSQL_MEMORY_LIMIT_MB: 2048
+    ports:
+      # 127.0.0.1 = only reachable from your own computer, not the Wi-Fi network
+      - "127.0.0.1:${MSSQL_PORT:-1433}:1433"
+    volumes:
+      # Database files live in a Docker volume, so data survives restarts
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -b -Q \"SELECT 1\" > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  # ---- One-time setup: creates the application database ----
+  # Waits until SQL Server is healthy, runs every .sql file in
+  # database/init/ in name order, then exits. Safe to re-run.
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-CU27-ubuntu-22.04
+    container_name: pos-sqlserver-init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?MSSQL_SA_PASSWORD is missing - copy .env.example to .env first}
+    volumes:
+      - ./database/init:/scripts:ro
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        for f in /scripts/*.sql; do
+          echo "Running $$f ..."
+          /opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P "$$MSSQL_SA_PASSWORD" -C -b -i "$$f" || exit 1
+        done
+        echo "Database setup finished."
+    restart: "no"
+
+volumes:
+  sqlserver_data:
