@@ -11,37 +11,10 @@ from sqlalchemy.orm import Session
 
 from app import models  # noqa: F401  (loads every table definition)
 from app.core.config import settings
+from app.core.permissions import PERMISSIONS, ROLES
 from app.core.security import hash_password
 from app.database import Base, SessionLocal, engine
 from app.models import Permission, Role, StoreSetting, User
-
-# Permission code -> description (docs/database/module-1-auth-admin.md)
-PERMISSIONS = {
-    "users.manage": "Create, edit, deactivate users; assign roles",
-    "settings.manage": "Change store settings",
-    "activity_logs.view": "See the activity log",
-    "tax_rates.manage": "Create and change VAT rates",
-    "products.manage": "Products, categories, brands, units",
-    "suppliers.manage": "Suppliers",
-    "purchases.manage": "Create purchases, pay supplier dues",
-    "inventory.manage": "Stock adjustments and batches",
-    "customers.manage": "Create and edit customers",
-    "customer_dues.receive": "Receive customer due payments",
-    "loyalty.configure": "Loyalty tiers",
-    "pos.sell": "Use the POS: sales, invoices, invoice SMS",
-    "sales.view": "Sales history and invoices",
-    "reports.view": "Dashboard, reports, expiry alerts",
-    "ai.use": "AI Assistant",
-}
-
-ADMIN_ONLY = {"users.manage", "settings.manage", "activity_logs.view", "tax_rates.manage"}
-
-# Role name -> (description, permission codes)
-ROLES = {
-    "Admin": ("Full access to everything", set(PERMISSIONS)),
-    "Manager": ("Runs the store: products, purchasing, inventory, customers, reports", set(PERMISSIONS) - ADMIN_ONLY),
-    "Cashier": ("Operates the POS", {"pos.sell"}),
-}
 
 
 def seed_roles_and_permissions(db: Session) -> None:

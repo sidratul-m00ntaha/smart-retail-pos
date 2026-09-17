@@ -161,6 +161,7 @@ Open http://localhost:5173 – you should see **Frontend: ok, Backend API: ok, D
 | `docker-compose.yml` or `database/init/` | in the project folder: `docker compose up -d` |
 | any `.env.example` | compare it with your `.env` and copy over any new settings |
 | new files in `backend/app/models/` | in `backend`, with `.venv` active: `python -m app.init_db` |
+| `backend/app/core/permissions.py` | in `backend`, with `.venv` active: `python -m app.init_db` (adds new permissions) |
 | an **existing** table was changed (the PR will say so) | `python -m app.init_db --reset` – ⚠️ deletes your local data |
 
 ## 5. Adding a new package
@@ -180,6 +181,16 @@ Open http://localhost:5173 – you should see **Frontend: ok, Backend API: ok, D
 | API documentation (Swagger) | http://127.0.0.1:8000/docs |
 | Health check | http://127.0.0.1:8000/api/health |
 | SQL Server (for database tools) | Server `127.0.0.1,1433` · login `sa` · your password · trust server certificate |
+
+### Logging in on the API docs page
+
+Most API endpoints need a logged-in user.
+
+1. Open http://127.0.0.1:8000/docs and click **Authorize** (top right).
+2. Enter username `admin` and the `FIRST_ADMIN_PASSWORD` from your `backend/.env`, click **Authorize**, then **Close**.
+3. Endpoints marked with a 🔒 now use your login automatically. **401** = not logged in (logins last 8 hours), **403** = your role isn't allowed.
+
+How to protect your own endpoints: see [docs/database/module-1-auth-admin.md](docs/database/module-1-auth-admin.md#what-module-1-gives-other-modules).
 
 ## Settings files (`.env`)
 

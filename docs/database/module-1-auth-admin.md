@@ -180,40 +180,63 @@ Based on PRD section 4. **Admin has every permission.** Any logged-in user can _
 | `reports.view`          | Dashboard, reports, expiry alerts            |  ✅   |   ✅    |         |
 | `ai.use`                | AI Assistant                                 |  ✅   |   ✅    |         |
 
-Need a new permission for your module? Add a row in a PR and request a review from the Module 1 owner.
+Need a new permission for your module? Add it to `backend/app/core/permissions.py` **and** to this table in a PR, and request a review from the Module 1 owner. Then run `python -m app.init_db` to add it to your database.
 
-## What Module 1 will give other modules
+## What Module 1 gives other modules
 
-Planned functions (exact details are finalised in Module 1, Step 4):
+Ready to use – import them in your router:
 
 ```python
-# backend/app/core/dependencies.py
-get_current_user               # the logged-in user, or error 401 (not logged in)
-require_permission("code")     # the logged-in user if allowed, or error 403 (not allowed)
-
-# backend/app/services/activity_log_service.py
-log_activity(db, user_id, action, entity, reference=None, details=None)
-# adds a row to ActivityLogs – does NOT commit (the caller commits)
+from app.core.dependencies import get_current_user, require_permission
+from app.models import User
+from app.services.activity_log_service import log_activity
 ```
 
-How other modules will use them:
+| Function | What it gives you | If it fails |
+|---|---|---|
+| `Depends(get_current_user)` | The logged-in `User` | **401** – not logged in, token expired (after 8 hours) or account deactivated |
+| `Depends(require_permission("code"))` | The logged-in `User`, **if their role has that permission** | **401** as above, or **403** – logged in but not allowed |
+| `log_activity(db, user_id, action, entity, reference=None, details=None)` | Adds an ActivityLogs row. It does **not** commit – your `db.commit()` saves it together with your own changes | – |
+
+**Which one to use:** viewing everyday lists (products, customers) → `get_current_user`. Changing data or opening sensitive pages → `require_permission`. Use the codes from the table above; a misspelled code stops the backend from starting, with a message telling you so.
+
+Example (how Module 2 would write its products router):
 
 ```python
-@router.post("/api/products")
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.core.dependencies import get_current_user, require_permission
+from app.database import get_db
+from app.models import Product, User
+from app.schemas.product import ProductCreate
+from app.services.activity_log_service import log_activity
+
+router = APIRouter(prefix="/api/products", tags=["Products"])
+
+
+@router.get("")
+def list_products(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    ...  # any logged-in user may view products
+
+
+@router.post("")
 def create_product(
     data: ProductCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("products.manage")),
 ):
-    product = ...  # create the product
+    product = Product(**data.model_dump())
+    db.add(product)
+    db.flush()  # the database gives the product its product_id
     log_activity(db, current_user.user_id, "CREATE", "Product", reference=str(product.product_id))
-    db.commit()
+    db.commit()  # saves the product and the log row together
     return product
 ```
 
-Until Module 1's login is merged, build your endpoints **without** the `require_permission` line and add it later – it's a one-line change.
+**Testing:** on the Swagger page (http://127.0.0.1:8000/docs) click **Authorize** and log in, then call your endpoint. **401** = not logged in, **403** = your role isn't allowed.
 
-## Open questions for the team
+Until Module 1 is merged into `main`, build your endpoints **without** the `get_current_user` / `require_permission` lines and add them afterwards – it's a one-line change per endpoint.
 
 ## Team decisions
 
