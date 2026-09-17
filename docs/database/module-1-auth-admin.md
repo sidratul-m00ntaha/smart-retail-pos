@@ -72,107 +72,113 @@ erDiagram
 ## Tables
 
 ### Roles
+
 The three roles from PRD section 4.
 
-| Column | Type | Rules |
-|---|---|---|
-| `role_id` | INT | PK, auto-numbered |
-| `name` | NVARCHAR(50) | NOT NULL, UNIQUE – `Admin`, `Manager`, `Cashier` |
-| `description` | NVARCHAR(255) | |
-| `created_at` | DATETIME2 | NOT NULL |
+| Column        | Type          | Rules                                            |
+| ------------- | ------------- | ------------------------------------------------ |
+| `role_id`     | INT           | PK, auto-numbered                                |
+| `name`        | NVARCHAR(50)  | NOT NULL, UNIQUE – `Admin`, `Manager`, `Cashier` |
+| `description` | NVARCHAR(255) |                                                  |
+| `created_at`  | DATETIME2     | NOT NULL                                         |
 
 ### Permissions
+
 One row per action that needs permission (see the list below).
 
-| Column | Type | Rules |
-|---|---|---|
-| `permission_id` | INT | PK, auto-numbered |
-| `code` | NVARCHAR(100) | NOT NULL, UNIQUE – e.g. `products.manage` |
-| `description` | NVARCHAR(255) | |
-| `created_at` | DATETIME2 | NOT NULL |
+| Column          | Type          | Rules                                     |
+| --------------- | ------------- | ----------------------------------------- |
+| `permission_id` | INT           | PK, auto-numbered                         |
+| `code`          | NVARCHAR(100) | NOT NULL, UNIQUE – e.g. `products.manage` |
+| `description`   | NVARCHAR(255) |                                           |
+| `created_at`    | DATETIME2     | NOT NULL                                  |
 
 ### RolePermissions
+
 Which role has which permission.
 
-| Column | Type | Rules |
-|---|---|---|
-| `role_id` | INT | PK, FK → Roles |
-| `permission_id` | INT | PK, FK → Permissions |
+| Column          | Type | Rules                |
+| --------------- | ---- | -------------------- |
+| `role_id`       | INT  | PK, FK → Roles       |
+| `permission_id` | INT  | PK, FK → Permissions |
 
 ### Users
+
 Staff accounts. Customers are **not** users – they don't log in (PRD 5.11).
 
-| Column | Type | Rules |
-|---|---|---|
-| `user_id` | INT | PK, auto-numbered |
-| `full_name` | NVARCHAR(100) | NOT NULL |
-| `username` | NVARCHAR(50) | NOT NULL, UNIQUE |
-| `email` | NVARCHAR(255) | NOT NULL, UNIQUE |
+| Column          | Type          | Rules                                                   |
+| --------------- | ------------- | ------------------------------------------------------- |
+| `user_id`       | INT           | PK, auto-numbered                                       |
+| `full_name`     | NVARCHAR(100) | NOT NULL                                                |
+| `username`      | NVARCHAR(50)  | NOT NULL, UNIQUE                                        |
+| `email`         | NVARCHAR(255) | NOT NULL, UNIQUE                                        |
 | `password_hash` | NVARCHAR(255) | NOT NULL – a scrambled version, never the real password |
-| `role_id` | INT | NOT NULL, FK → Roles |
-| `is_active` | BIT | NOT NULL, default 1 – inactive users can't log in |
-| `last_login_at` | DATETIME2 | |
-| `created_at` | DATETIME2 | NOT NULL |
-| `updated_at` | DATETIME2 | |
+| `role_id`       | INT           | NOT NULL, FK → Roles                                    |
+| `is_active`     | BIT           | NOT NULL, default 1 – inactive users can't log in       |
+| `last_login_at` | DATETIME2     |                                                         |
+| `created_at`    | DATETIME2     | NOT NULL                                                |
+| `updated_at`    | DATETIME2     |                                                         |
 
 ### ActivityLogs
+
 Important business actions only, not every click (PRD 5.21).
 
-| Column | Type | Rules |
-|---|---|---|
-| `activity_log_id` | INT | PK, auto-numbered |
-| `user_id` | INT | FK → Users; empty for actions done by the system |
-| `action` | NVARCHAR(50) | NOT NULL – `LOGIN`, `CREATE`, `UPDATE`, `DELETE`, `PAYMENT`, `ADJUSTMENT` |
-| `entity` | NVARCHAR(50) | NOT NULL – `User`, `Product`, `Purchase`, `Sale` … |
-| `reference` | NVARCHAR(100) | Which record, e.g. `INV-2026-00125` or `42` |
-| `details` | NVARCHAR(500) | Short description, e.g. `Role changed to Manager` |
-| `created_at` | DATETIME2 | NOT NULL – when it happened |
+| Column            | Type          | Rules                                                                     |
+| ----------------- | ------------- | ------------------------------------------------------------------------- |
+| `activity_log_id` | INT           | PK, auto-numbered                                                         |
+| `user_id`         | INT           | FK → Users; empty for actions done by the system                          |
+| `action`          | NVARCHAR(50)  | NOT NULL – `LOGIN`, `CREATE`, `UPDATE`, `DELETE`, `PAYMENT`, `ADJUSTMENT` |
+| `entity`          | NVARCHAR(50)  | NOT NULL – `User`, `Product`, `Purchase`, `Sale` …                        |
+| `reference`       | NVARCHAR(100) | Which record, e.g. `INV-2026-00125` or `42`                               |
+| `details`         | NVARCHAR(500) | Short description, e.g. `Role changed to Manager`                         |
+| `created_at`      | DATETIME2     | NOT NULL – when it happened                                               |
 
 Indexes on `created_at` and `user_id`, for filtering the log page.
 
 ### StoreSettings
+
 Always exactly **one row** (`store_setting_id = 1`).
 
-| Column | Type | Rules |
-|---|---|---|
-| `store_setting_id` | INT | PK – always 1 |
-| `store_name` | NVARCHAR(150) | NOT NULL |
-| `address` | NVARCHAR(255) | |
-| `phone` | NVARCHAR(20) | |
-| `email` | NVARCHAR(255) | |
-| `currency_code` | NVARCHAR(3) | NOT NULL – e.g. `BDT`, `USD` |
-| `invoice_prefix` | NVARCHAR(10) | NOT NULL, default `INV` |
-| `default_tax_rate_id` | INT | FK → TaxRates (module 2) |
-| `loyalty_enabled` | BIT | NOT NULL, default 1 |
-| `sms_enabled` | BIT | NOT NULL, default 0 |
-| `sms_sender_name` | NVARCHAR(20) | Name shown as the SMS sender |
-| `updated_by` | INT | FK → Users |
-| `created_at` | DATETIME2 | NOT NULL |
-| `updated_at` | DATETIME2 | |
+| Column                | Type          | Rules                                          |
+| --------------------- | ------------- | ---------------------------------------------- |
+| `store_setting_id`    | INT           | PK – always 1                                  |
+| `store_name`          | NVARCHAR(150) | NOT NULL                                       |
+| `address`             | NVARCHAR(255) |                                                |
+| `phone`               | NVARCHAR(20)  |                                                |
+| `email`               | NVARCHAR(255) |                                                |
+| `currency_code`       | NVARCHAR(3)   | NOT NULL, default `BDT` – Bangladeshi Taka (৳) |
+| `invoice_prefix`      | NVARCHAR(10)  | NOT NULL, default `INV`                        |
+| `default_tax_rate_id` | INT           | FK → TaxRates (module 2)                       |
+| `loyalty_enabled`     | BIT           | NOT NULL, default 1                            |
+| `sms_enabled`         | BIT           | NOT NULL, default 0                            |
+| `sms_sender_name`     | NVARCHAR(20)  | Name shown as the SMS sender                   |
+| `updated_by`          | INT           | FK → Users                                     |
+| `created_at`          | DATETIME2     | NOT NULL                                       |
+| `updated_at`          | DATETIME2     |                                                |
 
 > The SMS provider's **API key is not stored here**. It's a secret, so it goes in `backend/.env`.
 
 ## Roles and permissions
 
-Based on PRD section 4. **Admin has every permission.** Any logged-in user can *view* everyday lists such as products and customers (the POS needs them); permissions protect **changes** and **sensitive pages**.
+Based on PRD section 4. **Admin has every permission.** Any logged-in user can _view_ everyday lists such as products and customers (the POS needs them); permissions protect **changes** and **sensitive pages**.
 
-| Permission code | Allows | Admin | Manager | Cashier |
-|---|---|:-:|:-:|:-:|
-| `users.manage` | Create, edit, deactivate users; assign roles | ✅ | | |
-| `settings.manage` | Change store settings | ✅ | | |
-| `activity_logs.view` | See the activity log | ✅ | | |
-| `tax_rates.manage` | Create and change VAT rates | ✅ | | |
-| `products.manage` | Products, categories, brands, units | ✅ | ✅ | |
-| `suppliers.manage` | Suppliers | ✅ | ✅ | |
-| `purchases.manage` | Create purchases, pay supplier dues | ✅ | ✅ | |
-| `inventory.manage` | Stock adjustments and batches | ✅ | ✅ | |
-| `customers.manage` | Create and edit customers | ✅ | ✅ | |
-| `customer_dues.receive` | Receive customer due payments | ✅ | ✅ | |
-| `loyalty.configure` | Loyalty tiers | ✅ | ✅ | |
-| `pos.sell` | Use the POS: sales, invoices, invoice SMS | ✅ | ✅ | ✅ |
-| `sales.view` | Sales history and invoices | ✅ | ✅ | |
-| `reports.view` | Dashboard, reports, expiry alerts | ✅ | ✅ | |
-| `ai.use` | AI Assistant | ✅ | ✅ | |
+| Permission code         | Allows                                       | Admin | Manager | Cashier |
+| ----------------------- | -------------------------------------------- | :---: | :-----: | :-----: |
+| `users.manage`          | Create, edit, deactivate users; assign roles |  ✅   |         |         |
+| `settings.manage`       | Change store settings                        |  ✅   |         |         |
+| `activity_logs.view`    | See the activity log                         |  ✅   |         |         |
+| `tax_rates.manage`      | Create and change VAT rates                  |  ✅   |         |         |
+| `products.manage`       | Products, categories, brands, units          |  ✅   |   ✅    |         |
+| `suppliers.manage`      | Suppliers                                    |  ✅   |   ✅    |         |
+| `purchases.manage`      | Create purchases, pay supplier dues          |  ✅   |   ✅    |         |
+| `inventory.manage`      | Stock adjustments and batches                |  ✅   |   ✅    |         |
+| `customers.manage`      | Create and edit customers                    |  ✅   |   ✅    |         |
+| `customer_dues.receive` | Receive customer due payments                |  ✅   |   ✅    |         |
+| `loyalty.configure`     | Loyalty tiers                                |  ✅   |   ✅    |         |
+| `pos.sell`              | Use the POS: sales, invoices, invoice SMS    |  ✅   |   ✅    |   ✅    |
+| `sales.view`            | Sales history and invoices                   |  ✅   |   ✅    |         |
+| `reports.view`          | Dashboard, reports, expiry alerts            |  ✅   |   ✅    |         |
+| `ai.use`                | AI Assistant                                 |  ✅   |   ✅    |         |
 
 Need a new permission for your module? Add a row in a PR and request a review from the Module 1 owner.
 
@@ -209,10 +215,12 @@ Until Module 1's login is merged, build your endpoints **without** the `require_
 
 ## Open questions for the team
 
-- [ ] Can **Managers** use the POS? (assumed yes above)
-- [ ] Which **currency** does the store use?
-- [ ] **Loyalty earning rule** (e.g. 1 point per 100 spent): store it in StoreSettings or in Module 6's tables? – decide with Module 6
-- [ ] **SMS settings**: is anything else needed? – decide with Module 5
+## Team decisions
+
+- [x] **Managers can use the POS** – yes (`pos.sell` is given to Admin, Manager and Cashier)
+- [x] **Currency:** Bangladeshi Taka – `currency_code = BDT`, shown as ৳
+- [x] **SMS settings:** `sms_enabled` and `sms_sender_name` are enough; the SMS provider's API key goes in `backend/.env`
+- [ ] **Loyalty earning rule** (e.g. 1 point per 100 ৳ spent): store it in Module 6's tables or in StoreSettings? – being decided with Module 6
 
 ## Later (Wave 4): AI Assistant tables
 
