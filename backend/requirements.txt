@@ -3,7 +3,10 @@
 # When you add a package: add ONE line, pin the exact version (==),
 # and keep the list in alphabetical order.
 fastapi==0.141.1
+pwdlib[argon2]==0.3.1
 pydantic-settings==2.15.0
+pyjwt==2.14.0
 pyodbc==5.3.0
+python-multipart==0.0.32
 sqlalchemy==2.0.54
 uvicorn[standard]==0.53.0

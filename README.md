@@ -98,7 +98,18 @@ python -m pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Open `backend\.env` and set `DB_PASSWORD` to the **same** password as `MSSQL_SA_PASSWORD` in the top-level `.env`. Then start the API:
+Open `backend\.env` and set:
+- `DB_PASSWORD` – the **same** password as `MSSQL_SA_PASSWORD` in the top-level `.env`
+- `FIRST_ADMIN_PASSWORD` – a password for your local admin account
+- `JWT_SECRET_KEY` – a long random secret for login tokens. Create one with `python -c "import secrets; print(secrets.token_urlsafe(48))"` and paste the result
+
+Create the tables and starting data (roles, permissions, admin account):
+
+```bat
+python -m app.init_db
+```
+
+Then start the API:
 
 ```bat
 uvicorn app.main:app --reload
@@ -117,7 +128,7 @@ copy .env.example .env
 npm run dev
 ```
 
-Open http://localhost:5173 – you should see **Frontend: ok, Backend API: ok, Database: ok**. 🎉
+Open http://localhost:5173 – you should see the **Sign in** page with **● Server and database connected** at the bottom. Sign in with `admin` and your `FIRST_ADMIN_PASSWORD`. 🎉
 
 > Use `npm ci` (not `npm install`) for setup and after pulling changes. It installs exactly the versions in `package-lock.json` and never modifies that file, which avoids merge conflicts.
 
@@ -149,6 +160,9 @@ Open http://localhost:5173 – you should see **Frontend: ok, Backend API: ok, D
 | `frontend/package-lock.json` | in `frontend`: `npm ci` |
 | `docker-compose.yml` or `database/init/` | in the project folder: `docker compose up -d` |
 | any `.env.example` | compare it with your `.env` and copy over any new settings |
+| new files in `backend/app/models/` | in `backend`, with `.venv` active: `python -m app.init_db` |
+| `backend/app/core/permissions.py` | in `backend`, with `.venv` active: `python -m app.init_db` (adds new permissions) |
+| an **existing** table was changed (the PR will say so) | `python -m app.init_db --reset` – ⚠️ deletes your local data |
 
 ## 5. Adding a new package
 
@@ -167,6 +181,16 @@ Open http://localhost:5173 – you should see **Frontend: ok, Backend API: ok, D
 | API documentation (Swagger) | http://127.0.0.1:8000/docs |
 | Health check | http://127.0.0.1:8000/api/health |
 | SQL Server (for database tools) | Server `127.0.0.1,1433` · login `sa` · your password · trust server certificate |
+
+### Logging in on the API docs page
+
+Most API endpoints need a logged-in user.
+
+1. Open http://127.0.0.1:8000/docs and click **Authorize** (top right).
+2. Enter username `admin` and the `FIRST_ADMIN_PASSWORD` from your `backend/.env`, click **Authorize**, then **Close**.
+3. Endpoints marked with a 🔒 now use your login automatically. **401** = not logged in (logins last 8 hours), **403** = your role isn't allowed.
+
+How to protect your own endpoints: see [docs/database/module-1-auth-admin.md](docs/database/module-1-auth-admin.md#what-module-1-gives-other-modules).
 
 ## Settings files (`.env`)
 
@@ -205,15 +229,21 @@ Run these in the project folder.
 | Health check: `IM002 ... Data source name not found` | Install **ODBC Driver 18** (x64) |
 | Health check: `Login failed for user 'sa'` | `DB_PASSWORD` in `backend/.env` doesn't match `MSSQL_SA_PASSWORD` in `.env` |
 | Health check: `No connection could be made` | SQL Server isn't running (`docker compose up -d`), or `DB_SERVER` is not `127.0.0.1` |
-| Page says "Cannot reach the backend" | Start the backend (Terminal 1) |
+| Sign-in page says "Cannot reach the server" | Start the backend (Terminal 1) |
+| Sign-in page says "database is not connected" | Start SQL Server: `docker compose up -d` |
+| "Your session has expired" after signing in earlier | Logins last 8 hours, and restarting the backend after `JWT_SECRET_KEY` changes also ends them – sign in again |
 | Browser console: `blocked by CORS policy` | Open the frontend at exactly http://localhost:5173 and close any other dev server using that port |
 | `cd E:\Projects` does nothing | Command Prompt needs `/d` to change drives: `cd /d E:\Projects` |
+| `FIRST_ADMIN_PASSWORD is missing in backend/.env` | Add the `FIRST_ADMIN_...` lines from `backend/.env.example` to your `backend/.env` |
+| `jwt_secret_key` – `Field required` or `at least 32 characters` | Set `JWT_SECRET_KEY` in `backend/.env` (see section 2.3) |
 
 ## Project documents
 
 - [`docs/POS_System_PRD.docx`](docs/POS_System_PRD.docx) – product requirements (**main reference**)
 - [`docs/er-diagram.jpeg`](docs/er-diagram.jpeg) – early ER diagram. It is older than the PRD and is missing several tables; **where they differ, follow the PRD.**
 - [`docs/prototype/`](docs/prototype/) – static HTML design mockups (download and open `login.html` in a browser)
+- [`docs/frontend-guide.md`](docs/frontend-guide.md) – **how to add your module's pages** to the React app
+- [`docs/database/`](docs/database/) – database conventions, each module's tables, and how to protect API endpoints
 
 ## Team workflow
 

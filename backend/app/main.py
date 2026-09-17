@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.database import get_db
+from app.routers import activity_logs, auth, roles, store_settings, users
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
 
@@ -36,4 +37,10 @@ def health_check(response: Response, db: Session = Depends(get_db)):
         return {"api": "ok", "database": "error", "detail": str(error).splitlines()[0]}
 
 
-# Feature routers (products, sales, ...) will be registered here later.
+# ---- Routers: each module registers ONLY its own routers here ----
+# Module 1: Auth & Administration
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(roles.router)
+app.include_router(activity_logs.router)
+app.include_router(store_settings.router)

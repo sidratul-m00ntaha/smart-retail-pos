@@ -1,0 +1,243 @@
+/* Layout styles based on docs/prototype/dashboard.html */
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  width: 224px;
+  flex-shrink: 0;
+  background: var(--teal);
+  color: #eaf2ed;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 10px 22px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #afd1c0;
+}
+
+.brandTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 19px;
+  margin-top: 2px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  color: #cfe3d8;
+  font-size: 13.5px;
+  text-decoration: none;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.navItem:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 1px;
+}
+
+.navItem.active {
+  background: var(--amber);
+  color: #3a2606;
+  font-weight: 500;
+}
+
+.sidebarFooter {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #8fb6a2;
+  padding: 12px 10px 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Main area ---------- */
+.main {
+  flex: 1;
+  min-width: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 21px;
+  margin: 0;
+}
+
+.date {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin: 2px 0 0;
+}
+
+.topRight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.rolePill {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  background: var(--teal-tint);
+  color: var(--teal-dark);
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: #3a2606;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.logoutButton {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.logoutButton:hover,
+.logoutButton:focus-visible {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.content {
+  padding: 24px 32px 48px;
+  max-width: 1240px;
+}
+
+/* ---------- Page tabs (sections with several pages) ---------- */
+.pageTabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 4px;
+  margin-bottom: 18px;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.pageTab {
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 7px;
+  color: var(--ink-soft);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pageTab:hover {
+  color: var(--ink);
+}
+
+.pageTab.activeTab {
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- Small screens: sidebar becomes a scrollable bar at the top ---------- */
+@media (max-width: 860px) {
+  .shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: auto;
+    height: auto;
+    position: static;
+    padding: 12px 16px;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .brand {
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .nav {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .navItem {
+    white-space: nowrap;
+  }
+
+  .sidebarFooter {
+    display: none;
+  }
+
+  .topbar {
+    position: static;
+    flex-wrap: wrap;
+    padding: 14px 16px;
+  }
+
+  .content {
+    padding: 18px 16px 32px;
+  }
+}

@@ -1,5 +1,8 @@
 """Database connection: engine, SessionLocal, Base and get_db."""
+from datetime import datetime
+
 from sqlalchemy import URL, create_engine
+from sqlalchemy.dialects.mssql import DATETIME2
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from app.core.config import settings
@@ -26,6 +29,9 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False)
 
 class Base(DeclarativeBase):
     """All database models (tables) will inherit from this class."""
+
+    # Every Mapped[datetime] column becomes SQL Server DATETIME2 (our convention)
+    type_annotation_map = {datetime: DATETIME2}
 
 
 def get_db():

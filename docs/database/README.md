@@ -30,6 +30,7 @@ Each module owner writes and maintains their own file, and everyone follows the 
 | Status | `is_active` for on/off; `status NVARCHAR(20)` for more than two values | `status = 'completed'` |
 | Deleting | Don't delete rows that other records point to – deactivate them instead (PRD 5.3) | `is_active = 0` |
 | Unique columns | Make them `NOT NULL` – SQL Server allows only **one** NULL in a UNIQUE column | `email` |
+| Date/times in API responses | In response schemas use `UtcDateTime` from `backend/app/schemas/common.py` – it marks the value as UTC so the frontend shows local time | `created_at: UtcDateTime` |
 
 ## How to write your module's file
 
