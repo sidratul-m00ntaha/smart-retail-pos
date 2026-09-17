@@ -127,9 +127,13 @@ Hiding a button is only for a tidy screen – the real protection is `require_pe
 | `components/ui/Drawer.tsx` | A side panel for add/edit forms (closes with Escape or ✕) |
 | `components/common/MessagePanel.tsx` | Loading, error, empty and "not allowed" messages |
 | `utils/date.ts` → `formatDateTime(value)` | Showing API dates in local time, e.g. "17 Sep 2026, 16:05" |
+| `utils/date.ts` → `startOfLocalDay(date, dayAfter?)` | Date filters: turns a date picker value into the start of that day in local time, for the API |
 | `utils/text.ts` → `initials(name)` | Avatar letters, e.g. "Maria Akter" → "MA" |
 
-**Complete example to copy:** the Users page in `frontend/src/modules/users/` – a list with search and filters, an add/edit form in a `Drawer`, validation, loading and error states, and a refresh after saving.
+**Complete examples to copy:**
+
+- the Users page in `frontend/src/modules/users/` – a list with search and filters, an add/edit form in a `Drawer`, validation, loading and error states, and a refresh after saving.
+- the Activity Logs page in `frontend/src/modules/activity-logs/` – a long list loaded **one page at a time** from the backend, with filters, a date range and a search that waits until you stop typing.
 
 ## Styling
 

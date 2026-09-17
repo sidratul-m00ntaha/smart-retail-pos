@@ -198,6 +198,8 @@ from app.services.activity_log_service import log_activity
 | `Depends(require_permission("code"))` | The logged-in `User`, **if their role has that permission** | **401** as above, or **403** – logged in but not allowed |
 | `log_activity(db, user_id, action, entity, reference=None, details=None)` | Adds an ActivityLogs row. It does **not** commit – your `db.commit()` saves it together with your own changes | – |
 
+**Writing good log rows:** admins read them on the **Activity Logs** page, where they can filter by user, action, record type (`entity`) and date, and search the `reference` and `details`. So use the action names from the ActivityLogs table above, your table's name in the singular for `entity` (`Product`, `Purchase`), the record's code or number for `reference` (`INV-2026-00125`) and a short readable sentence for `details`.
+
 **Which one to use:** viewing everyday lists (products, customers) → `get_current_user`. Changing data or opening sensitive pages → `require_permission`. Use the codes from the table above; a misspelled code stops the backend from starting, with a message telling you so.
 
 Example (how Module 2 would write its products router):

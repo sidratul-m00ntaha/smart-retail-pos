@@ -1,0 +1,269 @@
+/* Activity Logs page styles, in the same look as the Users page (docs/prototype/users.html) */
+
+/* ---------- Toolbar ---------- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.search {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 280px;
+  color: var(--ink-soft);
+}
+
+.search svg {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.search input,
+.select,
+.dateField input {
+  width: 100%;
+  padding: 9px 12px 9px 34px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13.5px;
+  outline: none;
+}
+
+.select,
+.dateField input {
+  width: auto;
+  max-width: 220px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.search input:focus,
+.select:focus,
+.dateField input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+}
+
+.dateRange {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dateField {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* ---------- Buttons ---------- */
+.secondaryButton {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  border-color: var(--ink-soft);
+}
+
+.secondaryButton:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.linkButton {
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  color: var(--teal-dark);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.secondaryButton:focus-visible,
+.linkButton:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* ---------- Notice ---------- */
+.noticeError {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px solid #f0cfc9;
+  border-radius: 9px;
+  background: var(--danger-tint);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+/* ---------- Table ---------- */
+.tableCard {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+  transition: opacity 0.15s;
+}
+
+/* While the next page or new filters load, the old rows stay visible but faded */
+.tableCard.isLoading {
+  opacity: 0.6;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink-soft);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+  vertical-align: top;
+}
+
+.table tbody tr:hover {
+  background: #fafbf9;
+}
+
+.emptyRow {
+  padding: 36px 16px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  text-align: center;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.userName {
+  margin: 0;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.userSub {
+  margin: 2px 0 0;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.systemUser {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.details {
+  min-width: 220px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.actionPill {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Colours for the actions listed in docs/database/module-1-auth-admin.md; others stay grey */
+.actionLOGIN {
+  background: var(--teal-tint);
+  color: var(--teal-dark);
+}
+
+.actionCREATE {
+  background: var(--success-tint);
+  color: var(--success);
+}
+
+.actionUPDATE {
+  background: var(--amber-tint);
+  color: var(--amber-dark);
+}
+
+.actionDELETE {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+
+.actionPAYMENT {
+  background: #efeaf9;
+  color: #5b3fa0;
+}
+
+/* ---------- Pages ---------- */
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  color: var(--ink-soft);
+  font-size: 12.5px;
+}
+
+.pageNumber {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Text for screen readers only */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .spacer {
+    display: none;
+  }
+}
