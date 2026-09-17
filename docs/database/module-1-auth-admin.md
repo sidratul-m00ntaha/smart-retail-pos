@@ -190,6 +190,7 @@ Ready to use – import them in your router:
 from app.core.dependencies import get_current_user, require_permission
 from app.models import User
 from app.services.activity_log_service import log_activity
+from app.services.store_setting_service import get_store_settings
 ```
 
 | Function | What it gives you | If it fails |
@@ -197,8 +198,13 @@ from app.services.activity_log_service import log_activity
 | `Depends(get_current_user)` | The logged-in `User` | **401** – not logged in, token expired (after 8 hours) or account deactivated |
 | `Depends(require_permission("code"))` | The logged-in `User`, **if their role has that permission** | **401** as above, or **403** – logged in but not allowed |
 | `log_activity(db, user_id, action, entity, reference=None, details=None)` | Adds an ActivityLogs row. It does **not** commit – your `db.commit()` saves it together with your own changes | – |
+| `get_store_settings(db)` | The `StoreSetting` row: `store_name`, `address`, `phone`, `email`, `currency_code`, `invoice_prefix`, `default_tax_rate_id`, `loyalty_enabled`, `sms_enabled`, `sms_sender_name` – e.g. for invoices (Module 5) or loyalty (Module 6) | **500** – the row is missing; run `python -m app.init_db` |
 
-**Writing good log rows:** admins read them on the **Activity Logs** page, where they can filter by user, action, record type (`entity`) and date, and search the `reference` and `details`. So use the action names from the ActivityLogs table above, your table's name in the singular for `entity` (`Product`, `Purchase`), the record's code or number for `reference` (`INV-2026-00125`) and a short readable sentence for `details`.
+**Writing good log rows:** admins read them on the **Activity Logs** page, where they can filter by user, action, record type (`entity`) and date, and search the `reference` and `details`. So use the action names from the ActivityLogs table above, your model's class name for `entity` (`Product`, `Purchase`), the record's code or number for `reference` (`INV-2026-00125`) and a short readable sentence for `details`.
+
+**Store settings in the frontend:** `getStoreSettings()` from `src/services/store-settings.service.ts` works for every logged-in user (`GET /api/settings`). It also gives `currency_symbol` (e.g. `৳`) for showing money. Only admins can change the settings (`PUT /api/settings`, `settings.manage`).
+
+**Module 2:** `default_tax_rate_id` isn't editable yet. When the TaxRates table exists, add its foreign key here and a "Default VAT rate" choice to the Tax / VAT card on the Store settings page (`frontend/src/modules/settings/StoreSettingsPage.tsx`).
 
 **Which one to use:** viewing everyday lists (products, customers) → `get_current_user`. Changing data or opening sensitive pages → `require_permission`. Use the codes from the table above; a misspelled code stops the backend from starting, with a message telling you so.
 
