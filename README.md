@@ -159,7 +159,6 @@ Open http://localhost:5173 – you should see **Frontend: ok, Backend API: ok, D
 | `frontend/package-lock.json` | in `frontend`: `npm ci` |
 | `docker-compose.yml` or `database/init/` | in the project folder: `docker compose up -d` |
 | any `.env.example` | compare it with your `.env` and copy over any new settings |
-
 | new files in `backend/app/models/` | in `backend`, with `.venv` active: `python -m app.init_db` |
 | an **existing** table was changed (the PR will say so) | `python -m app.init_db --reset` – ⚠️ deletes your local data |
 
@@ -221,7 +220,6 @@ Run these in the project folder.
 | Page says "Cannot reach the backend" | Start the backend (Terminal 1) |
 | Browser console: `blocked by CORS policy` | Open the frontend at exactly http://localhost:5173 and close any other dev server using that port |
 | `cd E:\Projects` does nothing | Command Prompt needs `/d` to change drives: `cd /d E:\Projects` |
-
 | `FIRST_ADMIN_PASSWORD is missing in backend/.env` | Add the `FIRST_ADMIN_...` lines from `backend/.env.example` to your `backend/.env` |
 
 ## Project documents
