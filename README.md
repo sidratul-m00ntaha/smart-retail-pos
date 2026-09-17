@@ -128,7 +128,7 @@ copy .env.example .env
 npm run dev
 ```
 
-Open http://localhost:5173 – you should see **Frontend: ok, Backend API: ok, Database: ok**. 🎉
+Open http://localhost:5173 – you should see the **Sign in** page with **● Server and database connected** at the bottom. Sign in with `admin` and your `FIRST_ADMIN_PASSWORD`. 🎉
 
 > Use `npm ci` (not `npm install`) for setup and after pulling changes. It installs exactly the versions in `package-lock.json` and never modifies that file, which avoids merge conflicts.
 
@@ -229,7 +229,9 @@ Run these in the project folder.
 | Health check: `IM002 ... Data source name not found` | Install **ODBC Driver 18** (x64) |
 | Health check: `Login failed for user 'sa'` | `DB_PASSWORD` in `backend/.env` doesn't match `MSSQL_SA_PASSWORD` in `.env` |
 | Health check: `No connection could be made` | SQL Server isn't running (`docker compose up -d`), or `DB_SERVER` is not `127.0.0.1` |
-| Page says "Cannot reach the backend" | Start the backend (Terminal 1) |
+| Sign-in page says "Cannot reach the server" | Start the backend (Terminal 1) |
+| Sign-in page says "database is not connected" | Start SQL Server: `docker compose up -d` |
+| "Your session has expired" after signing in earlier | Logins last 8 hours, and restarting the backend after `JWT_SECRET_KEY` changes also ends them – sign in again |
 | Browser console: `blocked by CORS policy` | Open the frontend at exactly http://localhost:5173 and close any other dev server using that port |
 | `cd E:\Projects` does nothing | Command Prompt needs `/d` to change drives: `cd /d E:\Projects` |
 | `FIRST_ADMIN_PASSWORD is missing in backend/.env` | Add the `FIRST_ADMIN_...` lines from `backend/.env.example` to your `backend/.env` |
@@ -240,6 +242,8 @@ Run these in the project folder.
 - [`docs/POS_System_PRD.docx`](docs/POS_System_PRD.docx) – product requirements (**main reference**)
 - [`docs/er-diagram.jpeg`](docs/er-diagram.jpeg) – early ER diagram. It is older than the PRD and is missing several tables; **where they differ, follow the PRD.**
 - [`docs/prototype/`](docs/prototype/) – static HTML design mockups (download and open `login.html` in a browser)
+- [`docs/frontend-guide.md`](docs/frontend-guide.md) – **how to add your module's pages** to the React app
+- [`docs/database/`](docs/database/) – database conventions, each module's tables, and how to protect API endpoints
 
 ## Team workflow
 

@@ -1,13 +1,46 @@
-/* Global styles shared by the whole app */
+/* Colours, fonts and base styles for the whole app (taken from docs/prototype).
+   Styles for one component go in a *.module.css file next to that component. */
+:root {
+  --bg: #f5f6f2;
+  --paper: #ffffff;
+  --ink: #16231f;
+  --ink-soft: #5b655f;
+  --teal: #1f5d4e;
+  --teal-dark: #123a30;
+  --teal-tint: #e7f0eb;
+  --amber: #e2a63b;
+  --amber-tint: #fbf0da;
+  --amber-dark: #8a5a16;
+  --border: #dcdfd5;
+  --danger: #b54f45;
+  --danger-tint: #fbedeb;
+  --success: #2f7a4d;
+  --radius: 12px;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans: 'Work Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', Consolas, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--ink);
 }
 
-.status-page {
-  padding: 2rem;
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
-.error {
-  color: #b54f45;
+a {
+  color: var(--teal-dark);
 }
