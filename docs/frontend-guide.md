@@ -120,6 +120,17 @@ const { user, hasPermission } = useAuth()
 
 Hiding a button is only for a tidy screen – the real protection is `require_permission` on the backend endpoint.
 
+## Ready-made pieces
+
+| Use | For |
+|---|---|
+| `components/ui/Drawer.tsx` | A side panel for add/edit forms (closes with Escape or ✕) |
+| `components/common/MessagePanel.tsx` | Loading, error, empty and "not allowed" messages |
+| `utils/date.ts` → `formatDateTime(value)` | Showing API dates in local time, e.g. "17 Sep 2026, 16:05" |
+| `utils/text.ts` → `initials(name)` | Avatar letters, e.g. "Maria Akter" → "MA" |
+
+**Complete example to copy:** the Users page in `frontend/src/modules/users/` – a list with search and filters, an add/edit form in a `Drawer`, validation, loading and error states, and a refresh after saving.
+
 ## Styling
 
 - Use the colour variables from `src/index.css`: `var(--teal)`, `var(--amber)`, `var(--border)`, `var(--danger)`, `var(--ink-soft)` …

@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { findSection, NAV_SECTIONS, visibleItems } from '../../config/navigation.ts'
 import { useAuth } from '../../hooks/useAuth.ts'
+import { initials } from '../../utils/text.ts'
 import styles from './AppLayout.module.css'
 import { NavIcon } from './icons.tsx'
 
@@ -81,15 +82,6 @@ export default function AppLayout() {
       </div>
     </div>
   )
-}
-
-function initials(fullName: string): string {
-  return fullName
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0].toUpperCase())
-    .join('')
 }
 
 function formatToday(): string {

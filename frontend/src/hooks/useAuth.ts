@@ -6,6 +6,8 @@ export type AuthContextValue = {
   user: CurrentUser | null
   login: (usernameOrEmail: string, password: string, remember: boolean) => Promise<void>
   logout: (message?: string) => void
+  /** Reloads the logged-in user's details, e.g. after they edit their own name */
+  refreshUser: () => Promise<void>
   /** true if the logged-in user's role has this permission */
   hasPermission: (code: PermissionCode) => boolean
   /** A message for the sign-in page, e.g. "Your session has expired" */

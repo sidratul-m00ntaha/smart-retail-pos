@@ -39,14 +39,18 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setUser(result.user)
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    setUser(await fetchCurrentUser())
+  }, [])
+
   const hasPermission = useCallback(
     (code: PermissionCode) => user?.permissions.includes(code) ?? false,
     [user],
   )
 
   const value = useMemo(
-    () => ({ user, login, logout, hasPermission, signInMessage }),
-    [user, login, logout, hasPermission, signInMessage],
+    () => ({ user, login, logout, refreshUser, hasPermission, signInMessage }),
+    [user, login, logout, refreshUser, hasPermission, signInMessage],
   )
 
   if (isRestoring) {
