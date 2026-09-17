@@ -98,7 +98,17 @@ python -m pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Open `backend\.env` and set `DB_PASSWORD` to the **same** password as `MSSQL_SA_PASSWORD` in the top-level `.env`. Then start the API:
+Open `backend\.env` and set:
+- `DB_PASSWORD` – the **same** password as `MSSQL_SA_PASSWORD` in the top-level `.env`
+- `FIRST_ADMIN_PASSWORD` – a password for your local admin account
+
+Create the tables and starting data (roles, permissions, admin account):
+
+```bat
+python -m app.init_db
+```
+
+Then start the API:
 
 ```bat
 uvicorn app.main:app --reload
@@ -149,6 +159,9 @@ Open http://localhost:5173 – you should see **Frontend: ok, Backend API: ok, D
 | `frontend/package-lock.json` | in `frontend`: `npm ci` |
 | `docker-compose.yml` or `database/init/` | in the project folder: `docker compose up -d` |
 | any `.env.example` | compare it with your `.env` and copy over any new settings |
+
+| new files in `backend/app/models/` | in `backend`, with `.venv` active: `python -m app.init_db` |
+| an **existing** table was changed (the PR will say so) | `python -m app.init_db --reset` – ⚠️ deletes your local data |
 
 ## 5. Adding a new package
 
@@ -208,6 +221,8 @@ Run these in the project folder.
 | Page says "Cannot reach the backend" | Start the backend (Terminal 1) |
 | Browser console: `blocked by CORS policy` | Open the frontend at exactly http://localhost:5173 and close any other dev server using that port |
 | `cd E:\Projects` does nothing | Command Prompt needs `/d` to change drives: `cd /d E:\Projects` |
+
+| `FIRST_ADMIN_PASSWORD is missing in backend/.env` | Add the `FIRST_ADMIN_...` lines from `backend/.env.example` to your `backend/.env` |
 
 ## Project documents
 

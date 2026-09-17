@@ -25,6 +25,11 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:5173"
 
+    # First admin account, created by: python -m app.init_db
+    first_admin_username: str = "admin"
+    first_admin_email: str = "admin@example.com"
+    first_admin_password: str | None = None
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
