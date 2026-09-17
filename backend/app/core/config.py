@@ -1,6 +1,7 @@
 """App settings, read from backend/.env (never hard-code passwords)."""
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # backend/ folder, so .env is found no matter where you start the app from
@@ -29,6 +30,11 @@ class Settings(BaseSettings):
     first_admin_username: str = "admin"
     first_admin_email: str = "admin@example.com"
     first_admin_password: str | None = None
+
+    # Login tokens (JWT). The secret must be long and random - see backend/.env.example
+    jwt_secret_key: str = Field(min_length=32)
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 480  # 8 hours = one work shift
 
     @property
     def cors_origin_list(self) -> list[str]:

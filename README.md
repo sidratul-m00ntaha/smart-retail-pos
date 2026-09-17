@@ -101,6 +101,7 @@ copy .env.example .env
 Open `backend\.env` and set:
 - `DB_PASSWORD` – the **same** password as `MSSQL_SA_PASSWORD` in the top-level `.env`
 - `FIRST_ADMIN_PASSWORD` – a password for your local admin account
+- `JWT_SECRET_KEY` – a long random secret for login tokens. Create one with `python -c "import secrets; print(secrets.token_urlsafe(48))"` and paste the result
 
 Create the tables and starting data (roles, permissions, admin account):
 
@@ -221,6 +222,7 @@ Run these in the project folder.
 | Browser console: `blocked by CORS policy` | Open the frontend at exactly http://localhost:5173 and close any other dev server using that port |
 | `cd E:\Projects` does nothing | Command Prompt needs `/d` to change drives: `cd /d E:\Projects` |
 | `FIRST_ADMIN_PASSWORD is missing in backend/.env` | Add the `FIRST_ADMIN_...` lines from `backend/.env.example` to your `backend/.env` |
+| `jwt_secret_key` – `Field required` or `at least 32 characters` | Set `JWT_SECRET_KEY` in `backend/.env` (see section 2.3) |
 
 ## Project documents
 
