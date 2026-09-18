@@ -19,3 +19,17 @@ export type StockMovement = {
   created_by: number | null
   created_at: string
 }
+export type StockAdjustment = {
+  stock_adjustment_id: number
+  product_id: number
+  quantity_change: number
+  reason: string
+  adjusted_by: number | null
+  created_at: string
+}
+
+export type NewStockAdjustment = {
+  product_id: number
+  quantity_change: number
+  reason: string
+}
