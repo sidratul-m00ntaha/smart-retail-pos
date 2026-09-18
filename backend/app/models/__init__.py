@@ -9,5 +9,6 @@ from app.models.role import Role
 from app.models.role_permission import role_permissions
 from app.models.store_setting import StoreSetting
 from app.models.user import User
+from app.models.customer import Customer, LoyaltyTier, CustomerPayment, LoyaltyTransaction
 
 __all__ = ["ActivityLog", "Permission", "Role", "StoreSetting", "User", "role_permissions"]
