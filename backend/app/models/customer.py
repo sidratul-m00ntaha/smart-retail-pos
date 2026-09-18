@@ -6,7 +6,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
-
 class Customer(Base):
     __tablename__ = "Customers"
 
@@ -18,43 +17,39 @@ class Customer(Base):
     credit_limit: Mapped[float] = mapped_column(Numeric(18, 2), server_default=text("0"))
     outstanding_due: Mapped[float] = mapped_column(Numeric(18, 2), server_default=text("0"))
     loyalty_points: Mapped[int] = mapped_column(server_default=text("0"))
-    loyalty_tier_id: Mapped[int | None] = mapped_column(ForeignKey("LoyaltyTiers.tier_id"), default=None)
+    loyalty_tier_id: Mapped[int | None] = mapped_column(ForeignKey("LoyaltyTiers.loyalty_tier_id"), default=None)
     status: Mapped[str] = mapped_column(Unicode(20), server_default=text("'active'"))
     created_at: Mapped[datetime] = mapped_column(server_default=func.sysutcdatetime())
 
     loyalty_tier: Mapped["LoyaltyTier"] = relationship(back_populates="customers")
 
-
 class LoyaltyTier(Base):
     __tablename__ = "LoyaltyTiers"
 
-    tier_id: Mapped[int] = mapped_column(primary_key=True)
+    loyalty_tier_id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(Unicode(50))  # Regular, Silver, Gold
     required_points: Mapped[int] = mapped_column()
     discount_percent: Mapped[float] = mapped_column(Numeric(5, 2))
 
     customers: Mapped[list["Customer"]] = relationship(back_populates="loyalty_tier")
 
-
 class CustomerPayment(Base):
     __tablename__ = "CustomerPayments"
 
-    payment_id: Mapped[int] = mapped_column(primary_key=True)
+    customer_payment_id: Mapped[int] = mapped_column(primary_key=True)
     customer_id: Mapped[int] = mapped_column(ForeignKey("Customers.customer_id"))
     amount: Mapped[float] = mapped_column(Numeric(18, 2))
-    method: Mapped[str] = mapped_column(Unicode(20))  # cash, card, digital
-    # recorded_by will link to Users.user_id once Module 1 is fully integrated
+    method: Mapped[str] = mapped_column(Unicode(20))
     recorded_by: Mapped[int | None] = mapped_column(ForeignKey("Users.user_id"), default=None)
     created_at: Mapped[datetime] = mapped_column(server_default=func.sysutcdatetime())
-
 
 class LoyaltyTransaction(Base):
     __tablename__ = "LoyaltyTransactions"
 
-    transaction_id: Mapped[int] = mapped_column(primary_key=True)
+    loyalty_transaction_id: Mapped[int] = mapped_column(primary_key=True)
     customer_id: Mapped[int] = mapped_column(ForeignKey("Customers.customer_id"))
-    sale_id: Mapped[int | None] = mapped_column(default=None)  # Linked to Sales later
-    transaction_type: Mapped[str] = mapped_column(Unicode(20))  # "earn"
+    sale_id: Mapped[int | None] = mapped_column(default=None)
+    transaction_type: Mapped[str] = mapped_column(Unicode(20))
     points: Mapped[int] = mapped_column()
     description: Mapped[str | None] = mapped_column(Unicode(255), default=None)
     created_at: Mapped[datetime] = mapped_column(server_default=func.sysutcdatetime())
