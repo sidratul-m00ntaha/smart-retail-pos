@@ -33,3 +33,12 @@ export type NewStockAdjustment = {
   quantity_change: number
   reason: string
 }
+export type StockBatch = {
+  stock_batch_id: number
+  product_id: number
+  batch_number: string
+  quantity: number
+  expiry_date: string
+  is_expired: boolean
+  received_at: string
+}

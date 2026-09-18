@@ -1,6 +1,6 @@
 import { apiRequest } from './api.ts'
 
-import type { ProductStock, StockMovement, StockAdjustment, NewStockAdjustment } from '../types/stock.ts'
+import type { ProductStock, StockMovement, StockAdjustment, NewStockAdjustment, StockBatch } from '../types/stock.ts'
 
 export function getStock(): Promise<ProductStock[]> {
   return apiRequest<ProductStock[]>('/api/stock')
@@ -20,4 +20,7 @@ export function getAdjustments(): Promise<StockAdjustment[]> {
 
 export function createAdjustment(data: NewStockAdjustment): Promise<StockAdjustment> {
   return apiRequest<StockAdjustment>('/api/stock/adjustments', { method: 'POST', body: data })
+}
+export function getExpiryAlerts(days: number = 30): Promise<StockBatch[]> {
+  return apiRequest<StockBatch[]>(`/api/expiry/alerts?days=${days}`)
 }
