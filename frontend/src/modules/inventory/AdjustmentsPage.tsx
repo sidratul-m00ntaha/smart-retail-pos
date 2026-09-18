@@ -7,6 +7,7 @@ import Drawer from '../../components/ui/Drawer.tsx'
 import { formatDateTime } from '../../utils/date.ts'
 import { useAuth } from '../../hooks/useAuth.ts'
 import styles from './StockPage.module.css'
+import formStyles from './AdjustmentsPage.module.css'
 
 export default function AdjustmentsPage() {
   const { hasPermission } = useAuth()
@@ -16,7 +17,7 @@ export default function AdjustmentsPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   function loadAdjustments() {
-  getAdjustments()
+    getAdjustments()
       .then(setAdjustments)
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Could not load adjustments.'))
       .finally(() => setIsLoading(false))
@@ -30,7 +31,7 @@ export default function AdjustmentsPage() {
   return (
     <>
       {hasPermission('inventory.manage') && (
-        <button onClick={() => setIsDrawerOpen(true)} style={{ marginBottom: 16 }}>
+        <button onClick={() => setIsDrawerOpen(true)} className={formStyles.addButton} style={{ marginBottom: 16 }}>
           New adjustment
         </button>
       )}
@@ -51,7 +52,7 @@ export default function AdjustmentsPage() {
             {adjustments.map((row) => (
               <tr key={row.stock_adjustment_id}>
                 <td>{row.product_id}</td>
-                <td className={row.quantity_change > 0 ? styles.ok : styles.lowStock}>
+                <td className={row.quantity_change > 0 ? styles.qtyIn : styles.qtyOut}>
                   {row.quantity_change > 0 ? `+${row.quantity_change}` : row.quantity_change}
                 </td>
                 <td>{row.reason}</td>
@@ -109,25 +110,38 @@ function NewAdjustmentForm({ onClose, onSaved }: { onClose: () => void; onSaved:
       onClose={onClose}
       footer={
         <>
-          <button onClick={onClose}>Cancel</button>
-          <button onClick={handleSave} disabled={isSaving}>
+          <button onClick={onClose} className={formStyles.cancelButton}>Cancel</button>
+          <button onClick={handleSave} disabled={isSaving} className={formStyles.saveButton}>
             {isSaving ? 'Saving…' : 'Save adjustment'}
           </button>
         </>
       }
     >
-      {formError && <p style={{ color: 'var(--danger)', marginTop: 0 }}>{formError}</p>}
-      <label>Product ID</label>
-      <input type="number" value={productId} onChange={(e) => setProductId(e.target.value)} placeholder="14" />
-      <label>Quantity change</label>
+      {formError && <p className={formStyles.formError}>{formError}</p>}
+      <label className={formStyles.formLabel}>Product ID</label>
+      <input
+        type="number"
+        value={productId}
+        onChange={(e) => setProductId(e.target.value)}
+        placeholder="14"
+        className={formStyles.formInput}
+      />
+      <label className={formStyles.formLabel}>Quantity change</label>
       <input
         type="number"
         value={quantityChange}
         onChange={(e) => setQuantityChange(e.target.value)}
         placeholder="-3 or 20"
+        className={formStyles.formInput}
       />
-      <label>Reason</label>
-      <input type="text" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Damaged in storage" />
+      <label className={formStyles.formLabel}>Reason</label>
+      <input
+        type="text"
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="Damaged in storage"
+        className={formStyles.formInput}
+      />
     </Drawer>
   )
 }

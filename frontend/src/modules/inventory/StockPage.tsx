@@ -24,34 +24,54 @@ export default function StockPage() {
     return <MessagePanel title="No stock yet">Stock levels appear here once products exist and purchases are recorded.</MessagePanel>
   }
 
+  const lowCount = stock.filter((row) => row.is_low_stock).length
+  const outCount = stock.filter((row) => row.current_stock === 0).length
+
   return (
-    <table className={styles.table}>
-      <thead>
-        <tr>
-          <th>Product ID</th>
-          <th>Current stock</th>
-          <th>Reorder level</th>
-          <th>Status</th>
-          <th>Last updated</th>
-        </tr>
-      </thead>
-      <tbody>
-        {stock.map((row) => (
-          <tr key={row.product_stock_id}>
-            <td>{row.product_id}</td>
-            <td>{row.current_stock}</td>
-            <td>{row.reorder_level}</td>
-            <td>
-              {row.is_low_stock ? (
-                <span className={styles.lowStock}>Low stock</span>
-              ) : (
-                <span className={styles.ok}>OK</span>
-              )}
-            </td>
-            <td>{formatDateTime(row.updated_at)}</td>
+    <>
+      <div className={styles.statStrip}>
+        <div className={styles.statChip}>
+          <span className={styles.n}>{stock.length}</span> products tracked
+        </div>
+        {lowCount > 0 && (
+          <div className={`${styles.statChip} ${styles.warn}`}>
+            <span className={styles.n}>{lowCount}</span> low stock
+          </div>
+        )}
+        {outCount > 0 && (
+          <div className={`${styles.statChip} ${styles.bad}`}>
+            <span className={styles.n}>{outCount}</span> out of stock
+          </div>
+        )}
+      </div>
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th>Product ID</th>
+            <th>Current stock</th>
+            <th>Reorder level</th>
+            <th>Status</th>
+            <th>Last updated</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {stock.map((row) => (
+            <tr key={row.product_stock_id}>
+              <td>{row.product_id}</td>
+              <td>{row.current_stock}</td>
+              <td>{row.reorder_level}</td>
+              <td>
+                {row.is_low_stock ? (
+                  <span className={`${styles.statusPill} ${styles.low}`}>Low</span>
+                ) : (
+                  <span className={`${styles.statusPill} ${styles.normal}`}>Normal</span>
+                )}
+              </td>
+              <td>{formatDateTime(row.updated_at)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
   )
 }
