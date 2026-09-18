@@ -1,8 +1,8 @@
 import type { NavSection } from '../../types/navigation.ts'
-import CustomersPage from './CustomersPage' // 1. Import your newly built page
+import CustomersPage from './CustomersPage'
+import DuePaymentsPage from './DuePaymentsPage'
+import LoyaltyPage from './LoyaltyPage' // <-- Add this import
 
-// Owned by Module 6. When a page is built, import it and add `page: YourPage` to its entry.
-// See docs/frontend-guide.md
 export const customersSection: NavSection = {
   label: 'Customers',
   icon: 'customers',
@@ -12,9 +12,19 @@ export const customersSection: NavSection = {
       label: 'Customers', 
       path: '/customers', 
       permission: 'customers.manage',
-      page: CustomersPage // 2. Attach the page component here!
+      page: CustomersPage 
     },
-    { label: 'Due Payments', path: '/customers/due-payments', permission: 'customer_dues.receive' },
-    { label: 'Loyalty', path: '/customers/loyalty', permission: 'loyalty.configure' },
+    { 
+      label: 'Due Payments', 
+      path: '/customers/due-payments', 
+      permission: 'customer_dues.receive',
+      page: DuePaymentsPage 
+    },
+    { 
+      label: 'Loyalty', 
+      path: '/customers/loyalty', 
+      permission: 'loyalty.configure',
+      page: LoyaltyPage // <-- Add the page component here!
+    },
   ],
 }

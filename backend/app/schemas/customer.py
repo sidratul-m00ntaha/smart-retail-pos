@@ -1,6 +1,7 @@
 from pydantic import BaseModel, computed_field
 from decimal import Decimal
 from typing import Optional
+from datetime import datetime  # <-- ADDED THIS IMPORT
 
 class CustomerCreate(BaseModel):
     name: str
@@ -28,12 +29,58 @@ class CustomerRead(BaseModel):
     loyalty_points: int
     status: str
 
-    # Computed field: safely calculates available credit in Python (Decimal)
-    # so the frontend never has to do risky JavaScript float math.
+    # Computed field belongs HERE in CustomerRead
     @computed_field
     @property
     def available_credit(self) -> Decimal:
         return self.credit_limit - self.outstanding_due
 
     class Config:
-        from_attributes = True  # Required for Pydantic V2 to read SQLAlchemy models
+        from_attributes = True
+
+class PaymentCreate(BaseModel):
+    customer_id: int
+    amount: Decimal
+    method: str  # "cash", "card", or "digital"
+
+class PaymentRead(BaseModel):
+    customer_payment_id: int
+    customer_id: int
+    amount: Decimal
+    method: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+class PointsCalculation(BaseModel):
+    sale_amount: Decimal
+
+class LoyaltyTierCreate(BaseModel):
+    name: str
+    required_points: int
+    discount_percent: Decimal
+
+class LoyaltyTierUpdate(BaseModel):
+    name: Optional[str] = None
+    required_points: Optional[int] = None
+    discount_percent: Optional[Decimal] = None
+
+class LoyaltyTierRead(BaseModel):
+    loyalty_tier_id: int
+    name: str
+    required_points: int
+    discount_percent: Decimal
+
+    class Config:
+        from_attributes = True
+class CheckCreditPayload(BaseModel):
+    customer_id: int
+    sale_amount: Decimal
+
+class AddDuePayload(BaseModel):
+    customer_id: int
+    amount: Decimal
+
+class AddPointsPayload(BaseModel):
+    customer_id: int
+    points: int
