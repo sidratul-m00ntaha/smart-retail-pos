@@ -30,3 +30,33 @@ export function updateCustomer(customer_id: number, data: Partial<Customer>): Pr
     body: data 
   });
 }
+export function recordPayment(data: { customer_id: number; amount: number | string; method: string }): Promise<any> {
+  return apiRequest<any>("/api/customers/payments", { 
+    method: "POST", 
+    body: data 
+  });
+}
+export interface LoyaltyTier {
+  loyalty_tier_id: number;
+  name: string;
+  required_points: number;
+  discount_percent: number | string; // <-- CHANGE THIS LINE to allow both
+}
+
+export function listLoyaltyTiers(): Promise<LoyaltyTier[]> {
+  return apiRequest<LoyaltyTier[]>("/api/customers/loyalty-tiers/");
+}
+
+export function createLoyaltyTier(data: Partial<LoyaltyTier>): Promise<LoyaltyTier> {
+  return apiRequest<LoyaltyTier>("/api/customers/loyalty-tiers/", { 
+    method: "POST", 
+    body: data 
+  });
+}
+
+export function updateLoyaltyTier(tier_id: number, data: Partial<LoyaltyTier>): Promise<LoyaltyTier> {
+  return apiRequest<LoyaltyTier>(`/api/customers/loyalty-tiers/${tier_id}`, { 
+    method: "PUT", 
+    body: data 
+  });
+}
