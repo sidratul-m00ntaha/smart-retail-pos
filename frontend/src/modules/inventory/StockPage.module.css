@@ -96,3 +96,133 @@
   background: var(--danger-tint);
   color: var(--danger);
 }
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.searchField {
+  flex: 1;
+  min-width: 200px;
+  max-width: 300px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13.5px;
+  background: var(--paper);
+}
+
+.searchField:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+}
+
+.checkField {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.addButton {
+  padding: 10px 16px;
+  background: var(--amber);
+  color: #3a2606;
+  border: none;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.addButton:hover {
+  background: var(--amber-dark);
+  color: #fff;
+}
+
+.iconBtnSm {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.iconBtnSm:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.formLabel {
+  display: block;
+  font-weight: 500;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin: 16px 0 6px;
+}
+
+.formLabel:first-child {
+  margin-top: 0;
+}
+
+.formInput {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13.5px;
+  background: var(--paper);
+  font-family: var(--font-sans);
+}
+
+.formError {
+  background: var(--danger-tint);
+  color: var(--danger);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  margin: 0 0 16px;
+}
+
+.cancelButton {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.saveButton {
+  background: var(--amber);
+  color: #3a2606;
+  border: none;
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

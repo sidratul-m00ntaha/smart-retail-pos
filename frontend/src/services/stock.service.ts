@@ -24,3 +24,6 @@ export function createAdjustment(data: NewStockAdjustment): Promise<StockAdjustm
 export function getExpiryAlerts(days: number = 30): Promise<StockBatch[]> {
   return apiRequest<StockBatch[]>(`/api/expiry/alerts?days=${days}`)
 }
+export function addBatch(data: { product_id: number; batch_number: string; quantity: number; expiry_date: string }): Promise<StockBatch> {
+  return apiRequest<StockBatch>('/api/expiry/batches', { method: 'POST', body: data })
+}

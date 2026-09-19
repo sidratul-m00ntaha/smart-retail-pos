@@ -32,8 +32,8 @@ export default function AdjustmentsPage() {
     <>
       {hasPermission('inventory.manage') && (
         <button onClick={() => setIsDrawerOpen(true)} className={formStyles.addButton} style={{ marginBottom: 16 }}>
-          New adjustment
-        </button>
+  + New adjustment
+</button>
       )}
 
       {adjustments.length === 0 ? (
