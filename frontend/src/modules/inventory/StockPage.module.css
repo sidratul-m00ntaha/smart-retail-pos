@@ -226,3 +226,34 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+.selectField {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.typePill {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  display: inline-block;
+}
+
+.typePill.purchase {
+  background: var(--teal-tint);
+  color: var(--teal-dark);
+}
+
+.typePill.sale {
+  background: #efeaf9;
+  color: #5b3fa0;
+}
+
+.typePill.adjustment {
+  background: var(--amber-tint);
+  color: var(--amber-dark);
+}
