@@ -105,3 +105,195 @@
 .purchasing-page .toast { position:fixed; bottom:22px; left:50%; transform:translate(-50%, 0); background:var(--ink,#16231F); color:#fff; padding:10px 18px; border-radius:8px; font-size:13px; z-index:60; }
 
 @media (max-width: 900px){ .purchasing-page table { font-size:12.5px; } .purchasing-page .drawer.wide { width:100vw; } }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   Purchasing page — reference design finishing
+   ========================================================= */
+
+.purchasing-page .search-field input:focus,
+.purchasing-page .form-row input:focus,
+.purchasing-page .form-row select:focus,
+.purchasing-page .lines-table input:focus,
+.purchasing-page .lines-table select:focus {
+  border-color: var(--teal, #1F5D4E);
+  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.10);
+}
+
+.purchasing-page .field-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.purchasing-page .btn-primary {
+  min-height: 38px;
+  white-space: nowrap;
+}
+
+.purchasing-page .btn-primary svg {
+  flex-shrink: 0;
+}
+
+.purchasing-page .icon-btn-sm:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.purchasing-page .icon-btn-sm:disabled:hover {
+  border-color: var(--border, #DCDFD5);
+  color: var(--ink-soft, #5B655F);
+}
+
+/* .purchasing-page .drawer {
+  right: -420px;
+  transition: right 0.22s ease;
+}
+
+.purchasing-page .drawer.wide {
+  right: -580px;
+} */
+
+.purchasing-page .toast {
+  transform: translate(-50%, 20px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.purchasing-page .toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.purchasing-page .form-error {
+  display: none;
+}
+
+.purchasing-page .form-row.has-error .form-error {
+  display: block;
+}
+
+.purchasing-page .summary-row span:last-child,
+.purchasing-page .t-row span:last-child {
+  font-family: var(
+    --font-mono,
+    "IBM Plex Mono",
+    monospace
+  );
+}
+
+/* Inner Suppliers / Purchases tabs */
+
+.purchasing-page .purchasing-inner-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg, #F5F6F2);
+  border: 1px solid var(--border, #DCDFD5);
+  border-radius: 9px;
+  padding: 4px;
+  margin-bottom: 18px;
+  width: fit-content;
+}
+
+.purchasing-page .purchasing-inner-tabs button {
+  border: none;
+  background: none;
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 7px;
+  cursor: pointer;
+  color: var(--ink-soft, #5B655F);
+}
+
+.purchasing-page .purchasing-inner-tabs button:hover {
+  color: var(--ink, #16231F);
+}
+
+.purchasing-page .purchasing-inner-tabs button.active {
+  background: var(--paper, #fff);
+  color: var(--ink, #16231F);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Table hover */
+
+.purchasing-page tbody tr {
+  transition: background 0.12s ease;
+}
+
+.purchasing-page tbody tr:hover {
+  background: #FAFBF9;
+}
+
+/* Responsive drawer */
+/* 
+@media (max-width: 900px) {
+  .purchasing-page .drawer.wide {
+    width: 100vw;
+    right: -100vw;
+  }
+} */
+ /* Drawer animation */
+.purchasing-page .drawer {
+  transition: transform 0.22s ease;
+}
+
+.purchasing-page .drawer.show {
+  transform: translateX(0);
+}
+
+@media (max-width: 700px) {
+  .purchasing-page .toolbar {
+    align-items: stretch;
+  }
+
+  .purchasing-page .search-field {
+    max-width: none;
+    width: 100%;
+  }
+
+  .purchasing-page .status-tabs {
+    width: 100%;
+  }
+
+  .purchasing-page .status-tab {
+    flex: 1;
+  }
+
+  .purchasing-page .spacer {
+    display: none;
+  }
+
+  .purchasing-page .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .purchasing-page .table-card {
+    overflow-x: auto;
+  }
+
+  .purchasing-page table {
+    min-width: 720px;
+  }
+}
