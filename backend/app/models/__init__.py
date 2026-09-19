@@ -10,8 +10,14 @@ from app.models.role_permission import role_permissions
 from app.models.store_setting import StoreSetting
 from app.models.user import User
 from app.models.customer import Customer, LoyaltyTier, CustomerPayment, LoyaltyTransaction
+# ---- Purchase & Supplier ----
+from app.models.supplier import Supplier
+from app.models.purchase import Purchase, PurchaseItem, SupplierPayment
+
 
 # ---- Module 5: POS, Sales & Invoices ----
 from app.models.sale import Sale, SaleItem, Payment, Invoice, HeldCart, HeldCartItem
 
 __all__ = ["ActivityLog", "Permission", "Role", "StoreSetting", "User", "role_permissions"]
+# ---- Module 4: Inventory & Expiry ----
+from app.models.stock import ProductStock, StockMovement, StockAdjustment, StockBatch
