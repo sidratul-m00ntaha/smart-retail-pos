@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.database import get_db
 from app.routers import activity_logs, auth, roles, store_settings, users
 from app.routers import customers
+from app.routers import suppliers, purchases
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
 
@@ -46,6 +47,11 @@ app.include_router(roles.router)
 app.include_router(activity_logs.router)
 app.include_router(store_settings.router)
 app.include_router(customers.router)
+
+# Module 3: Suppliers & Purchasing
+app.include_router(suppliers.router)
+app.include_router(purchases.router)
+
 # Module 4: Inventory & Expiry
 from app.routers import stock, stock_movements, stock_adjustments, expiry
 app.include_router(stock.router)

@@ -1,0 +1,107 @@
+/* Scoped to .purchasing-page so class names like .drawer / .btn-primary don't
+   collide with other modules. Colors assume the same --teal/--amber/etc.
+   CSS variables the rest of the app defines globally (from purchasing.html);
+   move those :root vars into a shared stylesheet if they aren't already. */
+
+.purchasing-page { font-family: var(--font-sans, 'Work Sans', sans-serif); color: var(--ink, #16231F); }
+
+.purchasing-page .stat-strip { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+.purchasing-page .stat-chip { display:flex; align-items:center; gap:8px; padding:9px 14px; border-radius:9px; font-size:13px; border:1px solid var(--border,#DCDFD5); background:var(--paper,#fff); }
+.purchasing-page .stat-chip .n { font-family: var(--font-mono,'IBM Plex Mono',monospace); font-weight:500; }
+.purchasing-page .stat-chip.warn { border-color:#EFD7A6; background:var(--amber-tint,#FBF0DA); color:var(--amber-dark,#8A5A16); }
+
+.purchasing-page .page-tabs { display:flex; gap:4px; background:var(--bg,#F5F6F2); border:1px solid var(--border,#DCDFD5); border-radius:9px; padding:4px; margin-bottom:18px; width:fit-content; }
+.purchasing-page .page-tab { border:none; background:none; padding:8px 16px; font-size:13px; border-radius:7px; cursor:pointer; color:var(--ink-soft,#5B655F); }
+.purchasing-page .page-tab.active { background:var(--paper,#fff); color:var(--ink,#16231F); font-weight:500; box-shadow:0 1px 2px rgba(0,0,0,0.08); }
+
+.purchasing-page .toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.purchasing-page .search-field { position:relative; flex:1; min-width:200px; max-width:300px; }
+.purchasing-page .search-field input { width:100%; padding:9px 12px 9px 34px; border:1px solid var(--border,#DCDFD5); border-radius:9px; font-size:13.5px; background:var(--paper,#fff); outline:none; }
+.purchasing-page .field-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--ink-soft,#5B655F); }
+.purchasing-page .status-tabs { display:flex; gap:4px; background:var(--bg,#F5F6F2); border:1px solid var(--border,#DCDFD5); border-radius:8px; padding:3px; }
+.purchasing-page .status-tab { border:none; background:none; padding:6px 13px; font-size:12.5px; border-radius:6px; cursor:pointer; color:var(--ink-soft,#5B655F); }
+.purchasing-page .status-tab.active { background:var(--paper,#fff); color:var(--ink,#16231F); font-weight:500; box-shadow:0 1px 2px rgba(0,0,0,0.08); }
+.purchasing-page .spacer { flex:1; }
+.purchasing-page .btn-primary { padding:10px 16px; background:var(--amber,#E2A63B); color:#3A2606; border:none; border-radius:9px; font-size:13.5px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:7px; }
+.purchasing-page .btn-primary:hover { background:var(--amber-dark,#8A5A16); color:#fff; }
+
+.purchasing-page .table-card { background:var(--paper,#fff); border:1px solid var(--border,#DCDFD5); border-radius:12px; overflow:hidden; }
+.purchasing-page table { width:100%; border-collapse:collapse; }
+.purchasing-page thead th { text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-soft,#5B655F); font-weight:500; padding:12px 16px; border-bottom:1px solid var(--border,#DCDFD5); background:var(--bg,#F5F6F2); }
+.purchasing-page tbody td { padding:12px 16px; border-bottom:1px solid var(--border,#DCDFD5); font-size:13.5px; vertical-align:middle; }
+.purchasing-page tbody tr:last-child td { border-bottom:none; }
+.purchasing-page tbody tr:hover { background:#FAFBF9; }
+.purchasing-page .mono { font-family: var(--font-mono,'IBM Plex Mono',monospace); font-size:12.5px; }
+
+.purchasing-page .s-cell { display:flex; align-items:center; gap:10px; }
+.purchasing-page .s-avatar { width:34px; height:34px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family: var(--font-mono,'IBM Plex Mono',monospace); font-size:11px; font-weight:500; color:#fff; background:var(--teal,#1F5D4E); }
+.purchasing-page .s-name { font-weight:500; margin:0; }
+.purchasing-page .s-sub { font-size:11.5px; color:var(--ink-soft,#5B655F); margin:2px 0 0; font-family: var(--font-mono,'IBM Plex Mono',monospace); }
+
+.purchasing-page .due-cell.zero { color:var(--ink-soft,#5B655F); }
+.purchasing-page .due-cell.high { color:var(--danger,#B54F45); }
+
+.purchasing-page .pill { font-size:11.5px; padding:3px 10px; border-radius:20px; font-weight:500; display:inline-block; }
+.purchasing-page .pill.Active { background:var(--success-tint,#E4F0E7); color:var(--success,#2F7A4D); }
+.purchasing-page .pill.Inactive { background:var(--bg,#F5F6F2); color:var(--ink-soft,#5B655F); }
+.purchasing-page .pill.Confirmed { background:var(--success-tint,#E4F0E7); color:var(--success,#2F7A4D); }
+
+.purchasing-page .row-actions { display:flex; gap:6px; }
+.purchasing-page .icon-btn-sm { width:28px; height:28px; border-radius:7px; border:1px solid var(--border,#DCDFD5); background:var(--paper,#fff); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink-soft,#5B655F); }
+.purchasing-page .icon-btn-sm:hover { border-color:var(--teal,#1F5D4E); color:var(--teal,#1F5D4E); }
+.purchasing-page .icon-btn-sm:disabled { opacity:0.35; cursor:not-allowed; }
+.purchasing-page .empty-row td { text-align:center; color:var(--ink-soft,#5B655F); padding:36px 16px; font-size:13px; }
+
+/* Drawer */
+.purchasing-page .backdrop { position:fixed; inset:0; background:rgba(20,35,30,0.4); z-index:40; }
+.purchasing-page .drawer { position:fixed; top:0; right:0; width:400px; height:100vh; background:var(--paper,#fff); z-index:41; box-shadow:-10px 0 30px rgba(20,35,30,0.18); display:flex; flex-direction:column; }
+.purchasing-page .drawer.wide { width:560px; }
+.purchasing-page .drawer-head { display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border,#DCDFD5); }
+.purchasing-page .drawer-head h3 { font-family: var(--font-display,'Fraunces',serif); font-weight:600; font-size:18px; margin:0; }
+.purchasing-page .drawer-close { background:none; border:none; cursor:pointer; color:var(--ink-soft,#5B655F); padding:4px; }
+.purchasing-page .drawer-body { flex:1; overflow-y:auto; padding:20px 22px; }
+.purchasing-page .drawer-foot { padding:16px 22px; border-top:1px solid var(--border,#DCDFD5); display:flex; gap:10px; }
+.purchasing-page .form-row { margin-bottom:15px; }
+.purchasing-page .form-row label { display:block; font-size:12.5px; font-weight:500; margin-bottom:6px; }
+.purchasing-page .form-row .req { color:var(--danger,#B54F45); }
+.purchasing-page .form-row input, .purchasing-page .form-row select { width:100%; padding:9px 11px; border:1px solid var(--border,#DCDFD5); border-radius:8px; font-size:13.5px; outline:none; }
+.purchasing-page .form-row.has-error input, .purchasing-page .form-row.has-error select { border-color:var(--danger,#B54F45); }
+.purchasing-page .form-error { font-size:12px; color:var(--danger,#B54F45); margin-top:5px; }
+.purchasing-page .form-2col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+.purchasing-page .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; }
+.purchasing-page .toggle-row .t-sub { font-size:11.5px; color:var(--ink-soft,#5B655F); margin-top:2px; }
+.purchasing-page .switch { position:relative; width:38px; height:22px; flex-shrink:0; display:inline-block; }
+.purchasing-page .switch input { opacity:0; width:0; height:0; }
+.purchasing-page .slider { position:absolute; inset:0; background:var(--border,#DCDFD5); border-radius:22px; cursor:pointer; transition:.15s; }
+.purchasing-page .slider::before { content:""; position:absolute; width:16px; height:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.15s; }
+.purchasing-page .switch input:checked + .slider { background:var(--teal,#1F5D4E); }
+.purchasing-page .switch input:checked + .slider::before { transform:translateX(16px); }
+
+.purchasing-page .btn-secondary { flex:1; padding:10px 0; background:var(--paper,#fff); border:1px solid var(--border,#DCDFD5); border-radius:9px; font-size:13.5px; cursor:pointer; color:var(--ink,#16231F); }
+.purchasing-page .btn-save { flex:1.4; padding:10px 0; background:var(--amber,#E2A63B); color:#3A2606; border:none; border-radius:9px; font-size:13.5px; font-weight:600; cursor:pointer; }
+.purchasing-page .btn-save:hover { background:var(--amber-dark,#8A5A16); color:#fff; }
+
+.purchasing-page .summary-box { background:var(--teal-tint,#E7F0EB); border-radius:10px; padding:14px 16px; margin-bottom:16px; }
+.purchasing-page .summary-row { display:flex; justify-content:space-between; font-size:13px; color:var(--teal-dark,#123A30); margin-bottom:4px; }
+.purchasing-page .summary-row:last-child { margin-bottom:0; font-weight:600; }
+.purchasing-page .preview-box { background:var(--teal-tint,#E7F0EB); border-radius:8px; padding:10px 12px; font-size:12.5px; color:var(--teal-dark,#123A30); margin-top:4px; }
+.purchasing-page .preview-box.err { background:var(--danger-tint,#FBEDEB); color:var(--danger,#B54F45); }
+
+.purchasing-page .lines-table { width:100%; border-collapse:collapse; margin-bottom:10px; }
+.purchasing-page .lines-table th { text-align:left; font-size:11px; text-transform:uppercase; color:var(--ink-soft,#5B655F); padding:6px; border-bottom:1px solid var(--border,#DCDFD5); }
+.purchasing-page .lines-table td { padding:6px; vertical-align:middle; }
+.purchasing-page .lines-table select, .purchasing-page .lines-table input { width:100%; padding:7px 8px; border:1px solid var(--border,#DCDFD5); border-radius:7px; font-size:12.5px; outline:none; }
+.purchasing-page .lines-table .line-total { font-family: var(--font-mono,'IBM Plex Mono',monospace); font-size:12.5px; white-space:nowrap; }
+.purchasing-page .rm-line { background:none; border:none; color:var(--ink-soft,#5B655F); cursor:pointer; padding:4px; }
+.purchasing-page .rm-line:hover { color:var(--danger,#B54F45); }
+.purchasing-page .add-line-btn { font-size:12.5px; color:var(--teal-dark,#123A30); background:none; border:1px dashed var(--border,#DCDFD5); border-radius:8px; padding:7px 12px; cursor:pointer; width:100%; margin-bottom:16px; }
+
+.purchasing-page .totals-box { border-top:1px dashed var(--border,#DCDFD5); padding-top:12px; margin-bottom:16px; }
+.purchasing-page .t-row { display:flex; justify-content:space-between; font-size:13px; color:var(--ink-soft,#5B655F); margin-bottom:6px; }
+.purchasing-page .t-row span:last-child { font-family: var(--font-mono,'IBM Plex Mono',monospace); color:var(--ink,#16231F); }
+.purchasing-page .t-row.grand { font-weight:600; font-size:15px; color:var(--ink,#16231F); font-family: var(--font-display,'Fraunces',serif); }
+
+.purchasing-page .toast { position:fixed; bottom:22px; left:50%; transform:translate(-50%, 0); background:var(--ink,#16231F); color:#fff; padding:10px 18px; border-radius:8px; font-size:13px; z-index:60; }
+
+@media (max-width: 900px){ .purchasing-page table { font-size:12.5px; } .purchasing-page .drawer.wide { width:100vw; } }
