@@ -16,7 +16,7 @@ from app.models.sale import HeldCart, Invoice, Payment, Sale, SaleItem
 from app.schemas.sale import PaymentOut, SaleCreate, SaleItemOut, SaleOut
 from app.services.activity_log_service import log_activity
 from app.services.customer_service import add_due, add_points
-from app.services.sale_calculator import LineInput, calculate_sale, settle_payment
+from app.services.sale_calculator import LineInput, calculate_sale, money, settle_payment
 from app.services.sale_dependencies import get_sellable_product
 from app.services.stock_service import stock_out
 
@@ -124,7 +124,7 @@ def _build_and_save_sale(db: Session, data: SaleCreate, cashier_id: int) -> Comp
         )
         for r in totals.lines
     ]
-    payments = [Payment(sale_id=sale.sale_id, method=p.method, amount=p.amount) for p in data.payments]
+    payments = [Payment(sale_id=sale.sale_id, method=p.method, amount=money(p.amount)) for p in data.payments]
     db.add_all(items + payments)
 
     # 7. Take the items out of stock (Module 4). Sorted by product so two cashiers lock in the same order.

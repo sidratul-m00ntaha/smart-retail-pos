@@ -58,3 +58,7 @@ app.include_router(stock.router)
 app.include_router(stock_movements.router)
 app.include_router(stock_adjustments.router)
 app.include_router(expiry.router)
+
+# Module 5: POS, Sales & Invoices
+from app.routers import sales
+app.include_router(sales.router)

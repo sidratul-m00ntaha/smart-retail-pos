@@ -61,7 +61,9 @@ class CompleteSaleTests(unittest.TestCase):
         self.db.commit()
 
     def tearDown(self):
+        engine = self.db.get_bind()
         self.db.close()
+        engine.dispose()
 
     def count(self, model) -> int:
         return self.db.scalar(select(func.count()).select_from(model))
