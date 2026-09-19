@@ -24,6 +24,7 @@ export type StockAdjustment = {
   product_id: number
   quantity_change: number
   reason: string
+  balance_after: number
   adjusted_by: number | null
   created_at: string
 }

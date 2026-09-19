@@ -84,3 +84,15 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+.toolbarRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.toolbarText {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 0;
+}

@@ -94,6 +94,7 @@ def create_adjustment(db: Session, data: StockAdjustmentCreate, user_id: int | N
         product_id=data.product_id,
         quantity_change=data.quantity_change,
         reason=data.reason,
+        balance_after=stock.current_stock,
         adjusted_by=user_id,
     )
     db.add(adjustment)

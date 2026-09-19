@@ -30,11 +30,14 @@ export default function AdjustmentsPage() {
 
   return (
     <>
-      {hasPermission('inventory.manage') && (
-        <button onClick={() => setIsDrawerOpen(true)} className={formStyles.addButton} style={{ marginBottom: 16 }}>
-  + New adjustment
-</button>
-      )}
+      <div className={formStyles.toolbarRow}>
+        <p className={formStyles.toolbarText}>Manual corrections for damaged, lost, or miscounted stock.</p>
+        {hasPermission('inventory.manage') && (
+          <button onClick={() => setIsDrawerOpen(true)} className={formStyles.addButton}>
+            + New adjustment
+          </button>
+        )}
+      </div>
 
       {adjustments.length === 0 ? (
         <MessagePanel title="No adjustments yet">Manual stock corrections will appear here.</MessagePanel>
@@ -44,6 +47,7 @@ export default function AdjustmentsPage() {
             <tr>
               <th>Product ID</th>
               <th>Change</th>
+              <th>Balance after</th>
               <th>Reason</th>
               <th>When</th>
             </tr>
@@ -55,6 +59,7 @@ export default function AdjustmentsPage() {
                 <td className={row.quantity_change > 0 ? styles.qtyIn : styles.qtyOut}>
                   {row.quantity_change > 0 ? `+${row.quantity_change}` : row.quantity_change}
                 </td>
+                <td>{row.balance_after}</td>
                 <td>{row.reason}</td>
                 <td>{formatDateTime(row.created_at)}</td>
               </tr>

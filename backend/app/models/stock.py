@@ -40,6 +40,7 @@ class StockAdjustment(Base):
     product_id: Mapped[int]  # TODO: ForeignKey("Products.product_id")
     quantity_change: Mapped[int]  # positive = increase, negative = decrease
     reason: Mapped[str] = mapped_column(Unicode(255))
+    balance_after: Mapped[int]
     adjusted_by: Mapped[int | None] = mapped_column(ForeignKey("Users.user_id"))
     created_at: Mapped[datetime] = mapped_column(server_default=func.sysutcdatetime())
 
