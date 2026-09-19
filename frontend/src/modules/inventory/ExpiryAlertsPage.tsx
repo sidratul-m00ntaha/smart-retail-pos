@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ApiError } from '../../services/api.ts'
-import { getExpiryAlerts, addBatch } from '../../services/stock.service.ts'
+import { getExpiryAlerts, addBatch, createAdjustment } from '../../services/stock.service.ts'
 import type { StockBatch } from '../../types/stock.ts'
 import MessagePanel from '../../components/common/MessagePanel.tsx'
 import Drawer from '../../components/ui/Drawer.tsx'
@@ -21,6 +21,7 @@ export default function ExpiryAlertsPage() {
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [writeOffBatch, setWriteOffBatch] = useState<StockBatch | null>(null)
 
   function loadBatches() {
     getExpiryAlerts(30)
@@ -58,8 +59,8 @@ export default function ExpiryAlertsPage() {
         </div>
         {hasPermission('inventory.manage') && (
           <button onClick={() => setIsDrawerOpen(true)} className={styles.addButton}>
-  + New batch
-</button>
+            + New batch
+          </button>
         )}
       </div>
 
@@ -85,6 +86,11 @@ export default function ExpiryAlertsPage() {
                 <div className={styles.meta}><span>Quantity</span><span>{batch.quantity}</span></div>
                 <div className={styles.meta}><span>Expiry date</span><span>{batch.expiry_date}</span></div>
                 <div className={styles.meta}><span>Time left</span><span>{daysLabel}</span></div>
+                {batch.is_expired && hasPermission('inventory.manage') && (
+                  <button className={styles.writeOffBtn} onClick={() => setWriteOffBatch(batch)}>
+                    Write off as waste
+                  </button>
+                )}
               </div>
             )
           })}
@@ -100,7 +106,66 @@ export default function ExpiryAlertsPage() {
           }}
         />
       )}
+
+      {writeOffBatch && (
+        <WriteOffForm
+          batch={writeOffBatch}
+          onClose={() => setWriteOffBatch(null)}
+          onSaved={() => {
+            setWriteOffBatch(null)
+            loadBatches()
+          }}
+        />
+      )}
     </>
+  )
+}
+
+function WriteOffForm({ batch, onClose, onSaved }: { batch: StockBatch; onClose: () => void; onSaved: () => void }) {
+  const [formError, setFormError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+
+  async function handleConfirm() {
+    setFormError(null)
+    setIsSaving(true)
+    try {
+      await createAdjustment({
+        product_id: batch.product_id,
+        quantity_change: -batch.quantity,
+        reason: `Expired batch ${batch.batch_number} (auto)`,
+      })
+      onSaved()
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : 'Could not write off this batch.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <Drawer
+      title="Write off expired batch"
+      onClose={onClose}
+      footer={
+        <>
+          <button onClick={onClose} className={styles.cancelButton}>Cancel</button>
+          <button onClick={handleConfirm} disabled={isSaving} className={styles.confirmButton}>
+            {isSaving ? 'Writing off…' : 'Confirm write-off'}
+          </button>
+        </>
+      }
+    >
+      {formError && <p className={styles.formError}>{formError}</p>}
+      <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
+        This will remove the expired quantity from stock and log it as a waste adjustment.
+      </p>
+      <label className={styles.formLabel}>Product ID</label>
+      <input value={batch.product_id} disabled className={styles.confirmField} />
+      <label className={styles.formLabel}>Quantity to remove</label>
+      <input value={batch.quantity} disabled className={styles.confirmField} />
+      <label className={styles.formLabel}>Reason</label>
+      <input value={`Expired batch ${batch.batch_number} (auto)`} disabled className={styles.confirmField} />
+    </Drawer>
   )
 }
 
