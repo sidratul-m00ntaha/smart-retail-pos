@@ -11,4 +11,7 @@ from app.models.store_setting import StoreSetting
 from app.models.user import User
 from app.models.customer import Customer, LoyaltyTier, CustomerPayment, LoyaltyTransaction
 
+# ---- Module 5: POS, Sales & Invoices ----
+from app.models.sale import Sale, SaleItem, Payment, Invoice, HeldCart, HeldCartItem
+
 __all__ = ["ActivityLog", "Permission", "Role", "StoreSetting", "User", "role_permissions"]
