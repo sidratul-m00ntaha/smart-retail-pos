@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ApiError } from '../../services/api.ts'
-import { getAdjustments, createAdjustment } from '../../services/stock.service.ts'
+import { getAdjustments, createAdjustment, getStock } from '../../services/stock.service.ts'
 import type { StockAdjustment } from '../../types/stock.ts'
 import MessagePanel from '../../components/common/MessagePanel.tsx'
 import Drawer from '../../components/ui/Drawer.tsx'
@@ -82,15 +82,30 @@ export default function AdjustmentsPage() {
 }
 
 function NewAdjustmentForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+  const [stockList, setStockList] = useState<{ product_id: number; current_stock: number }[]>([])
   const [productId, setProductId] = useState('')
-  const [quantityChange, setQuantityChange] = useState('')
+  const [direction, setDirection] = useState<'dec' | 'inc'>('dec')
+  const [quantity, setQuantity] = useState('')
   const [reason, setReason] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
+  useEffect(() => {
+    getStock().then(setStockList).catch(() => {})
+  }, [])
+
+  const currentStock = stockList.find((s) => s.product_id === Number(productId))?.current_stock
+  const qtyNum = Number(quantity) || 0
+  const newBalance = currentStock !== undefined ? (direction === 'dec' ? currentStock - qtyNum : currentStock + qtyNum) : null
+  const wouldGoNegative = newBalance !== null && newBalance < 0
+
   async function handleSave() {
-    if (!productId || !quantityChange || !reason.trim()) {
-      setFormError('Fill in every field before saving.')
+    if (!productId || !quantity || Number(quantity) <= 0 || !reason.trim()) {
+      setFormError('Fill in every field with a quantity of at least 1.')
+      return
+    }
+    if (wouldGoNegative) {
+      setFormError(`Stock cannot go below zero. Maximum decrease is ${currentStock}.`)
       return
     }
     setFormError(null)
@@ -98,7 +113,7 @@ function NewAdjustmentForm({ onClose, onSaved }: { onClose: () => void; onSaved:
     try {
       await createAdjustment({
         product_id: Number(productId),
-        quantity_change: Number(quantityChange),
+        quantity_change: direction === 'dec' ? -qtyNum : qtyNum,
         reason: reason.trim(),
       })
       onSaved()
@@ -123,6 +138,7 @@ function NewAdjustmentForm({ onClose, onSaved }: { onClose: () => void; onSaved:
       }
     >
       {formError && <p className={formStyles.formError}>{formError}</p>}
+
       <label className={formStyles.formLabel}>Product ID</label>
       <input
         type="number"
@@ -131,14 +147,40 @@ function NewAdjustmentForm({ onClose, onSaved }: { onClose: () => void; onSaved:
         placeholder="14"
         className={formStyles.formInput}
       />
-      <label className={formStyles.formLabel}>Quantity change</label>
+
+      <label className={formStyles.formLabel}>Current stock</label>
+      <div className={formStyles.readonlyBox}>
+        {currentStock !== undefined ? `${currentStock} in stock` : '—'}
+      </div>
+
+      <label className={formStyles.formLabel}>Adjustment direction</label>
+      <div className={formStyles.dirTabs}>
+        <button
+          type="button"
+          className={`${formStyles.dirTab} ${direction === 'dec' ? formStyles.decActive : ''}`}
+          onClick={() => setDirection('dec')}
+        >
+          Decrease
+        </button>
+        <button
+          type="button"
+          className={`${formStyles.dirTab} ${direction === 'inc' ? formStyles.incActive : ''}`}
+          onClick={() => setDirection('inc')}
+        >
+          Increase
+        </button>
+      </div>
+
+      <label className={formStyles.formLabel}>Quantity</label>
       <input
         type="number"
-        value={quantityChange}
-        onChange={(e) => setQuantityChange(e.target.value)}
-        placeholder="-3 or 20"
+        min="1"
+        value={quantity}
+        onChange={(e) => setQuantity(e.target.value)}
+        placeholder="0"
         className={formStyles.formInput}
       />
+
       <label className={formStyles.formLabel}>Reason</label>
       <input
         type="text"
@@ -147,6 +189,16 @@ function NewAdjustmentForm({ onClose, onSaved }: { onClose: () => void; onSaved:
         placeholder="Damaged in storage"
         className={formStyles.formInput}
       />
+
+      <div className={`${formStyles.previewBox} ${wouldGoNegative ? formStyles.err : ''}`}>
+        {currentStock === undefined
+          ? 'Enter a valid product ID to preview the new balance.'
+          : qtyNum <= 0
+          ? 'Enter a quantity to preview the new balance.'
+          : wouldGoNegative
+          ? `Stock cannot go below zero. Maximum decrease is ${currentStock}.`
+          : `New balance after this adjustment: ${newBalance} (currently ${currentStock}).`}
+      </div>
     </Drawer>
   )
 }
