@@ -12,3 +12,5 @@ from app.models.user import User
 from app.models.customer import Customer, LoyaltyTier, CustomerPayment, LoyaltyTransaction
 
 __all__ = ["ActivityLog", "Permission", "Role", "StoreSetting", "User", "role_permissions"]
+# ---- Module 4: Inventory & Expiry ----
+from app.models.stock import ProductStock, StockMovement, StockAdjustment, StockBatch
