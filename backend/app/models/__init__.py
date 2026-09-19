@@ -10,4 +10,6 @@ from app.models.role_permission import role_permissions
 from app.models.store_setting import StoreSetting
 from app.models.user import User
 
-__all__ = ["ActivityLog", "Permission", "Role", "StoreSetting", "User", "role_permissions"]
+__all__ = ["ActivityLog", "Permission", "Role", "StoreSetting", "User", "role_permissions","Category", "Brand", "Unit", "TaxRate", "Product"]
+from app.models.catalog import Brand, Category, TaxRate, Unit
+from app.models.product import Product

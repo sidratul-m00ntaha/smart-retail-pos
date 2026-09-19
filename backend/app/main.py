@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.database import get_db
 from app.routers import activity_logs, auth, roles, store_settings, users
+from app.routers import brands, categories, products, reports, tax_rates, units
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
 
@@ -44,3 +45,11 @@ app.include_router(users.router)
 app.include_router(roles.router)
 app.include_router(activity_logs.router)
 app.include_router(store_settings.router)
+
+# Module 2: Product Catalog, Dashboard & Reports
+app.include_router(brands.router)
+app.include_router(categories.router)
+app.include_router(products.router)
+app.include_router(reports.router)
+app.include_router(tax_rates.router)
+app.include_router(units.router)

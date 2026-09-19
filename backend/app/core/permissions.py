@@ -13,6 +13,7 @@ PERMISSIONS = {
     "settings.manage": "Change store settings",
     "activity_logs.view": "See the activity log",
     "tax_rates.manage": "Create and change VAT rates",
+    "products.view": "View products, categories, brands, units",
     "products.manage": "Products, categories, brands, units",
     "suppliers.manage": "Suppliers",
     "purchases.manage": "Create purchases, pay supplier dues",
@@ -30,7 +31,18 @@ ADMIN_ONLY = {"users.manage", "settings.manage", "activity_logs.view", "tax_rate
 
 # Role name -> (description, permission codes)
 ROLES = {
-    "Admin": ("Full access to everything", set(PERMISSIONS)),
-    "Manager": ("Runs the store: products, purchasing, inventory, customers, reports", set(PERMISSIONS) - ADMIN_ONLY),
-    "Cashier": ("Operates the POS", {"pos.sell"}),
+    "Admin": (
+        "Full access to everything",
+        set(PERMISSIONS),
+    ),
+
+    "Manager": (
+        "Runs the store: products, purchasing, inventory, customers, reports",
+        set(PERMISSIONS) - ADMIN_ONLY - {"products.manage"},
+    ),
+
+    "Cashier": (
+        "Operates the POS",
+        {"pos.sell", "products.view"},
+    ),
 }
