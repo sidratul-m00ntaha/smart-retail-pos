@@ -1,15 +1,16 @@
 import type { NavSection } from '../../types/navigation.ts'
+import StockPage from './StockPage.tsx'
+import MovementsPage from './MovementsPage.tsx'
+import AdjustmentsPage from './AdjustmentsPage.tsx'
+import ExpiryAlertsPage from './ExpiryAlertsPage.tsx'
 
-// Owned by Module 4. When a page is built, import it and add `page: YourPage` to its entry.
-// See docs/frontend-guide.md
 export const inventorySection: NavSection = {
   label: 'Inventory',
   icon: 'inventory',
   owner: 'Module 4 – Inventory & Expiry',
   items: [
-    { label: 'Stock', path: '/inventory', permission: 'inventory.manage' },
-    { label: 'Movements', path: '/inventory/movements', permission: 'inventory.manage' },
-    { label: 'Adjustments', path: '/inventory/adjustments', permission: 'inventory.manage' },
-    { label: 'Expiry Alerts', path: '/inventory/expiry-alerts', permission: 'inventory.manage' },
-  ],
+    { label: 'Stock', path: '/inventory', permission: 'inventory.manage', page: StockPage },
+    { label: 'Movements', path: '/inventory/movements', permission: 'inventory.manage', page: MovementsPage },
+    { label: 'Adjustments', path: '/inventory/adjustments', permission: 'inventory.manage', page: AdjustmentsPage },
+    { label: 'Expiry Alerts', path: '/inventory/expiry-alerts', permission: 'inventory.manage', page: ExpiryAlertsPage },  ],
 }

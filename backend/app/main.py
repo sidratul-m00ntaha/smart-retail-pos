@@ -47,5 +47,14 @@ app.include_router(roles.router)
 app.include_router(activity_logs.router)
 app.include_router(store_settings.router)
 app.include_router(customers.router)
-app.include_router(suppliers.router) 
-app.include_router(purchases.router) 
+
+# Module 3: Suppliers & Purchasing
+app.include_router(suppliers.router)
+app.include_router(purchases.router)
+
+# Module 4: Inventory & Expiry
+from app.routers import stock, stock_movements, stock_adjustments, expiry
+app.include_router(stock.router)
+app.include_router(stock_movements.router)
+app.include_router(stock_adjustments.router)
+app.include_router(expiry.router)
