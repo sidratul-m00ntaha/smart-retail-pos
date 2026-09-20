@@ -28,7 +28,22 @@ export default function CategoriesPage() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    let isCurrent = true
+    getCategories()
+      .then((rows) => {
+        if (isCurrent) setItems(rows)
+      })
+      .catch((err) => {
+        if (isCurrent) setError(err instanceof ApiError ? err.message : 'Could not load categories.')
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false)
+      })
+    return () => {
+      isCurrent = false
+    }
+  }, [])
 
   if (isLoading) return <p>Loading…</p>
   if (error) return <p>{error}</p>

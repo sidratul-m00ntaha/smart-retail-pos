@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import styles from './ProductsPage.module.css'
 import type { Product, NewProduct } from '../../types/product'
 import type { Category, Brand, Unit, TaxRate } from '../../types/catalog'
@@ -21,35 +21,45 @@ const emptyForm: NewProduct = {
 }
 
 export default function ProductDrawer({ open, product, categories, brands, units, taxRates, onClose, onSave }: Props) {
-  const [form, setForm] = useState<NewProduct>(emptyForm)
+  if (!open) return null
+  // The form is only mounted while the drawer is open, so it always starts from the product being edited
+  return (
+    <ProductForm
+      product={product}
+      categories={categories}
+      brands={brands}
+      units={units}
+      taxRates={taxRates}
+      onClose={onClose}
+      onSave={onSave}
+    />
+  )
+}
+
+type ProductFormProps = Omit<Props, 'open'>
+
+function ProductForm({ product, categories, brands, units, taxRates, onClose, onSave }: ProductFormProps) {
+  const [form, setForm] = useState<NewProduct>(() =>
+    product
+      ? {
+          product_code: product.product_code,
+          barcode: product.barcode ?? '',
+          name: product.name,
+          category_id: product.category_id,
+          brand_id: product.brand_id ?? undefined,
+          unit_id: product.unit_id,
+          tax_rate_id: product.tax_rate_id ?? undefined,
+          purchase_price: product.purchase_price,
+          sale_price: product.sale_price,
+          tax_percent: product.tax_percent,
+          reorder_level: product.reorder_level,
+          expiry_tracking: product.expiry_tracking,
+          status: product.status,
+        }
+      : emptyForm,
+  )
   const [errors, setErrors] = useState<Record<string, boolean>>({})
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    if (!open) return
-    setErrors({})
-    if (product) {
-      setForm({
-        product_code: product.product_code,
-        barcode: product.barcode ?? '',
-        name: product.name,
-        category_id: product.category_id,
-        brand_id: product.brand_id ?? undefined,
-        unit_id: product.unit_id,
-        tax_rate_id: product.tax_rate_id ?? undefined,
-        purchase_price: product.purchase_price,
-        sale_price: product.sale_price,
-        tax_percent: product.tax_percent,
-        reorder_level: product.reorder_level,
-        expiry_tracking: product.expiry_tracking,
-        status: product.status,
-      })
-    } else {
-      setForm(emptyForm)
-    }
-  }, [open, product])
-
-  if (!open) return null
 
   function set<K extends keyof NewProduct>(key: K, value: NewProduct[K]) {
     setForm((f) => ({ ...f, [key]: value }))
