@@ -28,7 +28,8 @@ def list_customers(
 def create_customer(
     payload: CustomerCreate, 
     db: Session = Depends(get_db), 
-    user=Depends(require_permission("customers.manage")) # Only Managers/Admins
+    # CHANGE THIS LINE FROM "customers.manage" TO "customers.create":
+    user=Depends(require_permission("customers.create")) 
 ):
     existing = db.query(Customer).filter(Customer.phone == payload.phone).first()
     if existing:
