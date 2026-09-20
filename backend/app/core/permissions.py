@@ -13,6 +13,7 @@ PERMISSIONS = {
     "settings.manage": "Change store settings",
     "activity_logs.view": "See the activity log",
     "tax_rates.manage": "Create and change VAT rates",
+    "products.view": "View products, categories, brands and units",
     "products.manage": "Products, categories, brands, units",
     "suppliers.manage": "Suppliers",
     "purchases.manage": "Create purchases, pay supplier dues",
@@ -33,6 +34,6 @@ ADMIN_ONLY = {"users.manage", "settings.manage", "activity_logs.view", "tax_rate
 ROLES = {
     "Admin": ("Full access to everything", set(PERMISSIONS)),
     "Manager": ("Runs the store: products, purchasing, inventory, customers, reports", set(PERMISSIONS) - ADMIN_ONLY),
-    # Cashiers can register a new customer at checkout, but not edit or deactivate customers
-    "Cashier": ("Operates the POS", {"pos.sell", "customers.create"}),
+    # Cashiers see products and register new customers at checkout, but can't change either
+    "Cashier": ("Operates the POS", {"pos.sell", "products.view", "customers.create"}),
 }

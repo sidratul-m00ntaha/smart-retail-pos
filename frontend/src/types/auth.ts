@@ -4,6 +4,7 @@ export type PermissionCode =
   | 'settings.manage'
   | 'activity_logs.view'
   | 'tax_rates.manage'
+  | 'products.view'
   | 'products.manage'
   | 'suppliers.manage'
   | 'purchases.manage'

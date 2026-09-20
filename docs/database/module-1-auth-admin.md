@@ -168,6 +168,7 @@ Based on PRD section 4. **Admin has every permission.** Any logged-in user can _
 | `settings.manage`       | Change store settings                        |  ✅   |         |         |
 | `activity_logs.view`    | See the activity log                         |  ✅   |         |         |
 | `tax_rates.manage`      | Create and change VAT rates                  |  ✅   |         |         |
+| `products.view`         | View products, categories, brands, units     |  ✅   |   ✅    |   ✅    |
 | `products.manage`       | Products, categories, brands, units          |  ✅   |   ✅    |         |
 | `suppliers.manage`      | Suppliers                                    |  ✅   |   ✅    |         |
 | `purchases.manage`      | Create purchases, pay supplier dues          |  ✅   |   ✅    |         |

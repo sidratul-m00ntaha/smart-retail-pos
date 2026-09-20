@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useProductsStub } from "../useProductsStub";
 import type { ProductLite, PurchaseInput, Supplier } from "../../../types/purchasing";
 
@@ -29,9 +29,22 @@ function makeLine(lid: number, products: ProductLite[]): Line {
 
 export default function PurchaseDrawer({ open, suppliers, onClose, onSave }: Props) {
   const products = useProductsStub();
+  if (!open || !products.length) return null;
+  // The form is only mounted while the drawer is open, so it always starts as a blank purchase
+  return <PurchaseForm products={products} suppliers={suppliers} onClose={onClose} onSave={onSave} />;
+}
+
+type PurchaseFormProps = {
+  products: ProductLite[];
+  suppliers: Supplier[];
+  onClose: () => void;
+  onSave: (data: PurchaseInput) => Promise<void>;
+};
+
+function PurchaseForm({ products, suppliers, onClose, onSave }: PurchaseFormProps) {
   const [supplierId, setSupplierId] = useState<number | "">("");
-  const [lines, setLines] = useState<Line[]>([]);
-  const [lineCounter, setLineCounter] = useState(0);
+  const [lines, setLines] = useState<Line[]>(() => [makeLine(0, products)]);
+  const [lineCounter, setLineCounter] = useState(1);
   const [discount, setDiscount] = useState("");
   const [vatRate, setVatRate] = useState(0.05);
   const [paid, setPaid] = useState("");
@@ -39,21 +52,6 @@ export default function PurchaseDrawer({ open, suppliers, onClose, onSave }: Pro
   const [saving, setSaving] = useState(false);
 
   const activeSuppliers = suppliers.filter((s) => s.Status === "Active");
-
-  useEffect(() => {
-    if (open && products.length) {
-      setSupplierId("");
-      setDiscount("");
-      setVatRate(0.05);
-      setPaid("");
-      setErrors({});
-      setLines([makeLine(0, products)]);
-      setLineCounter(1);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  if (!open) return null;
 
   const subtotal = lines.reduce((s, l) => s + l.qty * l.price, 0);
   const discountVal = Math.min(parseFloat(discount) || 0, subtotal);

@@ -69,3 +69,197 @@
 .meta span:last-child {
   font-family: var(--font-mono);
 }
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.filterChips {
+  display: flex;
+  gap: 8px;
+}
+
+.chip {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--teal);
+}
+
+.chip.active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+}
+
+.addButton {
+  padding: 10px 16px;
+  background: var(--amber);
+  color: #3a2606;
+  border: none;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.addButton:hover {
+  background: var(--amber-dark);
+  color: #fff;
+}
+
+.formLabel {
+  display: block;
+  font-weight: 500;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin: 16px 0 6px;
+}
+
+.formLabel:first-child {
+  margin-top: 0;
+}
+
+.formInput {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13.5px;
+  background: var(--paper);
+  font-family: var(--font-sans);
+}
+
+.formError {
+  background: var(--danger-tint);
+  color: var(--danger);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  margin: 0 0 16px;
+}
+
+.cancelButton {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.saveButton {
+  background: var(--amber);
+  color: #3a2606;
+  border: none;
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.writeOffBtn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.writeOffBtn:hover {
+  opacity: 0.9;
+}
+
+.confirmField {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13.5px;
+  background: var(--bg);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+.formLabel {
+  display: block;
+  font-weight: 500;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin: 16px 0 6px;
+}
+
+.formLabel:first-child {
+  margin-top: 0;
+}
+
+.formError {
+  background: var(--danger-tint);
+  color: var(--danger);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  margin: 0 0 16px;
+}
+
+.cancelButton {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.confirmButton {
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.confirmButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.printBtn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.printBtn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
