@@ -1,0 +1,42 @@
+.alerts { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+.alertChip { display:flex; align-items:center; gap:8px; padding:9px 14px; border-radius:9px; font-size:13px; border:1px solid var(--border); background:#fff; }
+.alertChip .n { font-family: var(--font-mono, monospace); font-weight:500; }
+.alertChip.warn { border-color:#EFD7A6; background:var(--amber-tint, #FBF0DA); color:var(--amber-dark, #8A5A16); }
+.alertChip.bad { border-color:#EFC5BD; background:var(--danger-tint, #FBEDEB); color:var(--danger); }
+
+.metrics { display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; margin-bottom:26px; }
+.metricCard { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px 16px 14px; }
+.metricCard .mLabel { font-size:12.5px; color:var(--ink-soft); margin:0 0 8px; }
+.metricCard .mValue { font-family: var(--font-display, serif); font-weight:600; font-size:24px; margin:0; }
+.metricCard .mSub { font-size:11.5px; color:var(--ink-soft); margin-top:4px; font-family: var(--font-mono, monospace); }
+
+.sectionHead { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.sectionHead h3 { font-family: var(--font-display, serif); font-weight:600; font-size:16px; margin:0; }
+.rangeTabs { display:flex; gap:4px; background:var(--bg, #F5F6F2); border:1px solid var(--border); border-radius:8px; padding:3px; }
+.rangeTab { border:none; background:none; padding:5px 12px; font-size:12.5px; border-radius:6px; cursor:pointer; color:var(--ink-soft); }
+.rangeTab.active { background:#fff; color:var(--ink); font-weight:500; box-shadow:0 1px 2px rgba(0,0,0,0.08); }
+
+.chartsRowA { display:grid; grid-template-columns: 2fr 1fr; gap:16px; margin-bottom:16px; }
+.chartsRowB { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px; }
+.card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px 20px; }
+.chartWrap { position:relative; height:220px; margin-top:6px; }
+.chartWrap.small { height:180px; }
+
+.topProductsList { display:flex; flex-direction:column; gap:12px; margin-top:8px; }
+.tpRow { display:flex; align-items:center; gap:10px; }
+.tpRank { font-family: var(--font-mono, monospace); font-size:11px; color:var(--ink-soft); width:16px; flex-shrink:0; }
+.tpBarWrap { flex:1; }
+.tpName { font-size:12.5px; margin:0 0 4px; display:flex; justify-content:space-between; }
+.tpName span:last-child { color:var(--ink-soft); font-family: var(--font-mono, monospace); font-size:11.5px; }
+.tpBarTrack { height:6px; border-radius:4px; background:var(--bg, #F5F6F2); overflow:hidden; }
+.tpBarFill { height:100%; background:var(--teal); border-radius:4px; }
+
+@media (max-width: 1080px) {
+  .metrics { grid-template-columns:repeat(3,1fr); }
+  .chartsRowA { grid-template-columns:1fr; }
+  .chartsRowB { grid-template-columns:1fr 1fr; }
+}
+@media (max-width: 720px) {
+  .metrics { grid-template-columns:repeat(2,1fr); }
+  .chartsRowB { grid-template-columns:1fr; }
+}

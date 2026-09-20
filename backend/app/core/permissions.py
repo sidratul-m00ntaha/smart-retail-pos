@@ -13,19 +13,19 @@ PERMISSIONS = {
     "settings.manage": "Change store settings",
     "activity_logs.view": "See the activity log",
     "tax_rates.manage": "Create and change VAT rates",
+    "products.view": "View products, categories, brands and units",
     "products.manage": "Products, categories, brands, units",
     "suppliers.manage": "Suppliers",
     "purchases.manage": "Create purchases, pay supplier dues",
     "inventory.manage": "Stock adjustments and batches",
-    # "customers.manage": "Create and edit customers",  <-- DELETE THIS LINE!
+    "customers.manage": "View, edit, update credit limit, or deactivate customers",
+    "customers.create": "Register a new customer (used by the POS at checkout)",
     "customer_dues.receive": "Receive customer due payments",
     "loyalty.configure": "Loyalty tiers",
     "pos.sell": "Use the POS: sales, invoices, invoice SMS",
     "sales.view": "Sales history and invoices",
     "reports.view": "Dashboard, reports, expiry alerts",
     "ai.use": "AI Assistant",
-    "customers.manage": "View, edit, update credit limit, or deactivate customers", 
-    "customers.create": "Register a new customer (used by POS at checkout)", 
 }
 
 ADMIN_ONLY = {"users.manage", "settings.manage", "activity_logs.view", "tax_rates.manage"}
@@ -34,6 +34,6 @@ ADMIN_ONLY = {"users.manage", "settings.manage", "activity_logs.view", "tax_rate
 ROLES = {
     "Admin": ("Full access to everything", set(PERMISSIONS)),
     "Manager": ("Runs the store: products, purchasing, inventory, customers, reports", set(PERMISSIONS) - ADMIN_ONLY),
-    "Cashier": ("Operates the POS", {"pos.sell", 
-            "customers.create"}),
+    # Cashiers see products and register new customers at checkout, but can't change either
+    "Cashier": ("Operates the POS", {"pos.sell", "products.view", "customers.create"}),
 }
