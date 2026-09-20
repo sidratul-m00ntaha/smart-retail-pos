@@ -24,7 +24,22 @@ export default function VatRatesPage() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    let isCurrent = true
+    getTaxRates()
+      .then((rows) => {
+        if (isCurrent) setItems(rows)
+      })
+      .catch((err) => {
+        if (isCurrent) setError(err instanceof ApiError ? err.message : 'Could not load VAT rates.')
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false)
+      })
+    return () => {
+      isCurrent = false
+    }
+  }, [])
 
   if (isLoading) return <p>Loading…</p>
   if (error) return <p>{error}</p>

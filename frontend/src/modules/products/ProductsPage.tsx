@@ -96,7 +96,25 @@ export default function ProductsPage() {
   }
 
   useEffect(() => {
-    loadAll()
+    let isCurrent = true
+    Promise.all([getProducts(), getCategories(), getBrands(), getUnits(), getTaxRates()])
+      .then(([p, c, b, u, t]) => {
+        if (!isCurrent) return
+        setProducts(p)
+        setCategories(c)
+        setBrands(b)
+        setUnits(u)
+        setTaxRates(t)
+      })
+      .catch((err) => {
+        if (isCurrent) setError(err instanceof ApiError ? err.message : 'Could not load products.')
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false)
+      })
+    return () => {
+      isCurrent = false
+    }
   }, [])
 
   const filtered = useMemo(() => {

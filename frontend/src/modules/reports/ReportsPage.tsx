@@ -72,7 +72,6 @@ function SalesPanel() {
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#EDEFE9' }, ticks: { callback: (v) => `Tk ${v}k` } }, x: { grid: { display: false } } } },
     })
     return () => { chartRef.current?.destroy(); chartRef.current = null }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
   if (error) return <p>{error}</p>
