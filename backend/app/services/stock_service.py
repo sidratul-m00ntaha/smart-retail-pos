@@ -8,7 +8,7 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import ProductStock, StockAdjustment, StockBatch, StockMovement
+from app.models import Product, ProductStock, StockAdjustment, StockBatch, StockMovement
 from app.schemas.stock import (
     ProductStockOut,
     StockAdjustmentCreate,
@@ -22,14 +22,33 @@ from app.schemas.stock import (
 def _get_or_create_product_stock(db: Session, product_id: int) -> ProductStock:
     stock = db.scalar(select(ProductStock).where(ProductStock.product_id == product_id))
     if stock is None:
-        stock = ProductStock(product_id=product_id, current_stock=0, reserved_stock=0, reorder_level=0)
+        # Seeded/newly-created products may already have a starting quantity on
+        # Products.current_quantity even though no ProductStock row exists yet
+        # (e.g. seed_products.py sets current_quantity but doesn't create the row).
+        # Start from that instead of 0, or sales/out-movements would incorrectly
+        # treat every such product as having zero stock.
+        product = db.get(Product, product_id)
+        starting_quantity = product.current_quantity if product is not None else 0
+        stock = ProductStock(product_id=product_id, current_stock=starting_quantity, reserved_stock=0, reorder_level=0)
         db.add(stock)
         db.flush()  # so stock.current_stock is usable below before the caller commits
     return stock
 
 
+def _sync_product_current_quantity(db: Session, product_id: int, new_quantity: int) -> None:
+    """Keeps Products.current_quantity mirrored to ProductStock.current_stock.
+
+    Module 4 owns writes to this denormalized counter (see product.py docstring);
+    Module 2 only reads it. Called after every stock change in this file.
+    """
+    product = db.get(Product, product_id)
+    if product is not None:
+        product.current_quantity = new_quantity
+
+
 def stock_in(db: Session, product_id: int, quantity: int, source: str, reference_id: int | None, user_id: int | None) -> StockMovement:
-    """Increases stock. Called by Purchases (Module 3) when a purchase is completed.
+    """Increases stock. Called by Purchases (Module 3) when a purchase is completed,
+    and by add_batch() below when a new expiry-tracked batch arrives.
 
     Does not commit - the caller (e.g. complete_purchase) commits once at the end.
     """
@@ -38,6 +57,7 @@ def stock_in(db: Session, product_id: int, quantity: int, source: str, reference
 
     stock = _get_or_create_product_stock(db, product_id)
     stock.current_stock += quantity
+    _sync_product_current_quantity(db, product_id, stock.current_stock)
 
     movement = StockMovement(
         product_id=product_id,
@@ -68,6 +88,7 @@ def stock_out(db: Session, product_id: int, quantity: int, source: str, referenc
         raise ValueError(f"Not enough stock for product {product_id}: have {stock.current_stock}, need {quantity}")
 
     stock.current_stock -= quantity
+    _sync_product_current_quantity(db, product_id, stock.current_stock)
 
     movement = StockMovement(
         product_id=product_id,
@@ -89,6 +110,8 @@ def create_adjustment(db: Session, data: StockAdjustmentCreate, user_id: int | N
     stock.current_stock += data.quantity_change
     if stock.current_stock < 0:
         raise ValueError("Adjustment would make stock negative")
+
+    _sync_product_current_quantity(db, data.product_id, stock.current_stock)
 
     adjustment = StockAdjustment(
         product_id=data.product_id,
@@ -112,10 +135,24 @@ def create_adjustment(db: Session, data: StockAdjustmentCreate, user_id: int | N
     return adjustment
 
 
-def add_batch(db: Session, data: StockBatchCreate) -> StockBatch:
+def add_batch(db: Session, data: StockBatchCreate, user_id: int | None = None) -> StockBatch:
+    """Records a new expiry-tracked batch AND increases stock to match (the batch's
+    quantity is new stock arriving, so it must flow into ProductStock/current_quantity
+    the same way a purchase or adjustment would).
+    """
     batch = StockBatch(**data.model_dump())
     db.add(batch)
-    db.flush()
+    db.flush()  # so batch.stock_batch_id is available for the movement's reference_id
+
+    stock_in(
+        db,
+        product_id=data.product_id,
+        quantity=data.quantity,
+        source="batch",
+        reference_id=batch.stock_batch_id,
+        user_id=user_id,
+    )
+
     return batch
 
 
