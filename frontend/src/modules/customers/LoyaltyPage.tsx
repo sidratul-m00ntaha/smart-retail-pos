@@ -11,18 +11,28 @@ export default function LoyaltyPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  useEffect(() => {
-    loadTiers();
-  }, []);
-
   const loadTiers = async () => {
     try {
       const data = await listLoyaltyTiers();
       setTiers(data);
-    } catch (err) {
+    } catch {
       setMessage({ type: "error", text: "Failed to load loyalty tiers." });
     }
   };
+
+  useEffect(() => {
+    let isCurrent = true;
+    listLoyaltyTiers()
+      .then((data) => {
+        if (isCurrent) setTiers(data);
+      })
+      .catch(() => {
+        if (isCurrent) setMessage({ type: "error", text: "Failed to load loyalty tiers." });
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +60,8 @@ export default function LoyaltyPage() {
       setRequiredPoints("");
       setDiscountPercent("");
       await loadTiers();
-    } catch (err: any) {
-      setMessage({ type: "error", text: err.message || "Failed to save tier." });
+    } catch (err) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to save tier." });
     } finally {
       setLoading(false);
     }

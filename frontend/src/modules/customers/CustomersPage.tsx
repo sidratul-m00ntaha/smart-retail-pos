@@ -11,17 +11,18 @@ export default function CustomersPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    loadCustomers();
+    let isCurrent = true;
+    listCustomers()
+      .then((data) => {
+        if (isCurrent) setCustomers(data);
+      })
+      .catch(() => {
+        if (isCurrent) setError("Failed to load customers. Are you logged in?");
+      });
+    return () => {
+      isCurrent = false;
+    };
   }, []);
-
-  const loadCustomers = async () => {
-    try {
-      const data = await listCustomers();
-      setCustomers(data);
-    } catch (err) {
-      setError("Failed to load customers. Are you logged in?");
-    }
-  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,8 +38,8 @@ export default function CustomersPage() {
       setName("");
       setPhone("");
       setCreditLimit("0.00");
-    } catch (err: any) {
-      setError(err.message || "Failed to create customer. Check if phone already exists.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create customer. Check if phone already exists.");
     } finally {
       setLoading(false);
     }

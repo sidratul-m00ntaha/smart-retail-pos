@@ -30,17 +30,26 @@ export function updateCustomer(customer_id: number, data: Partial<Customer>): Pr
     body: data 
   });
 }
-export function recordPayment(data: { customer_id: number; amount: number | string; method: string }): Promise<any> {
-  return apiRequest<any>("/api/customers/payments", { 
-    method: "POST", 
-    body: data 
+/** Same shape as PaymentRead in backend/app/schemas/customer.py */
+export interface CustomerPayment {
+  customer_payment_id: number;
+  customer_id: number;
+  amount: string;
+  method: string;
+  created_at: string;
+}
+
+export function recordPayment(data: { customer_id: number; amount: number | string; method: string }): Promise<CustomerPayment> {
+  return apiRequest<CustomerPayment>("/api/customers/payments", {
+    method: "POST",
+    body: data
   });
 }
 export interface LoyaltyTier {
   loyalty_tier_id: number;
   name: string;
   required_points: number;
-  discount_percent: number | string; // <-- CHANGE THIS LINE to allow both
+  discount_percent: number | string; // the API sends a decimal as text
 }
 
 export function listLoyaltyTiers(): Promise<LoyaltyTier[]> {
