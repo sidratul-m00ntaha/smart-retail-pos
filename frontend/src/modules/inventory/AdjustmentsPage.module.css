@@ -148,3 +148,45 @@
   background: var(--danger-tint);
   color: var(--danger);
 }
+.recurringBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--danger-tint);
+  color: var(--danger);
+  font-weight: 600;
+  margin-left: 8px;
+}
+.selectField {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 13.5px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.undoBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--teal-tint);
+  color: var(--teal-dark);
+  border-radius: 9px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.undoLink {
+  background: none;
+  border: none;
+  color: var(--teal-dark);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 13px;
+}

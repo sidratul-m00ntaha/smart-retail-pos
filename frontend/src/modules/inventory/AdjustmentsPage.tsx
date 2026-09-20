@@ -15,6 +15,8 @@ export default function AdjustmentsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [lastSaved, setLastSaved] = useState<StockAdjustment | null>(null)
+  const [isUndoing, setIsUndoing] = useState(false)
 
   function loadAdjustments() {
     getAdjustments()
@@ -25,11 +27,47 @@ export default function AdjustmentsPage() {
 
   useEffect(loadAdjustments, [])
 
+  async function handleUndo() {
+    if (!lastSaved) return
+    setIsUndoing(true)
+    try {
+      await createAdjustment({
+        product_id: lastSaved.product_id,
+        quantity_change: -lastSaved.quantity_change,
+        reason: `Undo of adjustment #${lastSaved.stock_adjustment_id}`,
+      })
+      setLastSaved(null)
+      loadAdjustments()
+    } catch {
+      // If undo fails (e.g. would go negative), just leave the banner as-is.
+    } finally {
+      setIsUndoing(false)
+    }
+  }
+
   if (isLoading) return <MessagePanel title="Loading adjustments…" />
   if (error) return <MessagePanel title="Could not load adjustments">{error}</MessagePanel>
 
+  const reasonCounts = new Map<string, number>()
+  for (const row of adjustments) {
+    const key = `${row.product_id}::${row.reason.toLowerCase().trim()}`
+    reasonCounts.set(key, (reasonCounts.get(key) ?? 0) + 1)
+  }
+
   return (
     <>
+      {lastSaved && (
+        <div className={formStyles.undoBanner}>
+          <span>
+            Adjusted product {lastSaved.product_id} by {lastSaved.quantity_change > 0 ? '+' : ''}
+            {lastSaved.quantity_change}.
+          </span>
+          <button className={formStyles.undoLink} onClick={handleUndo} disabled={isUndoing}>
+            {isUndoing ? 'Undoing…' : 'Undo'}
+          </button>
+        </div>
+      )}
+
       <div className={formStyles.toolbarRow}>
         <p className={formStyles.toolbarText}>Manual corrections for damaged, lost, or miscounted stock.</p>
         {hasPermission('inventory.manage') && (
@@ -60,7 +98,14 @@ export default function AdjustmentsPage() {
                   {row.quantity_change > 0 ? `+${row.quantity_change}` : row.quantity_change}
                 </td>
                 <td>{row.balance_after}</td>
-                <td>{row.reason}</td>
+                <td>
+                  {row.reason}
+                  {(reasonCounts.get(`${row.product_id}::${row.reason.toLowerCase().trim()}`) ?? 0) >= 3 && (
+                    <span className={formStyles.recurringBadge}>
+                      ⚠ happened {reasonCounts.get(`${row.product_id}::${row.reason.toLowerCase().trim()}`)}×
+                    </span>
+                  )}
+                </td>
                 <td>{formatDateTime(row.created_at)}</td>
               </tr>
             ))}
@@ -71,8 +116,9 @@ export default function AdjustmentsPage() {
       {isDrawerOpen && (
         <NewAdjustmentForm
           onClose={() => setIsDrawerOpen(false)}
-          onSaved={() => {
+          onSaved={(created) => {
             setIsDrawerOpen(false)
+            setLastSaved(created)
             loadAdjustments()
           }}
         />
@@ -81,12 +127,20 @@ export default function AdjustmentsPage() {
   )
 }
 
-function NewAdjustmentForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+function NewAdjustmentForm({
+  onClose,
+  onSaved,
+}: {
+  onClose: () => void
+  onSaved: (created: StockAdjustment) => void
+}) {
   const [stockList, setStockList] = useState<{ product_id: number; current_stock: number }[]>([])
   const [productId, setProductId] = useState('')
   const [direction, setDirection] = useState<'dec' | 'inc'>('dec')
   const [quantity, setQuantity] = useState('')
-  const [reason, setReason] = useState('')
+  const [reasonChoice, setReasonChoice] = useState('')
+  const [customReason, setCustomReason] = useState('')
+  const reason = reasonChoice === 'Other' ? customReason : reasonChoice
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -111,12 +165,12 @@ function NewAdjustmentForm({ onClose, onSaved }: { onClose: () => void; onSaved:
     setFormError(null)
     setIsSaving(true)
     try {
-      await createAdjustment({
+      const created = await createAdjustment({
         product_id: Number(productId),
         quantity_change: direction === 'dec' ? -qtyNum : qtyNum,
         reason: reason.trim(),
       })
-      onSaved()
+      onSaved(created)
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : 'Could not save the adjustment.')
     } finally {
@@ -182,13 +236,30 @@ function NewAdjustmentForm({ onClose, onSaved }: { onClose: () => void; onSaved:
       />
 
       <label className={formStyles.formLabel}>Reason</label>
-      <input
-        type="text"
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder="Damaged in storage"
-        className={formStyles.formInput}
-      />
+      <select
+        value={reasonChoice}
+        onChange={(e) => setReasonChoice(e.target.value)}
+        className={formStyles.selectField}
+      >
+        <option value="">Select a reason…</option>
+        <option value="Damaged in storage">Damaged in storage</option>
+        <option value="Damaged in transit">Damaged in transit</option>
+        <option value="Expired">Expired</option>
+        <option value="Stolen / missing">Stolen / missing</option>
+        <option value="Miscounted (stock recount)">Miscounted (stock recount)</option>
+        <option value="Returned by customer">Returned by customer</option>
+        <option value="Other">Other (type your own)</option>
+      </select>
+      {reasonChoice === 'Other' && (
+        <input
+          type="text"
+          value={customReason}
+          onChange={(e) => setCustomReason(e.target.value)}
+          placeholder="Type the reason"
+          className={formStyles.formInput}
+          style={{ marginTop: 8 }}
+        />
+      )}
 
       <div className={`${formStyles.previewBox} ${wouldGoNegative ? formStyles.err : ''}`}>
         {currentStock === undefined

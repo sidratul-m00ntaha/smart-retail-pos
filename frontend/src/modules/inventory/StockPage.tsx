@@ -41,6 +41,12 @@ export default function StockPage() {
     return true
   })
 
+  function suggestedReorder(row: ProductStock): number {
+    // Simple heuristic: bring stock up to double the reorder level.
+    const target = row.reorder_level * 2
+    return Math.max(target - row.current_stock, 0)
+  }
+
   return (
     <>
       <div className={styles.statStrip}>
@@ -74,8 +80,8 @@ export default function StockPage() {
         <div className={styles.spacer} />
         {hasPermission('inventory.manage') && (
           <button className={styles.addButton} onClick={() => setQuickAdjustProductId(0)}>
-  + New adjustment
-</button>
+            + New adjustment
+          </button>
         )}
       </div>
 
@@ -89,37 +95,42 @@ export default function StockPage() {
               <th>Current stock</th>
               <th>Reorder level</th>
               <th>Status</th>
+              <th>Suggested reorder</th>
               <th>Last updated</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((row) => (
-              <tr key={row.product_stock_id}>
-                <td>{row.product_id}</td>
-                <td>{row.current_stock}</td>
-                <td>{row.reorder_level}</td>
-                <td>
-                  {row.is_low_stock ? (
-                    <span className={`${styles.statusPill} ${styles.low}`}>Low</span>
-                  ) : (
-                    <span className={`${styles.statusPill} ${styles.normal}`}>Normal</span>
-                  )}
-                </td>
-                <td>{formatDateTime(row.updated_at)}</td>
-                <td>
-                  {hasPermission('inventory.manage') && (
-                    <button
-                      className={styles.iconBtnSm}
-                      title="Quick adjust"
-                      onClick={() => setQuickAdjustProductId(row.product_id)}
-                    >
-                      +
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {filtered.map((row) => {
+              const suggestion = suggestedReorder(row)
+              return (
+                <tr key={row.product_stock_id}>
+                  <td>{row.product_id}</td>
+                  <td>{row.current_stock}</td>
+                  <td>{row.reorder_level}</td>
+                  <td>
+                    {row.is_low_stock ? (
+                      <span className={`${styles.statusPill} ${styles.low}`}>Low</span>
+                    ) : (
+                      <span className={`${styles.statusPill} ${styles.normal}`}>Normal</span>
+                    )}
+                  </td>
+                  <td>{row.is_low_stock && suggestion > 0 ? `Order ${suggestion}` : '—'}</td>
+                  <td>{formatDateTime(row.updated_at)}</td>
+                  <td>
+                    {hasPermission('inventory.manage') && (
+                      <button
+                        className={styles.iconBtnSm}
+                        title="Quick adjust"
+                        onClick={() => setQuickAdjustProductId(row.product_id)}
+                      >
+                        +
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       )}

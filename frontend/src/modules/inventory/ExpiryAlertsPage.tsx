@@ -12,6 +12,34 @@ function daysUntil(dateStr: string): number {
   return Math.round(diff / 86400000)
 }
 
+function agingColor(days: number, isExpired: boolean): string {
+  if (isExpired) return 'var(--danger)'
+  if (days <= 3) return 'var(--danger)'
+  if (days <= 7) return 'var(--amber)'
+  if (days <= 14) return '#d8c341'
+  return 'var(--success)'
+}
+
+function printWriteOffSlip(batch: StockBatch) {
+  const win = window.open('', '_blank', 'width=400,height=500')
+  if (!win) return
+  win.document.write(`
+    <html>
+      <head><title>Write-off slip</title></head>
+      <body style="font-family: monospace; padding: 24px;">
+        <h2>Stock Write-off Slip</h2>
+        <p>Product: #${batch.product_id}</p>
+        <p>Batch: ${batch.batch_number}</p>
+        <p>Quantity removed: ${batch.quantity}</p>
+        <p>Reason: Expired batch ${batch.batch_number} (auto)</p>
+        <p>Date: ${new Date().toLocaleString()}</p>
+      </body>
+    </html>
+  `)
+  win.document.close()
+  win.print()
+}
+
 type Filter = 'all' | 'expired' | 'within7' | 'within30'
 
 export default function ExpiryAlertsPage() {
@@ -73,9 +101,14 @@ export default function ExpiryAlertsPage() {
             const level = batch.is_expired ? 'expired' : 'soon'
             const daysLabel = days < 0 ? `${Math.abs(days)}d ago` : `${days}d left`
             const tagLabel = batch.is_expired ? 'Expired' : 'Expiring soon'
+            const borderColor = agingColor(days, batch.is_expired)
 
             return (
-              <div key={batch.stock_batch_id} className={`${styles.card} ${styles[level]}`}>
+              <div
+                key={batch.stock_batch_id}
+                className={`${styles.card} ${styles[level]}`}
+                style={{ borderLeftColor: borderColor }}
+              >
                 <div className={styles.top}>
                   <div>
                     <p className={styles.name}>Product #{batch.product_id}</p>
@@ -165,6 +198,9 @@ function WriteOffForm({ batch, onClose, onSaved }: { batch: StockBatch; onClose:
       <input value={batch.quantity} disabled className={styles.confirmField} />
       <label className={styles.formLabel}>Reason</label>
       <input value={`Expired batch ${batch.batch_number} (auto)`} disabled className={styles.confirmField} />
+      <button type="button" className={styles.printBtn} onClick={() => printWriteOffSlip(batch)}>
+        🖨 Print slip
+      </button>
     </Drawer>
   )
 }

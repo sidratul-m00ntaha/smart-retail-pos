@@ -247,3 +247,19 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+.printBtn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.printBtn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
