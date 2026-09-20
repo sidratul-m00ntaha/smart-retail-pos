@@ -1,6 +1,10 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { calculateCart, formatMoney, toHundredths } from './posMath.ts'
+import CustomerPanel from './CustomerPanel.tsx'
+import type { SelectedCustomer } from './CustomerPanel.tsx'
+import PaymentPanel from './PaymentPanel.tsx'
+import { calculateCart, formatMoney, parseAmount, settlePayment, toHundredths, toInputText } from './posMath.ts'
+import type { PaymentMethod, PaymentTexts } from './posMath.ts'
 import { SAMPLE_PRODUCTS } from './sampleProducts.ts'
 import type { PosProduct } from './sampleProducts.ts'
 import styles from './PosPage.module.css'
@@ -11,9 +15,7 @@ type Notice = { kind: 'ok' | 'error'; text: string }
 const LOW_STOCK_AT = 5
 const CATEGORIES = ['All', ...new Set(SAMPLE_PRODUCTS.map((product) => product.category))]
 const PRODUCT_BY_ID = new Map(SAMPLE_PRODUCTS.map((product) => [product.productId, product]))
-
-// Stage 2 will use the selected customer's loyalty tier here (in hundredths of a percent, 10.00% = 1000).
-const DISCOUNT_HUNDREDTHS = 0
+const NO_PAYMENT: PaymentTexts = { cash: '', card: '', digital: '' }
 
 export default function PosPage() {
   const [cart, setCart] = useState<CartLine[]>([])
@@ -21,6 +23,8 @@ export default function PosPage() {
   const [category, setCategory] = useState('All')
   const [scanText, setScanText] = useState('')
   const [notice, setNotice] = useState<Notice | null>(null)
+  const [selected, setSelected] = useState<SelectedCustomer | null>(null)
+  const [payTexts, setPayTexts] = useState<PaymentTexts>(NO_PAYMENT)
   const scanRef = useRef<HTMLInputElement>(null)
 
   const term = search.trim().toLowerCase()
@@ -43,9 +47,25 @@ export default function PosPage() {
       quantity: line.quantity,
       vatHundredths: toHundredths(product.vatPercent),
     })),
-    DISCOUNT_HUNDREDTHS,
+    selected?.discountHundredths ?? 0,
   )
   const itemCount = cart.reduce((count, line) => count + line.quantity, 0)
+
+  // Payment: the boxes hold text; the amounts are only used when every box is a valid amount.
+  const cash = parseAmount(payTexts.cash)
+  const card = parseAmount(payTexts.card)
+  const digital = parseAmount(payTexts.digital)
+  const invalid = { cash: cash === null, card: card === null, digital: digital === null }
+  const settlement =
+    cash === null || card === null || digital === null
+      ? null
+      : settlePayment(
+          totals.total,
+          { cash, card, digital },
+          selected !== null,
+          selected ? toHundredths(selected.customer.available_credit) : 0,
+        )
+  const ready = rows.length > 0 && settlement !== null && settlement.error === null
 
   /** Adds one unit. Returns a message when it can't be added, otherwise null. */
   function addToCart(product: PosProduct): string | null {
@@ -95,6 +115,17 @@ export default function PosPage() {
   function removeLine(product: PosProduct) {
     setNotice(null)
     setCart((lines) => lines.filter((line) => line.productId !== product.productId))
+  }
+
+  function clearSale() {
+    setNotice(null)
+    setCart([])
+    setSelected(null)
+    setPayTexts(NO_PAYMENT)
+  }
+
+  function payFull(method: PaymentMethod) {
+    setPayTexts({ ...NO_PAYMENT, [method]: toInputText(totals.total) })
   }
 
   return (
@@ -166,12 +197,14 @@ export default function PosPage() {
       <aside className={styles.cart} aria-label="Cart">
         <div className={styles.cartHeader}>
           <h2 className={styles.cartTitle}>Current sale{itemCount > 0 && ` · ${itemCount} item${itemCount === 1 ? '' : 's'}`}</h2>
-          {cart.length > 0 && (
-            <button type="button" className={styles.linkButton} onClick={() => setCart([])}>
+          {(cart.length > 0 || selected !== null) && (
+            <button type="button" className={styles.linkButton} onClick={clearSale}>
               Clear
             </button>
           )}
         </div>
+
+        <CustomerPanel selected={selected} onSelect={setSelected} />
 
         {rows.length === 0 ? (
           <p className={styles.cartEmpty}>The cart is empty. Scan a barcode or click a product.</p>
@@ -228,9 +261,23 @@ export default function PosPage() {
           </div>
         </dl>
 
+        <PaymentPanel
+          total={totals.total}
+          texts={payTexts}
+          invalid={invalid}
+          settlement={settlement}
+          onChange={(method, text) => setPayTexts((texts) => ({ ...texts, [method]: text }))}
+          onPayFull={payFull}
+        />
+
         <div className={styles.actions}>
-          <button type="button" className={styles.primaryButton} disabled title="Customer and payment come in the next step">
-            Continue to payment
+          <button
+            type="button"
+            className={styles.primaryButton}
+            disabled
+            title={ready ? 'Ready. Completing the sale is connected in the next step.' : 'Finish the cart and payment first'}
+          >
+            Complete sale
           </button>
         </div>
       </aside>
