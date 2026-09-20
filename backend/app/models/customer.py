@@ -20,7 +20,9 @@ class Customer(Base):
     loyalty_tier_id: Mapped[int | None] = mapped_column(ForeignKey("LoyaltyTiers.loyalty_tier_id"), default=None)
     status: Mapped[str] = mapped_column(Unicode(20), server_default=text("'active'"))
     created_at: Mapped[datetime] = mapped_column(server_default=func.sysutcdatetime())
-
+    
+    # Relationships
+    loyalty_transactions = relationship("LoyaltyTransaction", back_populates="customer")
     loyalty_tier: Mapped["LoyaltyTier"] = relationship(back_populates="customers")
 
 class LoyaltyTier(Base):
@@ -43,6 +45,7 @@ class CustomerPayment(Base):
     recorded_by: Mapped[int | None] = mapped_column(ForeignKey("Users.user_id"), default=None)
     created_at: Mapped[datetime] = mapped_column(server_default=func.sysutcdatetime())
 
+# --- THIS IS THE ONLY LOYALTY TRANSACTION CLASS NEEDED ---
 class LoyaltyTransaction(Base):
     __tablename__ = "LoyaltyTransactions"
 
@@ -53,3 +56,5 @@ class LoyaltyTransaction(Base):
     points: Mapped[int] = mapped_column()
     description: Mapped[str | None] = mapped_column(Unicode(255), default=None)
     created_at: Mapped[datetime] = mapped_column(server_default=func.sysutcdatetime())
+    
+    customer = relationship("Customer", back_populates="loyalty_transactions")
