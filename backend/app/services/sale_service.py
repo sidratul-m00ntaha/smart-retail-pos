@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.models.customer import Customer
 from app.models.sale import HeldCart, Invoice, Payment, Sale, SaleItem
-from app.schemas.sale import PaymentOut, SaleCreate, SaleItemOut, SaleOut
+from app.schemas.sale import PaymentOut, SaleCreate, SaleItemOut, SaleLineIn, SaleOut
 from app.services.activity_log_service import log_activity
 from app.services.customer_service import add_due, add_points
 from app.services.sale_calculator import LineInput, calculate_sale, money, settle_payment
@@ -35,6 +35,17 @@ def points_earned(paid_amount: Decimal) -> int:
     return int(paid_amount // Decimal("100")) * LOYALTY_POINTS_PER_100
 
 
+def merge_cart_lines(lines: list[SaleLineIn]) -> dict[int, Decimal]:
+    """Merges duplicate products into one quantity each. Stock is counted in whole units for now."""
+    quantities: dict[int, Decimal] = {}
+    for line in lines:
+        quantities[line.product_id] = quantities.get(line.product_id, Decimal("0")) + line.quantity
+    for quantity in quantities.values():
+        if quantity != quantity.to_integral_value():
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Quantities must be whole numbers.")
+    return quantities
+
+
 def complete_sale(db: Session, data: SaleCreate, cashier_id: int) -> CompletedSale:
     try:
         result = _build_and_save_sale(db, data, cashier_id)
@@ -46,13 +57,8 @@ def complete_sale(db: Session, data: SaleCreate, cashier_id: int) -> CompletedSa
 
 
 def _build_and_save_sale(db: Session, data: SaleCreate, cashier_id: int) -> CompletedSale:
-    # 1. Merge duplicate products and check quantities. Stock is counted in whole units for now.
-    quantities: dict[int, Decimal] = {}
-    for line in data.items:
-        quantities[line.product_id] = quantities.get(line.product_id, Decimal("0")) + line.quantity
-    for quantity in quantities.values():
-        if quantity != quantity.to_integral_value():
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Quantities must be whole numbers.")
+    # 1. Merge duplicate products and check quantities.
+    quantities = merge_cart_lines(data.items)
 
     # 2. Prices and VAT come from the database, never from the browser.
     products = {product_id: get_sellable_product(db, product_id) for product_id in quantities}
