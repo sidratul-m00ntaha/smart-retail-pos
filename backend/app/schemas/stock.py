@@ -52,6 +52,7 @@ class StockAdjustmentOut(BaseModel):
     product_id: int
     quantity_change: int
     reason: str
+    balance_after: int
     adjusted_by: int | None
     created_at: UtcDateTime
 
