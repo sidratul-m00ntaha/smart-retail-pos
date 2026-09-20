@@ -8,7 +8,10 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+from app.models.stock import ProductStock
 
 
 @dataclass(frozen=True)
@@ -32,6 +35,12 @@ def get_sellable_product(db: Session, product_id: int) -> SellableProduct:
     if product is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Product {product_id} was not found.")
     return product
+
+
+# ---- STAND-IN for Module 4's "available quantity": reads its ProductStock table directly ----
+def get_available_quantity(db: Session, product_id: int) -> int:
+    """Units in stock right now (0 if the product has no stock row yet). Read-only."""
+    return db.scalar(select(ProductStock.current_stock).where(ProductStock.product_id == product_id)) or 0
 
 
 # ---- REAL VERSION: use this once Module 2's code is on main (then delete the stand-in above) ----
