@@ -114,6 +114,7 @@ def _build_and_save_sale(db: Session, data: SaleCreate, cashier_id: int) -> Comp
     )
     db.add(sale)
     db.flush()  # gives the sale its id
+    invoice_number = f"INV-{datetime.now(timezone.utc).year}-{sale.sale_id:05d}"
 
     items = [
         SaleItem(
@@ -143,16 +144,14 @@ def _build_and_save_sale(db: Session, data: SaleCreate, cashier_id: int) -> Comp
             ) from err
 
     # 8. Customer effects (Module 6): the due, then the points and the tier.
-    # TODO(module 6): add_points does not write a LoyaltyTransactions row yet; ask its owner to add one.
     if customer is not None:
         if settlement.due_amount > 0:
             add_due(db, customer.customer_id, settlement.due_amount)
         points = points_earned(settlement.paid_amount)
         if points > 0:
-            add_points(db, customer.customer_id, points)
+            add_points(db, customer.customer_id, points, sale_id=sale.sale_id, description=f"Sale {invoice_number}")
 
     # 9. Invoice, held cart and activity log.
-    invoice_number = f"INV-{datetime.now(timezone.utc).year}-{sale.sale_id:05d}"
     db.add(Invoice(sale_id=sale.sale_id, invoice_number=invoice_number))
     if held_cart is not None:
         held_cart.status = "completed"
