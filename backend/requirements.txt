@@ -3,6 +3,8 @@
 # When you add a package: add ONE line, pin the exact version (==),
 # and keep the list in alphabetical order.
 fastapi==0.141.1
+# Used by the AI Assistant only when AI_API_KEY is set in backend/.env - see docs/ai-assistant.md
+google-genai==2.24.0
 pwdlib[argon2]==0.3.1
 pydantic-settings==2.15.0
 pyjwt==2.14.0

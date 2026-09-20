@@ -253,7 +253,10 @@ Until Module 1 is merged into `main`, build your endpoints **without** the `get_
 - [x] **SMS settings:** `sms_enabled` and `sms_sender_name` are enough; the SMS provider's API key goes in `backend/.env`
 - [ ] **Loyalty earning rule** (e.g. 1 point per 100 ৳ spent): store it in Module 6's tables or in StoreSettings? – being decided with Module 6
 
-## Later (Wave 4): AI Assistant tables
+## AI Assistant tables (PRD 5.22)
 
-- `AIConversations` – one chat session per user
-- `AIMessages` – each question and answer, including **which report function** produced the answer (PRD 5.22 requires answers to be traceable)
+- `AIConversations` – one saved chat per user
+- `AIMessages` – each question and answer, including **which report function** produced the answer, so every answer is traceable
+
+Both tables, how a question becomes an answer, and how to add a new question type are described in
+**[docs/ai-assistant.md](../ai-assistant.md)**.

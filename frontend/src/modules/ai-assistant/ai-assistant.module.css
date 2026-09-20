@@ -1,0 +1,337 @@
+/* AI Assistant page, based on docs/prototype/ai-assistant.html */
+
+.page {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ---------- Saved chats ---------- */
+.chatRail {
+  position: sticky;
+  top: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.newChatButton {
+  padding: 9px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--teal-dark);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.newChatButton:hover {
+  border-color: var(--teal);
+}
+
+.chatList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.railEmpty {
+  margin: 4px 2px;
+  color: var(--ink-soft);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.chatItem {
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+}
+
+.chatItem:hover,
+.chatItem.chatItemActive {
+  background: var(--paper);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.chatTitle {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.chatItemActive .chatTitle {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.chatDelete {
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.chatItem:hover .chatDelete,
+.chatDelete:focus-visible {
+  opacity: 1;
+}
+
+.chatDelete:hover {
+  color: var(--danger);
+}
+
+/* ---------- Chat card ---------- */
+.chatCard {
+  display: flex;
+  flex-direction: column;
+  min-height: 60vh;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.chatHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chatHeading {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.chatSub {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.modePill {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.modePill.modePillAi {
+  background: var(--teal-tint);
+  color: var(--teal-dark);
+}
+
+/* ---------- Messages ---------- */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 55vh;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.empty {
+  margin: auto;
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0 0 14px;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+}
+
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 560px;
+}
+
+.exampleChip {
+  padding: 8px 13px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.exampleChip:hover {
+  border-color: var(--teal);
+  background: var(--teal-tint);
+}
+
+.bubbleRow {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.bubbleRow.bubbleRowUser {
+  justify-content: flex-end;
+}
+
+.bubble {
+  max-width: 82%;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre-wrap; /* the answers use line breaks for lists */
+}
+
+.bubble.bubbleUser {
+  border-color: var(--teal);
+  background: var(--teal-tint);
+  color: var(--teal-dark);
+}
+
+.bubble.bubblePending {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.source {
+  display: block;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+}
+
+/* ---------- Composer ---------- */
+.error {
+  margin: 0 22px;
+  padding: 9px 12px;
+  border: 1px solid #f0cfc9;
+  border-radius: 8px;
+  background: var(--danger-tint);
+  color: var(--danger);
+  font-size: 12.5px;
+}
+
+.composer {
+  display: flex;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--border);
+}
+
+.composer input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 13px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13.5px;
+  outline: none;
+}
+
+.composer input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+}
+
+.sendButton {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 9px;
+  background: var(--amber);
+  color: #3a2606;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sendButton:hover:not(:disabled) {
+  background: var(--amber-dark);
+  color: #fff;
+}
+
+.sendButton:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.newChatButton:focus-visible,
+.chatTitle:focus-visible,
+.chatDelete:focus-visible,
+.exampleChip:focus-visible,
+.sendButton:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.composerNote {
+  margin: 8px 2px 0;
+  color: var(--ink-soft);
+  font-size: 11.5px;
+}
+
+/* Text for screen readers only */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .chatRail {
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+  }
+
+  .chatList {
+    flex-direction: row;
+  }
+
+  .chatTitle {
+    max-width: 150px;
+  }
+
+  .bubble {
+    max-width: 92%;
+  }
+}
