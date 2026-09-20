@@ -13,19 +13,19 @@ PERMISSIONS = {
     "settings.manage": "Change store settings",
     "activity_logs.view": "See the activity log",
     "tax_rates.manage": "Create and change VAT rates",
-    "products.view": "View products, categories, brands, units",
+    "products.view": "View products, categories, brands and units",
     "products.manage": "Products, categories, brands, units",
     "suppliers.manage": "Suppliers",
     "purchases.manage": "Create purchases, pay supplier dues",
     "inventory.manage": "Stock adjustments and batches",
+    "customers.manage": "View, edit, update credit limit, or deactivate customers",
+    "customers.create": "Register a new customer (used by the POS at checkout)",
     "customer_dues.receive": "Receive customer due payments",
     "loyalty.configure": "Loyalty tiers",
     "pos.sell": "Use the POS: sales, invoices, invoice SMS",
     "sales.view": "Sales history and invoices",
     "reports.view": "Dashboard, reports, expiry alerts",
     "ai.use": "AI Assistant",
-    "customers.manage": "View, edit, update credit limit, or deactivate customers",
-    "customers.create": "Register a new customer (used by POS at checkout)",
 }
 
 ADMIN_ONLY = {
@@ -47,6 +47,8 @@ ROLES = {
         set(PERMISSIONS) - ADMIN_ONLY - {"products.manage"},
     ),
 
+    # Cashiers can use POS, view products, and register customers at checkout,
+    # but cannot manage products.
     "Cashier": (
         "Operates the POS",
         {"pos.sell", "products.view", "customers.create"},

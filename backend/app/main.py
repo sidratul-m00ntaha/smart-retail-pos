@@ -61,9 +61,6 @@ app.include_router(reports.router)
 app.include_router(tax_rates.router)
 app.include_router(units.router)
 
-# Module 2/other modules already present on main
-app.include_router(customers.router)
-
 # Module 3: Suppliers & Purchasing
 app.include_router(suppliers.router)
 app.include_router(purchases.router)
@@ -81,3 +78,6 @@ from app.routers import sales, held_carts
 
 app.include_router(sales.router)
 app.include_router(held_carts.router)
+
+# Module 6: Customers, Dues & Loyalty
+app.include_router(customers.router)
