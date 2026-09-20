@@ -172,7 +172,8 @@ Based on PRD section 4. **Admin has every permission.** Any logged-in user can _
 | `suppliers.manage`      | Suppliers                                    |  ✅   |   ✅    |         |
 | `purchases.manage`      | Create purchases, pay supplier dues          |  ✅   |   ✅    |         |
 | `inventory.manage`      | Stock adjustments and batches                |  ✅   |   ✅    |         |
-| `customers.manage`      | Create and edit customers                    |  ✅   |   ✅    |         |
+| `customers.manage`      | View, edit, update credit limit, deactivate  |  ✅   |   ✅    |         |
+| `customers.create`      | Register a new customer (POS at checkout)    |  ✅   |   ✅    |   ✅    |
 | `customer_dues.receive` | Receive customer due payments                |  ✅   |   ✅    |         |
 | `loyalty.configure`     | Loyalty tiers                                |  ✅   |   ✅    |         |
 | `pos.sell`              | Use the POS: sales, invoices, invoice SMS    |  ✅   |   ✅    |   ✅    |
