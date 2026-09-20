@@ -3,19 +3,33 @@ import type { FormEvent } from 'react'
 import CustomerPanel from './CustomerPanel.tsx'
 import type { SelectedCustomer } from './CustomerPanel.tsx'
 import PaymentPanel from './PaymentPanel.tsx'
-import { calculateCart, formatMoney, parseAmount, settlePayment, toHundredths, toInputText } from './posMath.ts'
-import type { PaymentMethod, PaymentTexts } from './posMath.ts'
+import Receipt from './Receipt.tsx'
+import { ApiError } from '../../services/api.ts'
+import { createSale } from '../../services/pos.service.ts'
+import type { Sale } from '../../services/pos.service.ts'
+import { buildPayments, calculateCart, formatMoney, parseAmount, settlePayment, toHundredths, toInputText } from './posMath.ts'
+import type { Paisa, PaymentMethod, PaymentTexts } from './posMath.ts'
 import { SAMPLE_PRODUCTS } from './sampleProducts.ts'
 import type { PosProduct } from './sampleProducts.ts'
 import styles from './PosPage.module.css'
 
 type CartLine = { productId: number; quantity: number }
 type Notice = { kind: 'ok' | 'error'; text: string }
+type CompletedSale = { sale: Sale; change: Paisa; customerName: string | null }
+/** A sale error belongs to the cart and payment it happened with; it disappears as soon as either changes. */
+type SaleError = { text: string; signature: string }
 
 const LOW_STOCK_AT = 5
 const CATEGORIES = ['All', ...new Set(SAMPLE_PRODUCTS.map((product) => product.category))]
 const PRODUCT_BY_ID = new Map(SAMPLE_PRODUCTS.map((product) => [product.productId, product]))
 const NO_PAYMENT: PaymentTexts = { cash: '', card: '', digital: '' }
+
+function saleErrorText(error: unknown): string {
+  if (!(error instanceof ApiError)) return 'Could not complete the sale.'
+  // Status 0 (no answer) or 5xx: we don't know whether the server saved the sale before it failed.
+  const unsure = error.status === 0 || error.status >= 500
+  return unsure ? `${error.message} The sale may have been saved: ask a manager to check the Activity Logs before trying again.` : error.message
+}
 
 export default function PosPage() {
   const [cart, setCart] = useState<CartLine[]>([])
@@ -25,6 +39,10 @@ export default function PosPage() {
   const [notice, setNotice] = useState<Notice | null>(null)
   const [selected, setSelected] = useState<SelectedCustomer | null>(null)
   const [payTexts, setPayTexts] = useState<PaymentTexts>(NO_PAYMENT)
+  const [completed, setCompleted] = useState<CompletedSale | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [saleError, setSaleError] = useState<SaleError | null>(null)
+  const submittingRef = useRef(false) // blocks a double click before the state has updated
   const scanRef = useRef<HTMLInputElement>(null)
 
   const term = search.trim().toLowerCase()
@@ -66,6 +84,8 @@ export default function PosPage() {
           selected ? toHundredths(selected.customer.available_credit) : 0,
         )
   const ready = rows.length > 0 && settlement !== null && settlement.error === null
+  const signature = JSON.stringify([selected?.customer.customer_id ?? null, cart, payTexts])
+  const visibleError = saleError !== null && saleError.signature === signature ? saleError.text : null
 
   /** Adds one unit. Returns a message when it can't be added, otherwise null. */
   function addToCart(product: PosProduct): string | null {
@@ -124,163 +144,192 @@ export default function PosPage() {
     setPayTexts(NO_PAYMENT)
   }
 
+  async function completeSale() {
+    if (!ready || settlement === null || submittingRef.current) return
+    submittingRef.current = true
+    setSubmitting(true)
+    try {
+      const sale = await createSale({
+        customer_id: selected?.customer.customer_id ?? null,
+        items: rows.map(({ line, product }) => ({ product_id: product.productId, quantity: line.quantity })),
+        payments: buildPayments(settlement.applied),
+      })
+      setCompleted({ sale, change: settlement.change, customerName: selected?.customer.name ?? null })
+    } catch (error) {
+      setSaleError({ text: saleErrorText(error), signature })
+    } finally {
+      submittingRef.current = false
+      setSubmitting(false)
+    }
+  }
+
+  function newSale() {
+    clearSale()
+    setCompleted(null)
+  }
+
   function payFull(method: PaymentMethod) {
     setPayTexts({ ...NO_PAYMENT, [method]: toInputText(totals.total) })
   }
 
   return (
-    <div className={styles.layout}>
-      <section className={styles.catalog} aria-label="Products">
-        <div className={styles.searchRow}>
-          <form onSubmit={handleScan}>
+    <>
+      <div className={styles.layout}>
+        <section className={styles.catalog} aria-label="Products">
+          <div className={styles.searchRow}>
+            <form onSubmit={handleScan}>
+              <input
+                ref={scanRef}
+                className={styles.input}
+                value={scanText}
+                onChange={(event) => setScanText(event.target.value)}
+                placeholder="Scan barcode or type SKU, then Enter"
+                aria-label="Scan barcode or SKU"
+              />
+            </form>
             <input
-              ref={scanRef}
               className={styles.input}
-              value={scanText}
-              onChange={(event) => setScanText(event.target.value)}
-              placeholder="Scan barcode or type SKU, then Enter"
-              aria-label="Scan barcode or SKU"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search by name, SKU or barcode"
+              aria-label="Search products"
             />
-          </form>
-          <input
-            className={styles.input}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by name, SKU or barcode"
-            aria-label="Search products"
-          />
-        </div>
-        <p className={`${styles.notice} ${notice?.kind === 'error' ? styles.noticeError : styles.noticeOk}`} role="status">
-          {notice?.text}
-        </p>
+          </div>
+          <p className={`${styles.notice} ${notice?.kind === 'error' ? styles.noticeError : styles.noticeOk}`} role="status">
+            {notice?.text}
+          </p>
 
-        <div className={styles.chips}>
-          {CATEGORIES.map((name) => (
-            <button
-              key={name}
-              type="button"
-              className={name === category ? `${styles.chip} ${styles.chipActive}` : styles.chip}
-              onClick={() => setCategory(name)}
-            >
-              {name}
-            </button>
-          ))}
-        </div>
-
-        {visibleProducts.length === 0 ? (
-          <p className={styles.empty}>No products match your search.</p>
-        ) : (
-          <div className={styles.grid}>
-            {visibleProducts.map((product) => (
+          <div className={styles.chips}>
+            {CATEGORIES.map((name) => (
               <button
-                key={product.productId}
+                key={name}
                 type="button"
-                className={styles.card}
-                disabled={product.stock <= 0}
-                onClick={() => handleCardClick(product)}
+                className={name === category ? `${styles.chip} ${styles.chipActive}` : styles.chip}
+                onClick={() => setCategory(name)}
               >
-                {product.stock <= 0 ? (
-                  <span className={`${styles.badge} ${styles.badgeOut}`}>Out</span>
-                ) : product.stock <= LOW_STOCK_AT ? (
-                  <span className={`${styles.badge} ${styles.badgeLow}`}>Low</span>
-                ) : null}
-                <span className={styles.category}>{product.category}</span>
-                <span className={styles.name}>{product.name}</span>
-                <span className={styles.price}>{formatMoney(toHundredths(product.unitPrice))}</span>
-                <span className={styles.stock}>{product.stock} in stock</span>
+                {name}
               </button>
             ))}
           </div>
-        )}
-      </section>
 
-      <aside className={styles.cart} aria-label="Cart">
-        <div className={styles.cartHeader}>
-          <h2 className={styles.cartTitle}>Current sale{itemCount > 0 && ` · ${itemCount} item${itemCount === 1 ? '' : 's'}`}</h2>
-          {(cart.length > 0 || selected !== null) && (
-            <button type="button" className={styles.linkButton} onClick={clearSale}>
-              Clear
-            </button>
-          )}
-        </div>
-
-        <CustomerPanel selected={selected} onSelect={setSelected} />
-
-        {rows.length === 0 ? (
-          <p className={styles.cartEmpty}>The cart is empty. Scan a barcode or click a product.</p>
-        ) : (
-          <ul className={styles.lines}>
-            {rows.map(({ line, product }, index) => (
-              <li key={product.productId} className={styles.cartLine}>
-                <div className={styles.lineInfo}>
-                  <p className={styles.lineName}>{product.name}</p>
-                  <p className={styles.linePrice}>{formatMoney(toHundredths(product.unitPrice))} each</p>
-                </div>
-                <div className={styles.qty}>
-                  <button type="button" className={styles.qtyButton} aria-label={`Fewer ${product.name}`} onClick={() => changeQuantity(product, -1)}>
-                    −
-                  </button>
-                  <span className={styles.qtyValue}>{line.quantity}</span>
-                  <button
-                    type="button"
-                    className={styles.qtyButton}
-                    aria-label={`More ${product.name}`}
-                    disabled={line.quantity >= product.stock}
-                    onClick={() => changeQuantity(product, 1)}
-                  >
-                    +
-                  </button>
-                </div>
-                <span className={styles.lineTotal}>{formatMoney(totals.lines[index].subtotal)}</span>
-                <button type="button" className={styles.removeButton} aria-label={`Remove ${product.name}`} onClick={() => removeLine(product)}>
-                  ×
+          {visibleProducts.length === 0 ? (
+            <p className={styles.empty}>No products match your search.</p>
+          ) : (
+            <div className={styles.grid}>
+              {visibleProducts.map((product) => (
+                <button
+                  key={product.productId}
+                  type="button"
+                  className={styles.card}
+                  disabled={product.stock <= 0}
+                  onClick={() => handleCardClick(product)}
+                >
+                  {product.stock <= 0 ? (
+                    <span className={`${styles.badge} ${styles.badgeOut}`}>Out</span>
+                  ) : product.stock <= LOW_STOCK_AT ? (
+                    <span className={`${styles.badge} ${styles.badgeLow}`}>Low</span>
+                  ) : null}
+                  <span className={styles.category}>{product.category}</span>
+                  <span className={styles.name}>{product.name}</span>
+                  <span className={styles.price}>{formatMoney(toHundredths(product.unitPrice))}</span>
+                  <span className={styles.stock}>{product.stock} in stock</span>
                 </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <dl className={styles.totals}>
-          <div className={styles.totalRow}>
-            <dt>Subtotal</dt>
-            <dd>{formatMoney(totals.subtotal)}</dd>
-          </div>
-          {totals.discount > 0 && (
-            <div className={styles.totalRow}>
-              <dt>Loyalty discount</dt>
-              <dd>− {formatMoney(totals.discount)}</dd>
+              ))}
             </div>
           )}
-          <div className={styles.totalRow}>
-            <dt>VAT</dt>
-            <dd>{formatMoney(totals.tax)}</dd>
-          </div>
-          <div className={`${styles.totalRow} ${styles.grandTotal}`}>
-            <dt>Total</dt>
-            <dd>{formatMoney(totals.total)}</dd>
-          </div>
-        </dl>
+        </section>
 
-        <PaymentPanel
-          total={totals.total}
-          texts={payTexts}
-          invalid={invalid}
-          settlement={settlement}
-          onChange={(method, text) => setPayTexts((texts) => ({ ...texts, [method]: text }))}
-          onPayFull={payFull}
-        />
+        <aside className={styles.cart} aria-label="Cart">
+          <div className={styles.cartHeader}>
+            <h2 className={styles.cartTitle}>Current sale{itemCount > 0 && ` · ${itemCount} item${itemCount === 1 ? '' : 's'}`}</h2>
+            {(cart.length > 0 || selected !== null) && (
+              <button type="button" className={styles.linkButton} onClick={clearSale}>
+                Clear
+              </button>
+            )}
+          </div>
 
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className={styles.primaryButton}
-            disabled
-            title={ready ? 'Ready. Completing the sale is connected in the next step.' : 'Finish the cart and payment first'}
-          >
-            Complete sale
-          </button>
-        </div>
-      </aside>
-    </div>
+          <CustomerPanel selected={selected} onSelect={setSelected} />
+
+          {rows.length === 0 ? (
+            <p className={styles.cartEmpty}>The cart is empty. Scan a barcode or click a product.</p>
+          ) : (
+            <ul className={styles.lines}>
+              {rows.map(({ line, product }, index) => (
+                <li key={product.productId} className={styles.cartLine}>
+                  <div className={styles.lineInfo}>
+                    <p className={styles.lineName}>{product.name}</p>
+                    <p className={styles.linePrice}>{formatMoney(toHundredths(product.unitPrice))} each</p>
+                  </div>
+                  <div className={styles.qty}>
+                    <button type="button" className={styles.qtyButton} aria-label={`Fewer ${product.name}`} onClick={() => changeQuantity(product, -1)}>
+                      −
+                    </button>
+                    <span className={styles.qtyValue}>{line.quantity}</span>
+                    <button
+                      type="button"
+                      className={styles.qtyButton}
+                      aria-label={`More ${product.name}`}
+                      disabled={line.quantity >= product.stock}
+                      onClick={() => changeQuantity(product, 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <span className={styles.lineTotal}>{formatMoney(totals.lines[index].subtotal)}</span>
+                  <button type="button" className={styles.removeButton} aria-label={`Remove ${product.name}`} onClick={() => removeLine(product)}>
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <dl className={styles.totals}>
+            <div className={styles.totalRow}>
+              <dt>Subtotal</dt>
+              <dd>{formatMoney(totals.subtotal)}</dd>
+            </div>
+            {totals.discount > 0 && (
+              <div className={styles.totalRow}>
+                <dt>Loyalty discount</dt>
+                <dd>− {formatMoney(totals.discount)}</dd>
+              </div>
+            )}
+            <div className={styles.totalRow}>
+              <dt>VAT</dt>
+              <dd>{formatMoney(totals.tax)}</dd>
+            </div>
+            <div className={`${styles.totalRow} ${styles.grandTotal}`}>
+              <dt>Total</dt>
+              <dd>{formatMoney(totals.total)}</dd>
+            </div>
+          </dl>
+
+          <PaymentPanel
+            total={totals.total}
+            texts={payTexts}
+            invalid={invalid}
+            settlement={settlement}
+            onChange={(method, text) => setPayTexts((texts) => ({ ...texts, [method]: text }))}
+            onPayFull={payFull}
+          />
+
+          <div className={styles.actions}>
+            {visibleError && (
+              <p className={styles.saleError} role="alert">
+                {visibleError}
+              </p>
+            )}
+            <button type="button" className={styles.primaryButton} disabled={!ready || submitting} onClick={completeSale}>
+              {submitting ? 'Saving…' : 'Complete sale'}
+            </button>
+          </div>
+        </aside>
+      </div>
+      {completed && (
+        <Receipt sale={completed.sale} change={completed.change} customerName={completed.customerName} onNewSale={newSale} />
+      )}
+    </>
   )
 }

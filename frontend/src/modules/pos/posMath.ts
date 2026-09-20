@@ -135,6 +135,16 @@ export function settlePayment(
   }
 }
 
+/**
+ * The payments to send to the server: only methods with money in them, in a fixed order. Amounts are
+ * exact decimal strings ("189.00"). Cash is already reduced by the change, so the total always matches.
+ * A due is not sent: the server works it out as total - paid.
+ */
+export function buildPayments(applied: PaymentAmounts): { method: PaymentMethod; amount: string }[] {
+  const methods: PaymentMethod[] = ['cash', 'card', 'digital']
+  return methods.filter((method) => applied[method] > 0).map((method) => ({ method, amount: toInputText(applied[method]) }))
+}
+
 /** 123456 -> "Tk 1,234.56" and -5025 -> "-Tk 50.25" */
 export function formatMoney(paisa: Paisa): string {
   const sign = paisa < 0 ? '-' : ''
