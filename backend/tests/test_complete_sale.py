@@ -16,7 +16,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base
 import app.models  # noqa: F401  (registers every table)
-from app.models import ActivityLog
+from app.models import ActivityLog, Category, Product, TaxRate, Unit
 from app.models.customer import Customer, LoyaltyTier
 from app.models.sale import HeldCart, Invoice, Payment, Sale, SaleItem
 from app.models.stock import ProductStock, StockMovement
@@ -32,6 +32,20 @@ def _datetime2_on_sqlite(type_, compiler, **kw):
     return "DATETIME"
 
 
+def add_sample_products(db) -> None:
+    """The products the tests sell, as real Product rows. Their ids follow insertion order: 1 Milk, 2 Rice, 3 Soap.
+    They start with current_quantity 0; each test adds the stock it needs (a ProductStock row, or a quantity)."""
+    category, unit = Category(name="Sample"), Unit(name="Piece")
+    rates = {"5.00": TaxRate(name="VAT 5%", rate_percent=D("5.00")), "0.00": TaxRate(name="Zero VAT", rate_percent=D("0.00")), "15.00": TaxRate(name="VAT 15%", rate_percent=D("15.00"))}
+    db.add_all([category, unit, *rates.values()])
+    db.flush()
+    for code, name, price, rate in (("MLK-001", "Milk 1L", "90.00", "5.00"), ("RCE-005", "Rice 5kg", "450.00", "0.00"), ("SOP-001", "Soap", "35.50", "15.00")):
+        db.add(Product(product_code=code, name=name, category_id=category.category_id, unit_id=unit.unit_id, tax_rate_id=rates[rate].tax_rate_id,
+                       sale_price=D(price), tax_percent=D(rate), current_quantity=0))
+        db.flush()
+    db.commit()
+
+
 def make_session():
     engine = create_engine("sqlite://", poolclass=StaticPool, connect_args={"check_same_thread": False})
 
@@ -42,7 +56,9 @@ def make_session():
         )
 
     Base.metadata.create_all(engine)
-    return sessionmaker(engine)()
+    db = sessionmaker(engine)()
+    add_sample_products(db)
+    return db
 
 
 def line(product_id: int, quantity: str) -> SaleLineIn:

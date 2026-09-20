@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import CustomerPanel from './CustomerPanel.tsx'
 import type { SelectedCustomer } from './CustomerPanel.tsx'
@@ -11,8 +11,8 @@ import { createSale, getLoyaltyStatus, holdCart, resumeHeldCart, updateHeldCart 
 import type { HeldCartSave, Sale } from '../../services/pos.service.ts'
 import { buildPayments, calculateCart, formatMoney, parseAmount, settlePayment, toHundredths, toInputText } from './posMath.ts'
 import type { Paisa, PaymentMethod, PaymentTexts } from './posMath.ts'
-import { SAMPLE_PRODUCTS } from './sampleProducts.ts'
-import type { PosProduct } from './sampleProducts.ts'
+import type { PosProduct } from './posProducts.ts'
+import { usePosProducts } from './usePosProducts.ts'
 import styles from './PosPage.module.css'
 
 type CartLine = { productId: number; quantity: number }
@@ -21,9 +21,6 @@ type CompletedSale = { sale: Sale; change: Paisa; customerName: string | null }
 /** A sale error belongs to the cart and payment it happened with; it disappears as soon as either changes. */
 type SaleError = { text: string; signature: string }
 
-const LOW_STOCK_AT = 5
-const CATEGORIES = ['All', ...new Set(SAMPLE_PRODUCTS.map((product) => product.category))]
-const PRODUCT_BY_ID = new Map(SAMPLE_PRODUCTS.map((product) => [product.productId, product]))
 const NO_PAYMENT: PaymentTexts = { cash: '', card: '', digital: '' }
 
 function saleErrorText(error: unknown): string {
@@ -34,6 +31,9 @@ function saleErrorText(error: unknown): string {
 }
 
 export default function PosPage() {
+  const { products, status: productStatus, reload: reloadProducts, retry: retryProducts } = usePosProducts()
+  const categories = useMemo(() => ['All', ...[...new Set(products.map((product) => product.category))].sort()], [products])
+  const productById = useMemo(() => new Map(products.map((product) => [product.productId, product])), [products])
   const [cart, setCart] = useState<CartLine[]>([])
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
@@ -51,9 +51,10 @@ export default function PosPage() {
   const scanRef = useRef<HTMLInputElement>(null)
 
   const term = search.trim().toLowerCase()
-  const visibleProducts = SAMPLE_PRODUCTS.filter(
+  const activeCategory = categories.includes(category) ? category : 'All' // the chosen category may vanish after a reload
+  const visibleProducts = products.filter(
     (product) =>
-      (category === 'All' || product.category === category) &&
+      (activeCategory === 'All' || product.category === activeCategory) &&
       (term === '' ||
         product.name.toLowerCase().includes(term) ||
         product.sku.toLowerCase().includes(term) ||
@@ -61,7 +62,7 @@ export default function PosPage() {
   )
 
   const rows = cart.flatMap((line) => {
-    const product = PRODUCT_BY_ID.get(line.productId)
+    const product = productById.get(line.productId)
     return product ? [{ line, product }] : []
   })
   const totals = calculateCart(
@@ -116,7 +117,7 @@ export default function PosPage() {
     event.preventDefault()
     const code = scanText.trim()
     if (code === '') return
-    const product = SAMPLE_PRODUCTS.find((item) => item.barcode === code || item.sku.toLowerCase() === code.toLowerCase())
+    const product = products.find((item) => item.barcode === code || item.sku.toLowerCase() === code.toLowerCase())
     if (!product) {
       setNotice({ kind: 'error', text: `No product found for "${code}".` })
     } else {
@@ -165,6 +166,7 @@ export default function PosPage() {
         held_cart_id: heldCartId ?? undefined, // the server completes the held bill in the same transaction
       })
       setHeldRefresh((key) => key + 1)
+      reloadProducts()
       setCompleted({ sale, change: settlement.change, customerName: selected?.customer.name ?? null })
     } catch (error) {
       setSaleError({ text: saleErrorText(error), signature })
@@ -208,7 +210,7 @@ export default function PosPage() {
     const changes: string[] = []
     const lines: CartLine[] = []
     for (const item of resumed.items) {
-      const product = PRODUCT_BY_ID.get(item.product_id)
+      const product = productById.get(item.product_id)
       if (!product) {
         changes.push(`${item.product_name ?? `Product ${item.product_id}`} is not available on this screen.`)
         continue
@@ -282,11 +284,11 @@ export default function PosPage() {
           </p>
 
           <div className={styles.chips}>
-            {CATEGORIES.map((name) => (
+            {categories.map((name) => (
               <button
                 key={name}
                 type="button"
-                className={name === category ? `${styles.chip} ${styles.chipActive}` : styles.chip}
+                className={name === activeCategory ? `${styles.chip} ${styles.chipActive}` : styles.chip}
                 onClick={() => setCategory(name)}
               >
                 {name}
@@ -294,7 +296,18 @@ export default function PosPage() {
             ))}
           </div>
 
-          {visibleProducts.length === 0 ? (
+          {productStatus === 'loading' ? (
+            <p className={styles.empty}>Loading products…</p>
+          ) : productStatus === 'error' ? (
+            <p className={`${styles.empty} ${styles.noticeError}`} role="alert">
+              Could not load the products.{' '}
+              <button type="button" className={styles.linkButton} onClick={retryProducts}>
+                Try again
+              </button>
+            </p>
+          ) : products.length === 0 ? (
+            <p className={styles.empty}>There are no active products yet. Add them on the Products page.</p>
+          ) : visibleProducts.length === 0 ? (
             <p className={styles.empty}>No products match your search.</p>
           ) : (
             <div className={styles.grid}>
@@ -308,7 +321,7 @@ export default function PosPage() {
                 >
                   {product.stock <= 0 ? (
                     <span className={`${styles.badge} ${styles.badgeOut}`}>Out</span>
-                  ) : product.stock <= LOW_STOCK_AT ? (
+                  ) : product.stock <= product.reorderLevel ? (
                     <span className={`${styles.badge} ${styles.badgeLow}`}>Low</span>
                   ) : null}
                   <span className={styles.category}>{product.category}</span>
