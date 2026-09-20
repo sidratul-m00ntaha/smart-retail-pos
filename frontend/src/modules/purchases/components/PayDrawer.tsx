@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { PaymentMethod, Supplier, SupplierPaymentInput } from "../../../types/purchasing";
 
 interface Props {
@@ -9,20 +9,22 @@ interface Props {
 }
 
 export default function PayDrawer({ open, supplier, onClose, onSave }: Props) {
+  if (!open || !supplier) return null;
+  // The form is only mounted while the drawer is open, so its fields start empty every time
+  return <PayForm supplier={supplier} onClose={onClose} onSave={onSave} />;
+}
+
+type PayFormProps = {
+  supplier: Supplier;
+  onClose: () => void;
+  onSave: (data: SupplierPaymentInput) => Promise<void>;
+};
+
+function PayForm({ supplier, onClose, onSave }: PayFormProps) {
   const [amount, setAmount] = useState<string>("");
   const [method, setMethod] = useState<PaymentMethod>("Cash");
   const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setAmount("");
-      setMethod("Cash");
-      setError(false);
-    }
-  }, [open, supplier]);
-
-  if (!open || !supplier) return null;
 
   const amt = parseFloat(amount) || 0;
   const overLimit = amt > supplier.Due;
@@ -35,7 +37,7 @@ export default function PayDrawer({ open, supplier, onClose, onSave }: Props) {
   }
 
   async function handleSave() {
-    if (amt <= 0 || amt > supplier!.Due) {
+    if (amt <= 0 || amt > supplier.Due) {
       setError(true);
       return;
     }

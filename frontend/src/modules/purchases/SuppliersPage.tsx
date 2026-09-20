@@ -24,8 +24,20 @@ export default function SuppliersPage() {
   async function load() {
     setSuppliers(await purchasingApi.listSuppliers());
   }
+
   useEffect(() => {
-    load().finally(() => setLoading(false));
+    let isCurrent = true;
+    purchasingApi
+      .listSuppliers()
+      .then((rows) => {
+        if (isCurrent) setSuppliers(rows);
+      })
+      .finally(() => {
+        if (isCurrent) setLoading(false);
+      });
+    return () => {
+      isCurrent = false;
+    };
   }, []);
 
   const totalDue = suppliers.reduce((s, x) => s + x.Due, 0);

@@ -111,7 +111,19 @@ export default function PurchasingPage() {
   }
 
   useEffect(() => {
-    load().finally(() => setLoading(false));
+    let isCurrent = true;
+    Promise.all([purchasingApi.listSuppliers(), purchasingApi.listPurchases()])
+      .then(([supplierRows, purchaseRows]) => {
+        if (!isCurrent) return;
+        setSuppliers(supplierRows);
+        setPurchases(purchaseRows);
+      })
+      .finally(() => {
+        if (isCurrent) setLoading(false);
+      });
+    return () => {
+      isCurrent = false;
+    };
   }, []);
 
   const totalDue = suppliers.reduce(

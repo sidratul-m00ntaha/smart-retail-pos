@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Supplier, SupplierInput } from "../../../types/purchasing";
 
 interface Props {
@@ -11,22 +11,25 @@ interface Props {
 const EMPTY: SupplierInput = { Name: "", Phone: "", Email: "", Address: "", Status: "Active" };
 
 export default function SupplierDrawer({ open, editing, onClose, onSave }: Props) {
-  const [form, setForm] = useState<SupplierInput>(EMPTY);
+  if (!open) return null;
+  // The form is only mounted while the drawer is open, so it always starts from the supplier being edited
+  return <SupplierForm editing={editing} onClose={onClose} onSave={onSave} />;
+}
+
+type SupplierFormProps = {
+  editing: Supplier | null;
+  onClose: () => void;
+  onSave: (data: SupplierInput) => Promise<void>;
+};
+
+function SupplierForm({ editing, onClose, onSave }: SupplierFormProps) {
+  const [form, setForm] = useState<SupplierInput>(() =>
+    editing
+      ? { Name: editing.Name, Phone: editing.Phone, Email: editing.Email ?? "", Address: editing.Address ?? "", Status: editing.Status }
+      : EMPTY,
+  );
   const [errors, setErrors] = useState<{ Name?: boolean; Phone?: boolean }>({});
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setForm(
-        editing
-          ? { Name: editing.Name, Phone: editing.Phone, Email: editing.Email ?? "", Address: editing.Address ?? "", Status: editing.Status }
-          : EMPTY
-      );
-      setErrors({});
-    }
-  }, [open, editing]);
-
-  if (!open) return null;
 
   async function handleSave() {
     const nextErrors = { Name: !form.Name.trim(), Phone: !form.Phone.trim() };

@@ -10,18 +10,28 @@ export default function DuePaymentsPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  useEffect(() => {
-    loadCustomers();
-  }, []);
-
   const loadCustomers = async () => {
     try {
       const data = await listCustomers();
       setCustomers(data);
-    } catch (err) {
+    } catch {
       setMessage({ type: "error", text: "Failed to load customers." });
     }
   };
+
+  useEffect(() => {
+    let isCurrent = true;
+    listCustomers()
+      .then((data) => {
+        if (isCurrent) setCustomers(data);
+      })
+      .catch(() => {
+        if (isCurrent) setMessage({ type: "error", text: "Failed to load customers." });
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +53,8 @@ export default function DuePaymentsPage() {
       
       // Reload customers to show the updated outstanding_due
       await loadCustomers();
-    } catch (err: any) {
-      setMessage({ type: "error", text: err.message || "Failed to record payment." });
+    } catch (err) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Failed to record payment." });
     } finally {
       setLoading(false);
     }
