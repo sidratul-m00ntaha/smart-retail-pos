@@ -10,6 +10,7 @@ export type PermissionCode =
   | 'purchases.manage'
   | 'inventory.manage'
   | 'customers.manage'
+  | 'customers.create'
   | 'customer_dues.receive'
   | 'loyalty.configure'
   | 'pos.sell'
