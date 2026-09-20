@@ -54,6 +54,17 @@ export default function AdjustmentsPage() {
     reasonCounts.set(key, (reasonCounts.get(key) ?? 0) + 1)
   }
 
+  // Aggregate reason counts across all products, for the summary bar chart.
+  const globalReasonCounts = new Map<string, number>()
+  for (const row of adjustments) {
+    const key = row.reason.trim()
+    globalReasonCounts.set(key, (globalReasonCounts.get(key) ?? 0) + 1)
+  }
+  const topReasons = [...globalReasonCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+  const maxCount = topReasons[0]?.[1] ?? 1
+
   return (
     <>
       {lastSaved && (
@@ -76,6 +87,20 @@ export default function AdjustmentsPage() {
           </button>
         )}
       </div>
+
+      {topReasons.length > 0 && (
+        <div className={formStyles.reasonSummary}>
+          {topReasons.map(([reason, count]) => (
+            <div key={reason} className={formStyles.reasonBar}>
+              <span className={formStyles.reasonLabel}>{reason}</span>
+              <div className={formStyles.barTrack}>
+                <div className={formStyles.barFill} style={{ width: `${(count / maxCount) * 100}%` }} />
+              </div>
+              <span className={formStyles.reasonCount}>{count}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {adjustments.length === 0 ? (
         <MessagePanel title="No adjustments yet">Manual stock corrections will appear here.</MessagePanel>
