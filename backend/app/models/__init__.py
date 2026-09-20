@@ -2,8 +2,9 @@
 
 Shared file: each module adds ONLY its own block of imports, and its model names to __all__.
 """
-# ---- Module 1: Auth & Administration ----
+# ---- Module 1: Auth & Administration (and the AI Assistant) ----
 from app.models.activity_log import ActivityLog
+from app.models.ai_assistant import AIConversation, AIMessage
 from app.models.permission import Permission
 from app.models.role import Role
 from app.models.role_permission import role_permissions
@@ -29,7 +30,7 @@ from app.models.customer import Customer, CustomerPayment, LoyaltyTier, LoyaltyT
 
 __all__ = [
     # Module 1
-    "ActivityLog", "Permission", "Role", "StoreSetting", "User", "role_permissions",
+    "ActivityLog", "AIConversation", "AIMessage", "Permission", "Role", "StoreSetting", "User", "role_permissions",
     # Module 2
     "Brand", "Category", "Product", "TaxRate", "Unit",
     # Module 3

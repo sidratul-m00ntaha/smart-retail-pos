@@ -244,6 +244,7 @@ Run these in the project folder.
 - [`docs/prototype/`](docs/prototype/) – static HTML design mockups (download and open `login.html` in a browser)
 - [`docs/frontend-guide.md`](docs/frontend-guide.md) – **how to add your module's pages** to the React app
 - [`docs/database/`](docs/database/) – database conventions, each module's tables, and how to protect API endpoints
+- [`docs/ai-assistant.md`](docs/ai-assistant.md) – how the AI Assistant answers questions, and how to switch on an AI provider
 
 ## Team workflow
 

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.database import get_db
-from app.routers import activity_logs, auth, roles, store_settings, users
+from app.routers import activity_logs, ai, auth, roles, store_settings, users
 from app.routers import brands, categories, products, reports, tax_rates, units
 from app.routers import customers
 from app.routers import suppliers, purchases
@@ -47,6 +47,7 @@ app.include_router(users.router)
 app.include_router(roles.router)
 app.include_router(activity_logs.router)
 app.include_router(store_settings.router)
+app.include_router(ai.router)
 app.include_router(customers.router)
 
 # Module 2: Product Catalog, Dashboard & Reports

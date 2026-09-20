@@ -36,6 +36,14 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 480  # 8 hours = one work shift
 
+    # The shop's own time, so "today" in reports means the shop's day (Bangladesh = UTC+6)
+    store_utc_offset_hours: int = 6
+
+    # AI Assistant (PRD 5.22). It works without a key; a key only improves the wording.
+    # Get one from https://aistudio.google.com/apikey and put it in backend/.env
+    ai_api_key: str | None = None
+    ai_model: str = "gemini-2.5-flash"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
