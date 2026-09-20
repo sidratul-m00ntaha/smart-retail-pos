@@ -18,16 +18,22 @@ PERMISSIONS = {
     "suppliers.manage": "Suppliers",
     "purchases.manage": "Create purchases, pay supplier dues",
     "inventory.manage": "Stock adjustments and batches",
-    "customers.manage": "Create and edit customers",
     "customer_dues.receive": "Receive customer due payments",
     "loyalty.configure": "Loyalty tiers",
     "pos.sell": "Use the POS: sales, invoices, invoice SMS",
     "sales.view": "Sales history and invoices",
     "reports.view": "Dashboard, reports, expiry alerts",
     "ai.use": "AI Assistant",
+    "customers.manage": "View, edit, update credit limit, or deactivate customers",
+    "customers.create": "Register a new customer (used by POS at checkout)",
 }
 
-ADMIN_ONLY = {"users.manage", "settings.manage", "activity_logs.view", "tax_rates.manage"}
+ADMIN_ONLY = {
+    "users.manage",
+    "settings.manage",
+    "activity_logs.view",
+    "tax_rates.manage",
+}
 
 # Role name -> (description, permission codes)
 ROLES = {
@@ -43,6 +49,6 @@ ROLES = {
 
     "Cashier": (
         "Operates the POS",
-        {"pos.sell", "products.view"},
+        {"pos.sell", "products.view", "customers.create"},
     ),
 }
