@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { ApiError } from '../../services/api.ts'
 import { getExpiryAlerts, addBatch, createAdjustment } from '../../services/stock.service.ts'
+import { getProducts } from '../../services/product.service.ts'
 import type { StockBatch } from '../../types/stock.ts'
+import type { Product } from '../../types/product.ts'
 import MessagePanel from '../../components/common/MessagePanel.tsx'
 import Drawer from '../../components/ui/Drawer.tsx'
 import { useAuth } from '../../hooks/useAuth.ts'
@@ -20,7 +22,7 @@ function agingColor(days: number, isExpired: boolean): string {
   return 'var(--success)'
 }
 
-function printWriteOffSlip(batch: StockBatch) {
+function printWriteOffSlip(batch: StockBatch, productName: string) {
   const win = window.open('', '_blank', 'width=400,height=500')
   if (!win) return
   win.document.write(`
@@ -28,7 +30,7 @@ function printWriteOffSlip(batch: StockBatch) {
       <head><title>Write-off slip</title></head>
       <body style="font-family: monospace; padding: 24px;">
         <h2>Stock Write-off Slip</h2>
-        <p>Product: #${batch.product_id}</p>
+        <p>Product: ${productName}</p>
         <p>Batch: ${batch.batch_number}</p>
         <p>Quantity removed: ${batch.quantity}</p>
         <p>Reason: Expired batch ${batch.batch_number} (auto)</p>
@@ -45,6 +47,7 @@ type Filter = 'all' | 'expired' | 'within7' | 'within30'
 export default function ExpiryAlertsPage() {
   const { hasPermission } = useAuth()
   const [batches, setBatches] = useState<StockBatch[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
@@ -59,6 +62,17 @@ export default function ExpiryAlertsPage() {
   }
 
   useEffect(loadBatches, [])
+  useEffect(() => {
+    getProducts().then(setProducts).catch(() => {})
+  }, [])
+
+  const productNames = new Map<number, string>()
+  for (const p of products) {
+    productNames.set(p.product_id, p.name)
+  }
+  function nameFor(productId: number): string {
+    return productNames.get(productId) ?? `Product #${productId}`
+  }
 
   if (isLoading) return <MessagePanel title="Loading expiry alerts…" />
   if (error) return <MessagePanel title="Could not load expiry alerts">{error}</MessagePanel>
@@ -111,7 +125,7 @@ export default function ExpiryAlertsPage() {
               >
                 <div className={styles.top}>
                   <div>
-                    <p className={styles.name}>Product #{batch.product_id}</p>
+                    <p className={styles.name}>{nameFor(batch.product_id)}</p>
                     <p className={styles.batch}>Batch {batch.batch_number}</p>
                   </div>
                   <span className={`${styles.tag} ${styles[level]}`}>{tagLabel}</span>
@@ -143,6 +157,7 @@ export default function ExpiryAlertsPage() {
       {writeOffBatch && (
         <WriteOffForm
           batch={writeOffBatch}
+          productName={nameFor(writeOffBatch.product_id)}
           onClose={() => setWriteOffBatch(null)}
           onSaved={() => {
             setWriteOffBatch(null)
@@ -154,7 +169,17 @@ export default function ExpiryAlertsPage() {
   )
 }
 
-function WriteOffForm({ batch, onClose, onSaved }: { batch: StockBatch; onClose: () => void; onSaved: () => void }) {
+function WriteOffForm({
+  batch,
+  productName,
+  onClose,
+  onSaved,
+}: {
+  batch: StockBatch
+  productName: string
+  onClose: () => void
+  onSaved: () => void
+}) {
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -192,13 +217,13 @@ function WriteOffForm({ batch, onClose, onSaved }: { batch: StockBatch; onClose:
       <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
         This will remove the expired quantity from stock and log it as a waste adjustment.
       </p>
-      <label className={styles.formLabel}>Product ID</label>
-      <input value={batch.product_id} disabled className={styles.confirmField} />
+      <label className={styles.formLabel}>Product</label>
+      <input value={productName} disabled className={styles.confirmField} />
       <label className={styles.formLabel}>Quantity to remove</label>
       <input value={batch.quantity} disabled className={styles.confirmField} />
       <label className={styles.formLabel}>Reason</label>
       <input value={`Expired batch ${batch.batch_number} (auto)`} disabled className={styles.confirmField} />
-      <button type="button" className={styles.printBtn} onClick={() => printWriteOffSlip(batch)}>
+      <button type="button" className={styles.printBtn} onClick={() => printWriteOffSlip(batch, productName)}>
         🖨 Print slip
       </button>
     </Drawer>
@@ -206,12 +231,17 @@ function WriteOffForm({ batch, onClose, onSaved }: { batch: StockBatch; onClose:
 }
 
 function NewBatchForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+  const [products, setProducts] = useState<Product[]>([])
   const [productId, setProductId] = useState('')
   const [batchNumber, setBatchNumber] = useState('')
   const [quantity, setQuantity] = useState('')
   const [expiryDate, setExpiryDate] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    getProducts().then(setProducts).catch(() => {})
+  }, [])
 
   async function handleSave() {
     if (!productId || !batchNumber.trim() || !quantity || !expiryDate) {
@@ -249,8 +279,15 @@ function NewBatchForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =
       }
     >
       {formError && <p className={styles.formError}>{formError}</p>}
-      <label className={styles.formLabel}>Product ID</label>
-      <input type="number" value={productId} onChange={(e) => setProductId(e.target.value)} placeholder="14" className={styles.formInput} />
+      <label className={styles.formLabel}>Product</label>
+      <select value={productId} onChange={(e) => setProductId(e.target.value)} className={styles.formInput}>
+        <option value="">Select a product…</option>
+        {products.map((p) => (
+          <option key={p.product_id} value={p.product_id}>
+            {p.name}
+          </option>
+        ))}
+      </select>
       <label className={styles.formLabel}>Batch number</label>
       <input type="text" value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} placeholder="B-003" className={styles.formInput} />
       <label className={styles.formLabel}>Quantity</label>

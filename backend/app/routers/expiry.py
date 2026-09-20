@@ -33,6 +33,6 @@ def add_batch(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_permission("inventory.manage")),
 ):
-    batch = stock_service.add_batch(db, data)
+    batch = stock_service.add_batch(db, data, user_id=current_user.user_id)
     db.commit()
     return stock_service.to_stock_batch_out(batch)

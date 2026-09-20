@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { ApiError } from '../../services/api.ts'
 import { getStock, createAdjustment } from '../../services/stock.service.ts'
+import { getProducts } from '../../services/product.service.ts'
 import type { ProductStock } from '../../types/stock.ts'
+import type { Product } from '../../types/product.ts'
 import MessagePanel from '../../components/common/MessagePanel.tsx'
 import Drawer from '../../components/ui/Drawer.tsx'
 import { formatDateTime } from '../../utils/date.ts'
@@ -11,6 +13,7 @@ import styles from './StockPage.module.css'
 export default function StockPage() {
   const { hasPermission } = useAuth()
   const [stock, setStock] = useState<ProductStock[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -25,6 +28,18 @@ export default function StockPage() {
   }
 
   useEffect(loadStock, [])
+  useEffect(() => {
+    getProducts().then(setProducts).catch(() => {})
+  }, [])
+
+  // Lookup map: product_id -> product name, for display instead of raw IDs.
+  const productNames = new Map<number, string>()
+  for (const p of products) {
+    productNames.set(p.product_id, p.name)
+  }
+  function nameFor(productId: number): string {
+    return productNames.get(productId) ?? `Product #${productId}`
+  }
 
   if (isLoading) return <MessagePanel title="Loading stock…" />
   if (error) return <MessagePanel title="Could not load stock">{error}</MessagePanel>
@@ -37,7 +52,12 @@ export default function StockPage() {
 
   const filtered = stock.filter((row) => {
     if (lowOnly && !row.is_low_stock) return false
-    if (search && !String(row.product_id).includes(search.trim())) return false
+    if (search) {
+      const term = search.trim().toLowerCase()
+      const matchesId = String(row.product_id).includes(term)
+      const matchesName = nameFor(row.product_id).toLowerCase().includes(term)
+      if (!matchesId && !matchesName) return false
+    }
     return true
   })
 
@@ -69,7 +89,7 @@ export default function StockPage() {
         <input
           type="text"
           className={styles.searchField}
-          placeholder="Search by product ID"
+          placeholder="Search by product name or ID"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -91,7 +111,7 @@ export default function StockPage() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Product ID</th>
+              <th>Product</th>
               <th>Current stock</th>
               <th>Reorder level</th>
               <th>Status</th>
@@ -105,7 +125,7 @@ export default function StockPage() {
               const suggestion = suggestedReorder(row)
               return (
                 <tr key={row.product_stock_id}>
-                  <td>{row.product_id}</td>
+                  <td>{nameFor(row.product_id)}</td>
                   <td>{row.current_stock}</td>
                   <td>{row.reorder_level}</td>
                   <td>
@@ -158,11 +178,18 @@ function QuickAdjustForm({
   onClose: () => void
   onSaved: () => void
 }) {
+  const [products, setProducts] = useState<Product[]>([])
   const [productId, setProductId] = useState(initialProductId ? String(initialProductId) : '')
   const [quantityChange, setQuantityChange] = useState('')
-  const [reason, setReason] = useState('')
+  const [reasonChoice, setReasonChoice] = useState('')
+  const [customReason, setCustomReason] = useState('')
+  const reason = reasonChoice === 'Other' ? customReason : reasonChoice
   const [formError, setFormError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    getProducts().then(setProducts).catch(() => {})
+  }, [])
 
   async function handleSave() {
     if (!productId || !quantityChange || !reason.trim()) {
@@ -199,15 +226,20 @@ function QuickAdjustForm({
       }
     >
       {formError && <p className={styles.formError}>{formError}</p>}
-      <label className={styles.formLabel}>Product ID</label>
-      <input
-        type="number"
+      <label className={styles.formLabel}>Product</label>
+      <select
         value={productId}
         onChange={(e) => setProductId(e.target.value)}
-        placeholder="14"
         className={styles.formInput}
-        readOnly={!!initialProductId}
-      />
+        disabled={!!initialProductId}
+      >
+        <option value="">Select a product…</option>
+        {products.map((p) => (
+          <option key={p.product_id} value={p.product_id}>
+            {p.name}
+          </option>
+        ))}
+      </select>
       <label className={styles.formLabel}>Quantity change</label>
       <input
         type="number"
@@ -217,13 +249,28 @@ function QuickAdjustForm({
         className={styles.formInput}
       />
       <label className={styles.formLabel}>Reason</label>
-      <input
-        type="text"
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder="Damaged in storage"
+      <select
+        value={reasonChoice}
+        onChange={(e) => setReasonChoice(e.target.value)}
         className={styles.formInput}
-      />
+      >
+        <option value="">Select a reason…</option>
+        <option value="Restocking / new delivery">Restocking / new delivery</option>
+        <option value="Stock recount">Stock recount</option>
+        <option value="Out of stock correction">Out of stock correction</option>
+        <option value="Damaged / spoiled">Damaged / spoiled</option>
+        <option value="Other">Other (type your own)</option>
+      </select>
+      {reasonChoice === 'Other' && (
+        <input
+          type="text"
+          value={customReason}
+          onChange={(e) => setCustomReason(e.target.value)}
+          placeholder="Type the reason"
+          className={styles.formInput}
+          style={{ marginTop: 8 }}
+        />
+      )}
     </Drawer>
   )
 }
