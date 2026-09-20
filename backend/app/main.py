@@ -9,6 +9,8 @@ from app.core.config import settings
 from app.database import get_db
 from app.routers import activity_logs, auth, roles, store_settings, users
 from app.routers import brands, categories, products, reports, tax_rates, units
+from app.routers import customers
+from app.routers import suppliers, purchases
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
 
@@ -45,6 +47,7 @@ app.include_router(users.router)
 app.include_router(roles.router)
 app.include_router(activity_logs.router)
 app.include_router(store_settings.router)
+app.include_router(customers.router)
 
 # Module 2: Product Catalog, Dashboard & Reports
 app.include_router(brands.router)
@@ -53,3 +56,19 @@ app.include_router(products.router)
 app.include_router(reports.router)
 app.include_router(tax_rates.router)
 app.include_router(units.router)
+
+# Module 3: Suppliers & Purchasing
+app.include_router(suppliers.router)
+app.include_router(purchases.router)
+
+# Module 4: Inventory & Expiry
+from app.routers import stock, stock_movements, stock_adjustments, expiry
+app.include_router(stock.router)
+app.include_router(stock_movements.router)
+app.include_router(stock_adjustments.router)
+app.include_router(expiry.router)
+
+# Module 5: POS, Sales & Invoices
+from app.routers import sales, held_carts
+app.include_router(sales.router)
+app.include_router(held_carts.router)
