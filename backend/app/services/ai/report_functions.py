@@ -14,7 +14,28 @@ from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models import Customer, LoyaltyTier, Payment, Product, ProductStock, Purchase, Sale, SaleItem, StockBatch, Supplier
+from app.models import (
+    Brand,
+    Category,
+    Customer,
+    HeldCart,
+    HeldCartItem,
+    Invoice,
+    LoyaltyTier,
+    Payment,
+    Product,
+    ProductStock,
+    Purchase,
+    Sale,
+    SaleItem,
+    StockAdjustment,
+    StockBatch,
+    StockMovement,
+    Supplier,
+    TaxRate,
+    Unit,
+    User,
+)
 
 # Question periods the assistant understands
 PERIODS = ("today", "yesterday", "week", "month", "all")
@@ -56,6 +77,11 @@ def _within_period(query: Select, column, period: str) -> Select:
 
 def _money(value: Decimal | float | int | None) -> float:
     return round(float(value or 0), 2)
+
+
+def _store_time(value: datetime) -> str:
+    """A stored UTC time as the shop's own local time, so answers read like the till receipts."""
+    return (value + timedelta(hours=settings.store_utc_offset_hours)).isoformat()
 
 
 def _period_words(period: str) -> str:
@@ -293,6 +319,315 @@ def product_lookup(db: Session, name: str = "") -> dict:
     }
 
 
+def recent_sales(db: Session, limit: int = 5) -> dict:
+    """The latest sales at the till, with their invoice numbers."""
+    rows = db.execute(
+        select(Sale, Invoice.invoice_number, Customer.name)
+        .join(Invoice, Invoice.sale_id == Sale.sale_id, isouter=True)
+        .join(Customer, Customer.customer_id == Sale.customer_id, isouter=True)
+        .order_by(Sale.sale_id.desc())
+        .limit(max(1, min(limit, 20)))
+    ).all()
+    return {
+        "sales": [
+            {
+                "invoice": invoice_number or f"sale {sale.sale_id}",
+                "customer": customer_name or "Walk-in customer",
+                "total": _money(sale.total_amount),
+                "due": _money(sale.due_amount),
+                "payment_status": sale.payment_status,
+                "when": _store_time(sale.created_at),
+            }
+            for sale, invoice_number, customer_name in rows
+        ]
+    }
+
+
+def invoice_lookup(db: Session, number: str = "") -> dict:
+    """One invoice: what was sold, to whom, and whether it is paid."""
+    term = (number or "").strip()
+    if not term:
+        return {"search": term, "invoices": []}
+    rows = db.execute(
+        select(Sale, Invoice.invoice_number, Customer.name)
+        .join(Invoice, Invoice.sale_id == Sale.sale_id)
+        .join(Customer, Customer.customer_id == Sale.customer_id, isouter=True)
+        .where(Invoice.invoice_number.contains(term, autoescape=True))
+        .order_by(Invoice.invoice_number.desc())
+        .limit(5)
+    ).all()
+
+    invoices = []
+    for sale, invoice_number, customer_name in rows:
+        items = db.execute(
+            select(SaleItem.product_name, SaleItem.quantity, SaleItem.line_subtotal).where(SaleItem.sale_id == sale.sale_id)
+        ).all()
+        invoices.append(
+            {
+                "invoice": invoice_number,
+                "customer": customer_name or "Walk-in customer",
+                "when": _store_time(sale.created_at),
+                "total": _money(sale.total_amount),
+                "paid": _money(sale.paid_amount),
+                "due": _money(sale.due_amount),
+                "payment_status": sale.payment_status,
+                "items": [{"name": name, "quantity": _money(qty), "amount": _money(amount)} for name, qty, amount in items],
+            }
+        )
+    return {"search": term, "invoices": invoices}
+
+
+def unpaid_sales(db: Session, limit: int = 10) -> dict:
+    """Sales that are not fully paid yet, newest first."""
+    rows = db.execute(
+        select(Sale, Invoice.invoice_number, Customer.name)
+        .join(Invoice, Invoice.sale_id == Sale.sale_id, isouter=True)
+        .join(Customer, Customer.customer_id == Sale.customer_id, isouter=True)
+        .where(Sale.due_amount > 0, Sale.status != "returned")
+        .order_by(Sale.sale_id.desc())
+        .limit(max(1, min(limit, 20)))
+    ).all()
+    total_due = db.scalar(select(func.sum(Sale.due_amount)).where(Sale.due_amount > 0, Sale.status != "returned"))
+    return {
+        "total_due": _money(total_due),
+        "count": len(rows),
+        "sales": [
+            {
+                "invoice": invoice_number or f"sale {sale.sale_id}",
+                "customer": customer_name or "Walk-in customer",
+                "total": _money(sale.total_amount),
+                "due": _money(sale.due_amount),
+                "when": _store_time(sale.created_at),
+            }
+            for sale, invoice_number, customer_name in rows
+        ],
+    }
+
+
+def sales_by_cashier(db: Session, period: str = "today") -> dict:
+    """Who served how much at the till in a period."""
+    rows = db.execute(
+        _within_period(
+            select(User.full_name, func.count(Sale.sale_id), func.sum(Sale.total_amount))
+            .join(User, User.user_id == Sale.cashier_id)
+            .where(Sale.status != "returned")
+            .group_by(User.full_name)
+            .order_by(func.sum(Sale.total_amount).desc()),
+            Sale.created_at,
+            period,
+        )
+    ).all()
+    return {
+        "period": period,
+        "cashiers": [{"name": name, "sales_count": count, "total": _money(total)} for name, count, total in rows],
+    }
+
+
+def held_bills(db: Session) -> dict:
+    """Bills paused at the till and not finished yet."""
+    rows = db.execute(
+        select(HeldCart, User.full_name, Customer.name, func.count(HeldCartItem.held_cart_item_id))
+        .join(User, User.user_id == HeldCart.cashier_id, isouter=True)
+        .join(Customer, Customer.customer_id == HeldCart.customer_id, isouter=True)
+        .join(HeldCartItem, HeldCartItem.held_cart_id == HeldCart.held_cart_id, isouter=True)
+        .where(HeldCart.status == "held")
+        .group_by(
+            HeldCart.held_cart_id,
+            HeldCart.note,
+            HeldCart.status,
+            HeldCart.created_at,
+            HeldCart.cashier_id,
+            HeldCart.customer_id,
+            HeldCart.updated_at,
+            User.full_name,
+            Customer.name,
+        )
+        .order_by(HeldCart.held_cart_id.desc())
+        .limit(10)
+    ).all()
+    return {
+        "count": len(rows),
+        "bills": [
+            {
+                "note": cart.note or "no note",
+                "cashier": cashier_name or "unknown",
+                "customer": customer_name or "Walk-in customer",
+                "items": item_count,
+                "when": _store_time(cart.created_at),
+            }
+            for cart, cashier_name, customer_name, item_count in rows
+        ],
+    }
+
+
+def stock_movements_summary(db: Session, period: str = "today") -> dict:
+    """What moved in and out of stock in a period, and why."""
+    rows = db.execute(
+        _within_period(
+            select(StockMovement.movement_type, StockMovement.source, func.count(), func.sum(StockMovement.quantity))
+            .group_by(StockMovement.movement_type, StockMovement.source)
+            .order_by(StockMovement.movement_type),
+            StockMovement.created_at,
+            period,
+        )
+    ).all()
+    moved_in = sum(int(quantity or 0) for movement_type, _, _, quantity in rows if movement_type == "in")
+    moved_out = sum(int(quantity or 0) for movement_type, _, _, quantity in rows if movement_type == "out")
+    return {
+        "period": period,
+        "units_in": moved_in,
+        "units_out": moved_out,
+        "movements": [
+            {"type": movement_type, "source": source, "count": count, "units": int(quantity or 0)}
+            for movement_type, source, count, quantity in rows
+        ],
+    }
+
+
+def catalog_summary(db: Session) -> dict:
+    """How the catalog is set up: products, categories, brands, units and the VAT rates."""
+    counts = {}
+    for label, model, id_column in (
+        ("categories", Category, Category.category_id),
+        ("brands", Brand, Brand.brand_id),
+        ("units", Unit, Unit.unit_id),
+    ):
+        counts[label] = db.scalar(select(func.count(id_column)).where(model.status == "active")) or 0
+
+    rates = db.execute(
+        select(TaxRate.name, TaxRate.rate_percent, TaxRate.status).order_by(TaxRate.rate_percent.desc())
+    ).all()
+    return {
+        "products": db.scalar(select(func.count(Product.product_id)).where(Product.status == "active")) or 0,
+        **counts,
+        "vat_rates": [{"name": name, "percent": float(percent), "status": status} for name, percent, status in rates],
+    }
+
+
+def products_by_category(db: Session) -> dict:
+    """How many products each category holds, and what that stock is worth."""
+    rows = db.execute(
+        select(
+            Category.name,
+            func.count(Product.product_id),
+            func.sum(Product.current_quantity),
+            func.sum(Product.current_quantity * Product.sale_price),
+        )
+        .join(Product, Product.category_id == Category.category_id)
+        .where(Product.status == "active")
+        .group_by(Category.name)
+        .order_by(func.count(Product.product_id).desc())
+    ).all()
+    return {
+        "categories": [
+            {"name": name, "products": count, "units_in_stock": _money(units), "retail_value": _money(value)}
+            for name, count, units, value in rows
+        ]
+    }
+
+
+def customer_lookup(db: Session, name: str = "") -> dict:
+    """One customer: what they owe, their credit room and their loyalty standing."""
+    term = (name or "").strip()
+    if not term:
+        return {"search": term, "customers": []}
+    rows = db.execute(
+        select(Customer, LoyaltyTier.name)
+        .join(LoyaltyTier, LoyaltyTier.loyalty_tier_id == Customer.loyalty_tier_id, isouter=True)
+        .where(Customer.name.contains(term, autoescape=True) | Customer.phone.contains(term, autoescape=True))
+        .order_by(Customer.name)
+        .limit(5)
+    ).all()
+    return {
+        "search": term,
+        "customers": [
+            {
+                "name": customer.name,
+                "phone": customer.phone,
+                "due": _money(customer.outstanding_due),
+                "credit_limit": _money(customer.credit_limit),
+                "available_credit": _money(float(customer.credit_limit or 0) - float(customer.outstanding_due or 0)),
+                "points": customer.loyalty_points,
+                "tier": tier_name or "no tier",
+                "status": customer.status,
+            }
+            for customer, tier_name in rows
+        ],
+    }
+
+
+def supplier_lookup(db: Session, name: str = "") -> dict:
+    """One supplier: how to reach them, what was bought and what is still owed."""
+    term = (name or "").strip()
+    if not term:
+        return {"search": term, "suppliers": []}
+    rows = db.execute(
+        select(
+            Supplier.Name,
+            Supplier.Phone,
+            Supplier.Status,
+            func.count(Purchase.PurchaseID),
+            func.sum(Purchase.Total),
+            func.sum(Purchase.Due),
+        )
+        .join(Purchase, Purchase.SupplierID == Supplier.SupplierID, isouter=True)
+        .where(Supplier.Name.contains(term, autoescape=True))
+        .group_by(Supplier.Name, Supplier.Phone, Supplier.Status)
+        .order_by(Supplier.Name)
+        .limit(5)
+    ).all()
+    return {
+        "search": term,
+        "suppliers": [
+            {
+                "name": supplier_name,
+                "phone": phone,
+                "status": status,
+                "purchases": count,
+                "total_purchased": _money(total),
+                "due": _money(due),
+            }
+            for supplier_name, phone, status, count, total, due in rows
+        ],
+    }
+
+
+def stock_adjustments_summary(db: Session, period: str = "month") -> dict:
+    """Manual stock corrections in a period, and the reasons given."""
+    rows = db.execute(
+        _within_period(
+            select(StockAdjustment, Product.name, User.full_name)
+            .join(Product, Product.product_id == StockAdjustment.product_id, isouter=True)
+            .join(User, User.user_id == StockAdjustment.adjusted_by, isouter=True)
+            .order_by(StockAdjustment.stock_adjustment_id.desc()),
+            StockAdjustment.created_at,
+            period,
+        ).limit(10)
+    ).all()
+    totals = db.execute(
+        _within_period(
+            select(func.count(StockAdjustment.stock_adjustment_id), func.sum(StockAdjustment.quantity_change)),
+            StockAdjustment.created_at,
+            period,
+        )
+    ).one()
+    return {
+        "period": period,
+        "count": totals[0] or 0,
+        "net_change": int(totals[1] or 0),
+        "adjustments": [
+            {
+                "product": product_name or f"product {adjustment.product_id}",
+                "change": adjustment.quantity_change,
+                "reason": adjustment.reason,
+                "by": user_name or "unknown",
+                "when": _store_time(adjustment.created_at),
+            }
+            for adjustment, product_name, user_name in rows
+        ],
+    }
+
+
 def business_summary(db: Session) -> dict:
     """A short overall picture: today's sales, stock alerts and money owed both ways."""
     sales = sales_summary(db, "today")
@@ -305,6 +640,7 @@ def business_summary(db: Session) -> dict:
         "customer_due": customer_dues(db, limit=3)["total_due"],
         "supplier_due": supplier_dues(db, limit=3)["total_due"],
         "inventory_retail_value": inventory_value(db)["retail_value"],
+        "held_bills": held_bills(db)["count"],
     }
 
 
@@ -321,6 +657,17 @@ REPORT_FUNCTIONS = {
     "purchases_summary": (purchases_summary, "Purchases from suppliers in a period"),
     "loyalty_summary": (loyalty_summary, "Loyalty points and tiers"),
     "product_lookup": (product_lookup, "Price and stock of one product"),
+    "recent_sales": (recent_sales, "The latest sales at the till"),
+    "invoice_lookup": (invoice_lookup, "One invoice by its number"),
+    "unpaid_sales": (unpaid_sales, "Sales that are not fully paid"),
+    "sales_by_cashier": (sales_by_cashier, "Who sold how much at the till"),
+    "held_bills": (held_bills, "Bills paused at the till"),
+    "stock_movements_summary": (stock_movements_summary, "Stock moved in and out in a period"),
+    "catalog_summary": (catalog_summary, "Categories, brands, units and VAT rates"),
+    "products_by_category": (products_by_category, "How many products each category holds"),
+    "customer_lookup": (customer_lookup, "One customer's due, credit and loyalty"),
+    "supplier_lookup": (supplier_lookup, "One supplier's contact and balance"),
+    "stock_adjustments_summary": (stock_adjustments_summary, "Manual stock corrections and their reasons"),
     "business_summary": (business_summary, "A short overall picture of the business"),
 }
 
