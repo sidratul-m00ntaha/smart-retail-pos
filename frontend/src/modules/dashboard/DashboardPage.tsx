@@ -2,14 +2,27 @@ import { useEffect, useRef, useState } from 'react'
 import Chart from 'chart.js/auto'
 import styles from './DashboardPage.module.css'
 import { ApiError } from '../../services/api'
-import { getDashboardData } from '../../services/report.service'
-import type { DashboardData } from '../../services/report.service'
+import { getDashboardData } from '../../services/dashboard.service'
+import type { DashboardData } from '../../services/dashboard.service'
 
 const TEAL = '#1F5D4E'
 const AMBER = '#E2A63B'
 const GRAY = '#C7CCC4'
 
 type Range = 'week' | 'month' | 'quarter'
+
+/**
+ * Labels for a bucketed series. "week" is always 7 days and "quarter" is
+ * always 3 months, but "month" splits into 4 or 5 seven-day slices depending
+ * on the calendar (see dashboard_service.py's _month_buckets) - so month
+ * labels are generated from however many values actually came back, not a
+ * fixed-length array.
+ */
+function labelsFor(range: Range, values: number[]): string[] {
+  if (range === 'week') return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  if (range === 'quarter') return ['2 months ago', 'Last month', 'This month']
+  return values.map((_, i) => `W${i + 1}`)
+}
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
@@ -23,24 +36,30 @@ export default function DashboardPage() {
   const loyaltyCanvas = useRef<HTMLCanvasElement>(null)
   const salesChart = useRef<Chart | null>(null)
 
-  useEffect(() => {
+  function load() {
+    setIsLoading(true)
     getDashboardData()
-      .then(setData)
+      .then((d) => { setData(d); setError(null) })
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Could not load the dashboard.'))
       .finally(() => setIsLoading(false))
+  }
+
+  useEffect(() => {
+    load()
+    // Real numbers only change when a sale/purchase/etc. actually happens
+    // elsewhere in the app, so a light poll keeps this screen current for
+    // someone who leaves it open, without needing a push/event system.
+    const interval = window.setInterval(load, 60_000)
+    return () => window.clearInterval(interval)
   }, [])
 
   // Sales-over-time line chart, updates in place when the range tab changes.
   useEffect(() => {
     if (!data || !salesCanvas.current) return
-    const labelsByRange: Record<Range, string[]> = {
-      week: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      month: ['W1', 'W2', 'W3', 'W4'],
-      quarter: ['Month 1', 'Month 2', 'Month 3'],
-    }
     const values = data.sales_over_time[range]
+    const labels = labelsFor(range, values)
     if (salesChart.current) {
-      salesChart.current.data.labels = labelsByRange[range]
+      salesChart.current.data.labels = labels
       salesChart.current.data.datasets[0].data = values
       salesChart.current.update()
       return
@@ -48,7 +67,7 @@ export default function DashboardPage() {
     salesChart.current = new Chart(salesCanvas.current, {
       type: 'line',
       data: {
-        labels: labelsByRange[range],
+        labels,
         datasets: [{ data: values, borderColor: TEAL, backgroundColor: 'rgba(31,93,78,0.08)', fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: TEAL }],
       },
       options: {
@@ -63,13 +82,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!salesChart.current || !data) return
-    const labelsByRange: Record<Range, string[]> = {
-      week: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      month: ['W1', 'W2', 'W3', 'W4'],
-      quarter: ['Month 1', 'Month 2', 'Month 3'],
-    }
-    salesChart.current.data.labels = labelsByRange[range]
-    salesChart.current.data.datasets[0].data = data.sales_over_time[range]
+    const values = data.sales_over_time[range]
+    salesChart.current.data.labels = labelsFor(range, values)
+    salesChart.current.data.datasets[0].data = values
     salesChart.current.update()
   }, [range, data])
 
@@ -145,7 +160,7 @@ export default function DashboardPage() {
         <div className={styles.metricCard}>
           <p className={styles.mLabel}>Items sold</p>
           <p className={styles.mValue}>{data.metrics.items_sold}</p>
-          <p className={styles.mSub}>avg Tk {Math.round(data.metrics.todays_sales / data.metrics.transactions)} / sale</p>
+          <p className={styles.mSub}>{data.metrics.transactions > 0 ? `avg Tk ${Math.round(data.metrics.todays_sales / data.metrics.transactions)} / sale` : 'no sales yet today'}</p>
         </div>
         <div className={styles.metricCard}>
           <p className={styles.mLabel}>Customer due</p>
@@ -175,24 +190,32 @@ export default function DashboardPage() {
         </div>
         <div className={styles.card}>
           <div className={styles.sectionHead}><h3>Sales by payment method</h3></div>
-          <div className={styles.chartWrap}><canvas ref={paymentCanvas} /></div>
+          {data.sales_by_payment_method.length === 0 ? (
+            <p className={styles.mSub}>No payments recorded this month yet.</p>
+          ) : (
+            <div className={styles.chartWrap}><canvas ref={paymentCanvas} /></div>
+          )}
         </div>
       </div>
 
       <div className={styles.chartsRowB}>
         <div className={styles.card}>
           <div className={styles.sectionHead}><h3>Top-selling products</h3></div>
-          <div className={styles.topProductsList}>
-            {data.top_products.map((p, i) => (
-              <div className={styles.tpRow} key={p.name}>
-                <span className={styles.tpRank}>{i + 1}</span>
-                <div className={styles.tpBarWrap}>
-                  <p className={styles.tpName}><span>{p.name}</span><span>{p.units_sold} units</span></p>
-                  <div className={styles.tpBarTrack}><div className={styles.tpBarFill} style={{ width: `${p.percent_of_top}%` }} /></div>
+          {data.top_products.length === 0 ? (
+            <p className={styles.mSub}>No sales recorded this month yet.</p>
+          ) : (
+            <div className={styles.topProductsList}>
+              {data.top_products.map((p, i) => (
+                <div className={styles.tpRow} key={p.name}>
+                  <span className={styles.tpRank}>{i + 1}</span>
+                  <div className={styles.tpBarWrap}>
+                    <p className={styles.tpName}><span>{p.name}</span><span>{p.units_sold} units</span></p>
+                    <div className={styles.tpBarTrack}><div className={styles.tpBarFill} style={{ width: `${p.percent_of_top}%` }} /></div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className={styles.card}>
           <div className={styles.sectionHead}><h3>Purchases vs. sales</h3></div>
@@ -200,7 +223,11 @@ export default function DashboardPage() {
         </div>
         <div className={styles.card}>
           <div className={styles.sectionHead}><h3>Loyalty tier distribution</h3></div>
-          <div className={`${styles.chartWrap} ${styles.small}`}><canvas ref={loyaltyCanvas} /></div>
+          {data.loyalty_distribution.length === 0 ? (
+            <p className={styles.mSub}>No loyalty tiers set up yet.</p>
+          ) : (
+            <div className={`${styles.chartWrap} ${styles.small}`}><canvas ref={loyaltyCanvas} /></div>
+          )}
         </div>
       </div>
     </section>
