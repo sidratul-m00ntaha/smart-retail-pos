@@ -244,6 +244,86 @@ def _stock_movements_summary(data: dict, symbol: str) -> str:
     return text + "\n" + "\n".join(lines)
 
 
+def _plural(count: int, singular: str, plural: str | None = None) -> str:
+    return f"{count} {singular if count == 1 else (plural or singular + 's')}"
+
+
+def _catalog_summary(data: dict, symbol: str) -> str:
+    text = (
+        f"The catalog has {_plural(data['products'], 'active product')} in "
+        f"{_plural(data['categories'], 'category', 'categories')}, "
+        f"{_plural(data['brands'], 'brand')} and {_plural(data['units'], 'unit')}."
+    )
+    rates = [rate for rate in data["vat_rates"] if rate["status"] == "active"]
+    if rates:
+        text += " VAT rates: " + ", ".join(f"{rate['name']} {rate['percent']:g}%" for rate in rates) + "."
+    else:
+        text += " No VAT rates are set up yet."
+    return text
+
+
+def _products_by_category(data: dict, symbol: str) -> str:
+    if not data["categories"]:
+        return "No category has any active products yet."
+    lines = [
+        f"• {category['name']} — {category['products']} "
+        f"{'product' if category['products'] == 1 else 'products'}, {category['units_in_stock']:g} in stock, "
+        f"{_money(category['retail_value'], symbol)} at retail"
+        for category in data["categories"]
+    ]
+    return "Products by category:\n" + "\n".join(lines)
+
+
+def _customer_lookup(data: dict, symbol: str) -> str:
+    if not data["customers"]:
+        return f"I couldn't find a customer matching \"{data['search']}\"."
+    if len(data["customers"]) > 1:
+        lines = [
+            f"• {customer['name']} ({customer['phone']}) — owes {_money(customer['due'], symbol)}"
+            for customer in data["customers"]
+        ]
+        return f"Customers matching \"{data['search']}\":\n" + "\n".join(lines)
+
+    customer = data["customers"][0]
+    owed = "owes nothing" if not customer["due"] else f"owes {_money(customer['due'], symbol)}"
+    return (
+        f"{customer['name']} ({customer['phone']}) {owed}, with {_money(customer['available_credit'], symbol)} "
+        f"of credit left out of {_money(customer['credit_limit'], symbol)}. "
+        f"{customer['points']} loyalty points, {customer['tier']} tier."
+        + ("" if customer["status"] == "active" else f" This customer is {customer['status']}.")
+    )
+
+
+def _supplier_lookup(data: dict, symbol: str) -> str:
+    if not data["suppliers"]:
+        return f"I couldn't find a supplier matching \"{data['search']}\"."
+    lines = [
+        f"• {supplier['name']} ({supplier['phone']}) — {supplier['purchases']} "
+        f"{'purchase' if supplier['purchases'] == 1 else 'purchases'} worth "
+        f"{_money(supplier['total_purchased'], symbol)}, {_money(supplier['due'], symbol)} still owed"
+        for supplier in data["suppliers"]
+    ]
+    if len(lines) == 1:
+        return lines[0].lstrip("• ")
+    return f"Suppliers matching \"{data['search']}\":\n" + "\n".join(lines)
+
+
+def _stock_adjustments_summary(data: dict, symbol: str) -> str:
+    when = _period_words(data["period"])
+    if not data["count"]:
+        return f"No stock adjustments were made {when}."
+    direction = "up" if data["net_change"] > 0 else "down"
+    text = (
+        f"{data['count']} stock {'adjustment' if data['count'] == 1 else 'adjustments'} {when}, "
+        f"{direction} {abs(data['net_change'])} units in total:"
+    )
+    lines = [
+        f"• {adjustment['product']} — {adjustment['change']:+d} ({adjustment['reason']}), by {adjustment['by']}"
+        for adjustment in data["adjustments"]
+    ]
+    return text + "\n" + "\n".join(lines)
+
+
 def _business_summary(data: dict, symbol: str) -> str:
     return (
         f"Today: {_money(data['sales_today'], symbol)} from {data['sales_count_today']} "
@@ -278,6 +358,11 @@ _WRITERS = {
     "sales_by_cashier": _sales_by_cashier,
     "held_bills": _held_bills,
     "stock_movements_summary": _stock_movements_summary,
+    "catalog_summary": _catalog_summary,
+    "products_by_category": _products_by_category,
+    "customer_lookup": _customer_lookup,
+    "supplier_lookup": _supplier_lookup,
+    "stock_adjustments_summary": _stock_adjustments_summary,
     "business_summary": _business_summary,
 }
 

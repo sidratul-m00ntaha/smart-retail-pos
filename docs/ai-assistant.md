@@ -54,6 +54,11 @@ own records — today's sales, stock levels, customer dues, supplier dues, expir
 | `sales_by_cashier` | Who sold the most today? Sales by cashier this month. |
 | `held_bills` | How many bills are on hold at the till? |
 | `stock_movements_summary` | What stock moved today, and why? |
+| `catalog_summary` | What VAT rates do we have? How many categories and brands? |
+| `products_by_category` | Show products by category. Which category is the biggest? |
+| `customer_lookup` | Find customer Rahim. How much does Nusrat owe? |
+| `supplier_lookup` | Find supplier Pran Foods. |
+| `stock_adjustments_summary` | What stock adjustments were made this month? |
 | `business_summary` | How is my business doing? |
 
 Anything else gets an honest "I can only answer questions about the shop's own data", with examples.

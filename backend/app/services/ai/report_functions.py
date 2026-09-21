@@ -15,6 +15,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models import (
+    Brand,
+    Category,
     Customer,
     HeldCart,
     HeldCartItem,
@@ -26,9 +28,12 @@ from app.models import (
     Purchase,
     Sale,
     SaleItem,
+    StockAdjustment,
     StockBatch,
     StockMovement,
     Supplier,
+    TaxRate,
+    Unit,
     User,
 )
 
@@ -479,6 +484,150 @@ def stock_movements_summary(db: Session, period: str = "today") -> dict:
     }
 
 
+def catalog_summary(db: Session) -> dict:
+    """How the catalog is set up: products, categories, brands, units and the VAT rates."""
+    counts = {}
+    for label, model, id_column in (
+        ("categories", Category, Category.category_id),
+        ("brands", Brand, Brand.brand_id),
+        ("units", Unit, Unit.unit_id),
+    ):
+        counts[label] = db.scalar(select(func.count(id_column)).where(model.status == "active")) or 0
+
+    rates = db.execute(
+        select(TaxRate.name, TaxRate.rate_percent, TaxRate.status).order_by(TaxRate.rate_percent.desc())
+    ).all()
+    return {
+        "products": db.scalar(select(func.count(Product.product_id)).where(Product.status == "active")) or 0,
+        **counts,
+        "vat_rates": [{"name": name, "percent": float(percent), "status": status} for name, percent, status in rates],
+    }
+
+
+def products_by_category(db: Session) -> dict:
+    """How many products each category holds, and what that stock is worth."""
+    rows = db.execute(
+        select(
+            Category.name,
+            func.count(Product.product_id),
+            func.sum(Product.current_quantity),
+            func.sum(Product.current_quantity * Product.sale_price),
+        )
+        .join(Product, Product.category_id == Category.category_id)
+        .where(Product.status == "active")
+        .group_by(Category.name)
+        .order_by(func.count(Product.product_id).desc())
+    ).all()
+    return {
+        "categories": [
+            {"name": name, "products": count, "units_in_stock": _money(units), "retail_value": _money(value)}
+            for name, count, units, value in rows
+        ]
+    }
+
+
+def customer_lookup(db: Session, name: str = "") -> dict:
+    """One customer: what they owe, their credit room and their loyalty standing."""
+    term = (name or "").strip()
+    if not term:
+        return {"search": term, "customers": []}
+    rows = db.execute(
+        select(Customer, LoyaltyTier.name)
+        .join(LoyaltyTier, LoyaltyTier.loyalty_tier_id == Customer.loyalty_tier_id, isouter=True)
+        .where(Customer.name.contains(term, autoescape=True) | Customer.phone.contains(term, autoescape=True))
+        .order_by(Customer.name)
+        .limit(5)
+    ).all()
+    return {
+        "search": term,
+        "customers": [
+            {
+                "name": customer.name,
+                "phone": customer.phone,
+                "due": _money(customer.outstanding_due),
+                "credit_limit": _money(customer.credit_limit),
+                "available_credit": _money(float(customer.credit_limit or 0) - float(customer.outstanding_due or 0)),
+                "points": customer.loyalty_points,
+                "tier": tier_name or "no tier",
+                "status": customer.status,
+            }
+            for customer, tier_name in rows
+        ],
+    }
+
+
+def supplier_lookup(db: Session, name: str = "") -> dict:
+    """One supplier: how to reach them, what was bought and what is still owed."""
+    term = (name or "").strip()
+    if not term:
+        return {"search": term, "suppliers": []}
+    rows = db.execute(
+        select(
+            Supplier.Name,
+            Supplier.Phone,
+            Supplier.Status,
+            func.count(Purchase.PurchaseID),
+            func.sum(Purchase.Total),
+            func.sum(Purchase.Due),
+        )
+        .join(Purchase, Purchase.SupplierID == Supplier.SupplierID, isouter=True)
+        .where(Supplier.Name.contains(term, autoescape=True))
+        .group_by(Supplier.Name, Supplier.Phone, Supplier.Status)
+        .order_by(Supplier.Name)
+        .limit(5)
+    ).all()
+    return {
+        "search": term,
+        "suppliers": [
+            {
+                "name": supplier_name,
+                "phone": phone,
+                "status": status,
+                "purchases": count,
+                "total_purchased": _money(total),
+                "due": _money(due),
+            }
+            for supplier_name, phone, status, count, total, due in rows
+        ],
+    }
+
+
+def stock_adjustments_summary(db: Session, period: str = "month") -> dict:
+    """Manual stock corrections in a period, and the reasons given."""
+    rows = db.execute(
+        _within_period(
+            select(StockAdjustment, Product.name, User.full_name)
+            .join(Product, Product.product_id == StockAdjustment.product_id, isouter=True)
+            .join(User, User.user_id == StockAdjustment.adjusted_by, isouter=True)
+            .order_by(StockAdjustment.stock_adjustment_id.desc()),
+            StockAdjustment.created_at,
+            period,
+        ).limit(10)
+    ).all()
+    totals = db.execute(
+        _within_period(
+            select(func.count(StockAdjustment.stock_adjustment_id), func.sum(StockAdjustment.quantity_change)),
+            StockAdjustment.created_at,
+            period,
+        )
+    ).one()
+    return {
+        "period": period,
+        "count": totals[0] or 0,
+        "net_change": int(totals[1] or 0),
+        "adjustments": [
+            {
+                "product": product_name or f"product {adjustment.product_id}",
+                "change": adjustment.quantity_change,
+                "reason": adjustment.reason,
+                "by": user_name or "unknown",
+                "when": _store_time(adjustment.created_at),
+            }
+            for adjustment, product_name, user_name in rows
+        ],
+    }
+
+
 def business_summary(db: Session) -> dict:
     """A short overall picture: today's sales, stock alerts and money owed both ways."""
     sales = sales_summary(db, "today")
@@ -514,6 +663,11 @@ REPORT_FUNCTIONS = {
     "sales_by_cashier": (sales_by_cashier, "Who sold how much at the till"),
     "held_bills": (held_bills, "Bills paused at the till"),
     "stock_movements_summary": (stock_movements_summary, "Stock moved in and out in a period"),
+    "catalog_summary": (catalog_summary, "Categories, brands, units and VAT rates"),
+    "products_by_category": (products_by_category, "How many products each category holds"),
+    "customer_lookup": (customer_lookup, "One customer's due, credit and loyalty"),
+    "supplier_lookup": (supplier_lookup, "One supplier's contact and balance"),
+    "stock_adjustments_summary": (stock_adjustments_summary, "Manual stock corrections and their reasons"),
     "business_summary": (business_summary, "A short overall picture of the business"),
 }
 

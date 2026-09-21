@@ -126,6 +126,36 @@ _INTENTS: list[dict] = [
         "weak": ["movement", "moved"],
     },
     {
+        "name": "catalog_summary",
+        "function": "catalog_summary",
+        "strong": ["vat rate", "tax rate", "how many categories", "how many brands", "how many units", "catalog"],
+        "weak": ["category", "categories", "brand", "unit", "vat", "tax"],
+    },
+    {
+        "name": "products_by_category",
+        "function": "products_by_category",
+        "strong": ["products by category", "per category", "each category", "biggest category", "category breakdown"],
+        "weak": ["category", "categories"],
+    },
+    {
+        "name": "customer_lookup",
+        "function": "customer_lookup",
+        "strong": ["about customer", "find customer", "customer named", "customer details", "how much does"],
+        "weak": ["customer"],
+    },
+    {
+        "name": "supplier_lookup",
+        "function": "supplier_lookup",
+        "strong": ["about supplier", "find supplier", "supplier named", "supplier details", "supplier contact"],
+        "weak": ["supplier"],
+    },
+    {
+        "name": "stock_adjustments_summary",
+        "function": "stock_adjustments_summary",
+        "strong": ["stock adjustment", "adjustments made", "stock correction", "wrote off", "write off", "damaged stock"],
+        "weak": ["adjustment", "adjusted"],
+    },
+    {
         "name": "business_summary",
         "function": "business_summary",
         "strong": ["how is my business", "how is business", "business summary", "overview", "summary of", "how are we doing"],
@@ -139,6 +169,9 @@ _STOP_WORDS = {
     "price", "cost", "much", "many", "left", "there", "any", "currently", "now", "please", "tell", "me", "what",
     "whats", "show", "give", "sell", "selling", "at", "today",
 }
+
+# Dropped as well when working out which person was asked about
+_PERSON_STOP_WORDS = {"customer", "supplier", "about", "find", "named", "details", "owe", "owes", "us", "to", "from"}
 
 # Shown on the empty chat screen and when nothing matches
 EXAMPLE_QUESTIONS = [
@@ -180,6 +213,14 @@ def _detect_product_name(question: str) -> str:
     return " ".join(words[:4]).strip()
 
 
+def _detect_person_name(question: str) -> str:
+    """The customer or supplier asked about, e.g. "find customer Rahim Uddin" -> "rahim uddin"."""
+    parts = re.split(r"\b(?:about|find|named|details of|details for|owe|owes|customer|supplier)\b", question)
+    text = parts[-1] if len(parts) > 1 else question
+    words = [word for word in re.findall(r"[a-z0-9.\-]+", text) if word not in _STOP_WORDS | _PERSON_STOP_WORDS]
+    return " ".join(words[:3]).strip()
+
+
 def _detect_invoice_number(question: str) -> str:
     """The invoice someone asked about, e.g. "show invoice INV-2026-00125" -> "INV-2026-00125"."""
     match = re.search(r"\b([a-z]{2,4}-[\w-]*\d+)\b", question)  # INV-2026-00125
@@ -212,8 +253,14 @@ def detect_intent(question: str) -> tuple[str, str, dict] | None:
     name, function = best["name"], best["function"]
     if name in ("sales_summary", "payment_methods", "sales_by_cashier", "stock_movements_summary"):
         return name, function, {"period": detect_period(text, "today")}
-    if name in ("top_products", "purchases_summary"):
+    if name in ("top_products", "purchases_summary", "stock_adjustments_summary"):
         return name, function, {"period": detect_period(text, "month")}
+    if name in ("customer_lookup", "supplier_lookup"):
+        person = _detect_person_name(text)
+        if not person:
+            # no name given - the totals answer that better
+            return ("customer_dues", "customer_dues", {}) if name == "customer_lookup" else ("supplier_dues", "supplier_dues", {})
+        return name, function, {"name": person}
     if name == "expiring_soon":
         return name, function, {"days": _detect_days(text)}
     if name == "product_lookup":
