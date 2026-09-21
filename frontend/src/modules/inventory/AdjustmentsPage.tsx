@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { ApiError } from '../../services/api.ts'
-import { getAdjustments, createAdjustment, getStock } from '../../services/stock.service.ts'
+import { getAdjustments, createAdjustment } from '../../services/stock.service.ts'
 import { getProducts } from '../../services/product.service.ts'
 import type { StockAdjustment } from '../../types/stock.ts'
 import type { Product } from '../../types/product.ts'
 import MessagePanel from '../../components/common/MessagePanel.tsx'
-import Drawer from '../../components/ui/Drawer.tsx'
 import { formatDateTime } from '../../utils/date.ts'
 import { useAuth } from '../../hooks/useAuth.ts'
+import AdjustmentForm from './AdjustmentForm.tsx'
 import styles from './StockPage.module.css'
 import formStyles from './AdjustmentsPage.module.css'
 
@@ -33,12 +33,14 @@ export default function AdjustmentsPage() {
     getProducts().then(setProducts).catch(() => {})
   }, [])
 
-  const productNames = new Map<number, string>()
+  const productById = new Map<number, Product>()
   for (const p of products) {
-    productNames.set(p.product_id, p.name)
+    productById.set(p.product_id, p)
   }
   function nameFor(productId: number): string {
-    return productNames.get(productId) ?? `Product #${productId}`
+    const p = productById.get(productId)
+    if (!p) return `Product #${productId}`
+    return p.brand?.name ? `${p.name} (${p.brand.name})` : p.name
   }
 
   async function handleUndo() {
@@ -68,7 +70,6 @@ export default function AdjustmentsPage() {
     reasonCounts.set(key, (reasonCounts.get(key) ?? 0) + 1)
   }
 
-  // Aggregate reason counts across all products, for the summary bar chart.
   const globalReasonCounts = new Map<string, number>()
   for (const row of adjustments) {
     const key = row.reason.trim()
@@ -153,7 +154,7 @@ export default function AdjustmentsPage() {
       )}
 
       {isDrawerOpen && (
-        <NewAdjustmentForm
+        <AdjustmentForm
           onClose={() => setIsDrawerOpen(false)}
           onSaved={(created) => {
             setIsDrawerOpen(false)
@@ -163,166 +164,5 @@ export default function AdjustmentsPage() {
         />
       )}
     </>
-  )
-}
-
-function NewAdjustmentForm({
-  onClose,
-  onSaved,
-}: {
-  onClose: () => void
-  onSaved: (created: StockAdjustment) => void
-}) {
-  const [products, setProducts] = useState<Product[]>([])
-  const [stockList, setStockList] = useState<{ product_id: number; current_stock: number }[]>([])
-  const [productId, setProductId] = useState('')
-  const [direction, setDirection] = useState<'dec' | 'inc'>('dec')
-  const [quantity, setQuantity] = useState('')
-  const [reasonChoice, setReasonChoice] = useState('')
-  const [customReason, setCustomReason] = useState('')
-  const reason = reasonChoice === 'Other' ? customReason : reasonChoice
-  const [formError, setFormError] = useState<string | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
-
-  useEffect(() => {
-    getStock().then(setStockList).catch(() => {})
-    getProducts().then(setProducts).catch(() => {})
-  }, [])
-
-  // Prefer the live ProductStock number; if this product has no ProductStock row
-  // yet (e.g. freshly seeded, never adjusted before), fall back to the product's
-  // own current_quantity so the preview isn't blank for untouched products.
-  const stockRow = stockList.find((s) => s.product_id === Number(productId))
-  const productRow = products.find((p) => p.product_id === Number(productId))
-  const currentStock = stockRow?.current_stock ?? productRow?.current_quantity
-
-  const qtyNum = Number(quantity) || 0
-  const newBalance = currentStock !== undefined ? (direction === 'dec' ? currentStock - qtyNum : currentStock + qtyNum) : null
-  const wouldGoNegative = newBalance !== null && newBalance < 0
-
-  async function handleSave() {
-    if (!productId || !quantity || Number(quantity) <= 0 || !reason.trim()) {
-      setFormError('Fill in every field with a quantity of at least 1.')
-      return
-    }
-    if (wouldGoNegative) {
-      setFormError(`Stock cannot go below zero. Maximum decrease is ${currentStock}.`)
-      return
-    }
-    setFormError(null)
-    setIsSaving(true)
-    try {
-      const created = await createAdjustment({
-        product_id: Number(productId),
-        quantity_change: direction === 'dec' ? -qtyNum : qtyNum,
-        reason: reason.trim(),
-      })
-      onSaved(created)
-    } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Could not save the adjustment.')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  return (
-    <Drawer
-      title="New adjustment"
-      onClose={onClose}
-      footer={
-        <>
-          <button onClick={onClose} className={formStyles.cancelButton}>Cancel</button>
-          <button onClick={handleSave} disabled={isSaving} className={formStyles.saveButton}>
-            {isSaving ? 'Saving…' : 'Save adjustment'}
-          </button>
-        </>
-      }
-    >
-      {formError && <p className={formStyles.formError}>{formError}</p>}
-
-      <label className={formStyles.formLabel}>Product</label>
-      <select
-        value={productId}
-        onChange={(e) => setProductId(e.target.value)}
-        className={formStyles.selectField}
-      >
-        <option value="">Select a product…</option>
-        {products.map((p) => (
-          <option key={p.product_id} value={p.product_id}>
-            {p.name}
-          </option>
-        ))}
-      </select>
-
-      <label className={formStyles.formLabel}>Current stock</label>
-      <div className={formStyles.readonlyBox}>
-        {currentStock !== undefined ? `${currentStock} in stock` : '—'}
-      </div>
-
-      <label className={formStyles.formLabel}>Adjustment direction</label>
-      <div className={formStyles.dirTabs}>
-        <button
-          type="button"
-          className={`${formStyles.dirTab} ${direction === 'dec' ? formStyles.decActive : ''}`}
-          onClick={() => setDirection('dec')}
-        >
-          Decrease
-        </button>
-        <button
-          type="button"
-          className={`${formStyles.dirTab} ${direction === 'inc' ? formStyles.incActive : ''}`}
-          onClick={() => setDirection('inc')}
-        >
-          Increase
-        </button>
-      </div>
-
-      <label className={formStyles.formLabel}>Quantity</label>
-      <input
-        type="number"
-        min="1"
-        value={quantity}
-        onChange={(e) => setQuantity(e.target.value)}
-        placeholder="0"
-        className={formStyles.formInput}
-      />
-
-      <label className={formStyles.formLabel}>Reason</label>
-      <select
-        value={reasonChoice}
-        onChange={(e) => setReasonChoice(e.target.value)}
-        className={formStyles.selectField}
-      >
-        <option value="">Select a reason…</option>
-        <option value="Damaged in storage">Damaged in storage</option>
-        <option value="Damaged in transit">Damaged in transit</option>
-        <option value="Expired">Expired</option>
-        <option value="Stolen / missing">Stolen / missing</option>
-        <option value="Miscounted (stock recount)">Miscounted (stock recount)</option>
-        <option value="Found stock (misplaced/mislabeled)">Found stock (misplaced/mislabeled)</option>
-        <option value="Initial stock correction">Initial stock correction</option>
-        <option value="Other">Other (type your own)</option>
-      </select>
-      {reasonChoice === 'Other' && (
-        <input
-          type="text"
-          value={customReason}
-          onChange={(e) => setCustomReason(e.target.value)}
-          placeholder="Type the reason"
-          className={formStyles.formInput}
-          style={{ marginTop: 8 }}
-        />
-      )}
-
-      <div className={`${formStyles.previewBox} ${wouldGoNegative ? formStyles.err : ''}`}>
-        {currentStock === undefined
-          ? 'Select a product to preview the new balance.'
-          : qtyNum <= 0
-          ? 'Enter a quantity to preview the new balance.'
-          : wouldGoNegative
-          ? `Stock cannot go below zero. Maximum decrease is ${currentStock}.`
-          : `New balance after this adjustment: ${newBalance} (currently ${currentStock}).`}
-      </div>
-    </Drawer>
   )
 }

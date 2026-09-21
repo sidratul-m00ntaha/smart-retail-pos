@@ -257,3 +257,7 @@
   background: var(--amber-tint);
   color: var(--amber-dark);
 }
+.statusPill.bad {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
