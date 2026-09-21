@@ -17,8 +17,12 @@ interface Props {
   onToggle?: (id: number, active: boolean) => Promise<void>
 }
 
-/** Shared list UI for Categories, Brands and Units — PRD 5.4: each supports
- * Active/Inactive status and is managed independently. */
+/**
+ * Shared list UI for Categories, Brands and Units.
+ *
+ * Admin users can create and change status.
+ * Users without products.manage can only view the list.
+ */
 export default function CatalogManager({
   title,
   placeholder,
@@ -29,14 +33,33 @@ export default function CatalogManager({
 }: Props) {
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleAdd() {
-    if (!name.trim() || !onCreate) return
+    const trimmedName = name.trim()
 
+    if (!trimmedName) {
+      setError(`Please enter a ${title.toLowerCase()} name.`)
+      return
+    }
+
+    if (!onCreate) {
+      setError(`You do not have permission to add ${title.toLowerCase()}s.`)
+      return
+    }
+
+    setError(null)
     setBusy(true)
+
     try {
-      await onCreate(name.trim())
+      await onCreate(trimmedName)
       setName('')
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : `Could not add ${title.toLowerCase()}.`,
+      )
     } finally {
       setBusy(false)
     }
@@ -45,23 +68,52 @@ export default function CatalogManager({
   return (
     <div className={styles.tableCard}>
       {canManage && (
-        <div className={styles.toolbar} style={{ padding: '16px 16px 0' }}>
-          <div className={styles.searchField} style={{ maxWidth: 260 }}>
+        <div
+          className={styles.toolbar}
+          style={{ padding: '16px 16px 0' }}
+        >
+          <div
+            className={styles.searchField}
+            style={{ maxWidth: 260 }}
+          >
             <input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value)
+                if (error) setError(null)
+              }}
               placeholder={placeholder}
-              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              disabled={busy}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  void handleAdd()
+                }
+              }}
             />
           </div>
 
           <button
             className={styles.btnPrimary}
-            onClick={handleAdd}
+            onClick={() => void handleAdd()}
             disabled={busy}
           >
-            + Add {title.toLowerCase()}
+            {busy
+              ? 'Adding…'
+              : `+ Add ${title.toLowerCase()}`}
           </button>
+        </div>
+      )}
+
+      {error && (
+        <div
+          role="alert"
+          style={{
+            margin: '12px 16px 0',
+            color: '#b42318',
+            fontSize: '14px',
+          }}
+        >
+          {error}
         </div>
       )}
 
@@ -100,7 +152,10 @@ export default function CatalogManager({
                   <button
                     className={styles.iconBtnSm}
                     onClick={() =>
-                      onToggle?.(item.id, item.status !== 'active')
+                      void onToggle?.(
+                        item.id,
+                        item.status !== 'active',
+                      )
                     }
                     aria-label="Toggle status"
                   >
