@@ -16,26 +16,42 @@ from app.core.security import hash_password
 from app.database import Base, SessionLocal, engine
 from app.models import Permission, Role, StoreSetting, User
 
-
 def seed_roles_and_permissions(db: Session) -> None:
     permissions = {}
+
     for code, description in PERMISSIONS.items():
-        permission = db.scalar(select(Permission).where(Permission.code == code))
+        permission = db.scalar(
+            select(Permission).where(Permission.code == code)
+        )
+
         if permission is None:
-            permission = Permission(code=code, description=description)
+            permission = Permission(
+                code=code,
+                description=description,
+            )
             db.add(permission)
+
         permissions[code] = permission
 
     for name, (description, codes) in ROLES.items():
-        role = db.scalar(select(Role).where(Role.name == name))
-        if role is None:
-            role = Role(name=name, description=description)
-            db.add(role)
-        for code in sorted(codes):
-            if permissions[code] not in role.permissions:
-                role.permissions.append(permissions[code])
+        role = db.scalar(
+            select(Role).where(Role.name == name)
+        )
 
-    db.flush()  # send to the database now, so the admin user below can find the Admin role
+        if role is None:
+            role = Role(
+                name=name,
+                description=description,
+            )
+            db.add(role)
+
+        # Keep the database synchronized with the role definition.
+        role.permissions = [
+            permissions[code]
+            for code in sorted(codes)
+        ]
+
+    db.flush()
 
 
 def seed_store_settings(db: Session) -> None:

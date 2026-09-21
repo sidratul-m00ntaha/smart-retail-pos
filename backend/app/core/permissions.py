@@ -28,12 +28,32 @@ PERMISSIONS = {
     "ai.use": "AI Assistant",
 }
 
-ADMIN_ONLY = {"users.manage", "settings.manage", "activity_logs.view", "tax_rates.manage"}
+ADMIN_ONLY = {
+    "users.manage",
+    "settings.manage",
+    "activity_logs.view",
+    "tax_rates.manage",
+    "products.manage",
+}
 
 # Role name -> (description, permission codes)
 ROLES = {
-    "Admin": ("Full access to everything", set(PERMISSIONS)),
-    "Manager": ("Runs the store: products, purchasing, inventory, customers, reports", set(PERMISSIONS) - ADMIN_ONLY),
-    # Cashiers see products and register new customers at checkout, but can't change either
-    "Cashier": ("Operates the POS", {"pos.sell", "products.view", "customers.create"}),
+    "Admin": (
+        "Full access to everything",
+        set(PERMISSIONS),
+    ),
+
+    "Manager": (
+        "Runs the store: view products, purchasing, inventory, customers, reports",
+        set(PERMISSIONS) - ADMIN_ONLY,
+    ),
+
+    "Cashier": (
+        "Operates the POS",
+        {
+            "pos.sell",
+            "products.view",
+            "customers.create",
+        },
+    ),
 }
