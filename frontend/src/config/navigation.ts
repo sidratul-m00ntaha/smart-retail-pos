@@ -7,7 +7,6 @@ import { inventorySection } from '../modules/inventory/navigation.ts'
 import { posSection } from '../modules/pos/navigation.ts'
 import { productsSection } from '../modules/products/navigation.ts'
 import { purchasingSection } from '../modules/purchases/navigation.ts'
-import { reportsSection } from '../modules/reports/navigation.ts'
 import { salesSection } from '../modules/sales/navigation.ts'
 import { settingsSection } from '../modules/settings/navigation.ts'
 import { usersSection } from '../modules/users/navigation.ts'
@@ -24,7 +23,6 @@ export const NAV_SECTIONS: NavSection[] = [
   inventorySection,
   customersSection,
   salesSection,
-  reportsSection,
   aiAssistantSection,
   activityLogsSection,
   usersSection,

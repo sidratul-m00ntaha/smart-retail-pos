@@ -41,3 +41,33 @@ export function deleteProduct(id: number): Promise<void> {
 export function setProductStatus(id: number, active: boolean): Promise<Product> {
   return apiRequest<Product>(`/api/products/${id}/status?active=${active}`, { method: 'PATCH' })
 }
+
+// ---- For Module 5 (POS): real products, shaped for the POS cart ----
+// Call this from PosPage.tsx's own data-fetching code instead of a hardcoded
+// sample list. This lives here (not in modules/pos/) because it's Module 2's
+// data and mapping, not Module 5's - Module 5 owns how/when it's fetched.
+export interface PosProduct {
+  productId: number
+  sku: string
+  barcode: string
+  name: string
+  category: string
+  unitPrice: string
+  vatPercent: string
+  stock: number
+}
+
+export function getPosProducts(): Promise<PosProduct[]> {
+  return getProducts({ status_filter: 'active' }).then((rows) =>
+    rows.map((p) => ({
+      productId: p.product_id,
+      sku: p.product_code,
+      barcode: p.barcode ?? '',
+      name: p.name,
+      category: p.category?.name ?? 'Uncategorized',
+      unitPrice: p.sale_price.toFixed(2),
+      vatPercent: p.tax_percent.toFixed(2),
+      stock: p.current_quantity,
+    })),
+  )
+}
