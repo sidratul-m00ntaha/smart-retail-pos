@@ -4,6 +4,8 @@ Every sentence here is built only from those numbers - nothing is invented. If a
 provider is switched on later (llm.py) it rewrites this text; the numbers still come
 from the report function.
 """
+from datetime import datetime
+
 from app.services.ai.intents import EXAMPLE_QUESTIONS
 
 # Set from the store settings when the answer is built
@@ -152,6 +154,96 @@ def _product_lookup(data: dict, symbol: str) -> str:
     return f"Products matching \"{data['search']}\":\n" + "\n".join(lines)
 
 
+def _when(iso_time: str) -> str:
+    """"2026-09-21T09:15:00" -> "21 Sep, 09:15" (the time is already the shop's own)."""
+    try:
+        moment = datetime.fromisoformat(iso_time)
+    except ValueError:
+        return iso_time
+    return moment.strftime("%d %b, %H:%M")
+
+
+def _recent_sales(data: dict, symbol: str) -> str:
+    if not data["sales"]:
+        return "There are no sales yet."
+    lines = [
+        f"• {sale['invoice']} — {_money(sale['total'], symbol)}, {sale['customer']}"
+        + (f", {_money(sale['due'], symbol)} unpaid" if sale["due"] else "")
+        for sale in data["sales"]
+    ]
+    return "The latest sales:\n" + "\n".join(lines)
+
+
+def _invoice_lookup(data: dict, symbol: str) -> str:
+    if not data["invoices"]:
+        return f"I couldn't find an invoice matching \"{data['search']}\"."
+    if len(data["invoices"]) > 1:
+        lines = [
+            f"• {invoice['invoice']} — {_money(invoice['total'], symbol)}, {invoice['customer']}"
+            for invoice in data["invoices"]
+        ]
+        return f"Invoices matching \"{data['search']}\":\n" + "\n".join(lines)
+
+    invoice = data["invoices"][0]
+    text = (
+        f"{invoice['invoice']} — {_money(invoice['total'], symbol)} for {invoice['customer']} "
+        f"on {_when(invoice['when'])}. "
+    )
+    text += "Fully paid." if not invoice["due"] else f"{_money(invoice['due'], symbol)} still unpaid."
+    if invoice["items"]:
+        lines = [f"• {item['name']} × {item['quantity']:g} — {_money(item['amount'], symbol)}" for item in invoice["items"]]
+        text += "\n" + "\n".join(lines)
+    return text
+
+
+def _unpaid_sales(data: dict, symbol: str) -> str:
+    if not data["sales"]:
+        return "Every sale is fully paid."
+    text = f"{data['count']} {'sale is' if data['count'] == 1 else 'sales are'} not fully paid, {_money(data['total_due'], symbol)} in total."
+    lines = [
+        f"• {sale['invoice']} — {_money(sale['due'], symbol)} of {_money(sale['total'], symbol)}, {sale['customer']}"
+        for sale in data["sales"]
+    ]
+    return text + "\n" + "\n".join(lines)
+
+
+def _sales_by_cashier(data: dict, symbol: str) -> str:
+    when = _period_words(data["period"])
+    if not data["cashiers"]:
+        return f"Nobody made a sale {when}."
+    lines = [
+        f"• {cashier['name']} — {_money(cashier['total'], symbol)} from {cashier['sales_count']} "
+        f"{'sale' if cashier['sales_count'] == 1 else 'sales'}"
+        for cashier in data["cashiers"]
+    ]
+    return f"Sales by cashier {when}:\n" + "\n".join(lines)
+
+
+def _held_bills(data: dict, symbol: str) -> str:
+    if not data["count"]:
+        return "No bills are on hold at the till."
+    text = f"{data['count']} {'bill is' if data['count'] == 1 else 'bills are'} on hold:"
+    lines = [
+        f"• {bill['note']} — {bill['items']} {'item' if bill['items'] == 1 else 'items'}, "
+        f"{bill['customer']}, held by {bill['cashier']} at {_when(bill['when'])}"
+        for bill in data["bills"]
+    ]
+    return text + "\n" + "\n".join(lines)
+
+
+def _stock_movements_summary(data: dict, symbol: str) -> str:
+    when = _period_words(data["period"])
+    if not data["movements"]:
+        return f"No stock moved {when}."
+    text = f"Stock {when}: {data['units_in']} units in, {data['units_out']} units out."
+    lines = [
+        f"• {movement['units']} units {movement['type']} from {movement['source']} "
+        f"({movement['count']} {'entry' if movement['count'] == 1 else 'entries'})"
+        for movement in data["movements"]
+    ]
+    return text + "\n" + "\n".join(lines)
+
+
 def _business_summary(data: dict, symbol: str) -> str:
     return (
         f"Today: {_money(data['sales_today'], symbol)} from {data['sales_count_today']} "
@@ -160,6 +252,11 @@ def _business_summary(data: dict, symbol: str) -> str:
         f"worth {_money(data['inventory_retail_value'], symbol)} at retail.\n"
         f"Money: customers owe {_money(data['customer_due'], symbol)}, "
         f"suppliers are owed {_money(data['supplier_due'], symbol)}."
+        + (
+            f"\nTill: {data['held_bills']} {'bill' if data['held_bills'] == 1 else 'bills'} on hold."
+            if data.get("held_bills")
+            else ""
+        )
     )
 
 
@@ -175,6 +272,12 @@ _WRITERS = {
     "purchases_summary": _purchases_summary,
     "loyalty_summary": _loyalty_summary,
     "product_lookup": _product_lookup,
+    "recent_sales": _recent_sales,
+    "invoice_lookup": _invoice_lookup,
+    "unpaid_sales": _unpaid_sales,
+    "sales_by_cashier": _sales_by_cashier,
+    "held_bills": _held_bills,
+    "stock_movements_summary": _stock_movements_summary,
     "business_summary": _business_summary,
 }
 

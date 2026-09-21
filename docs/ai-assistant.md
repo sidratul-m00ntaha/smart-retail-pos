@@ -48,6 +48,12 @@ own records — today's sales, stock levels, customer dues, supplier dues, expir
 | `purchases_summary` | What did we purchase this month? |
 | `loyalty_summary` | How many loyalty points are out there, and by tier? |
 | `product_lookup` | What is the price of rice? How much milk is in stock? |
+| `recent_sales` | What were the last sales? Show me the recent bills. |
+| `invoice_lookup` | Show invoice INV-2026-00125. |
+| `unpaid_sales` | Which sales are still unpaid? |
+| `sales_by_cashier` | Who sold the most today? Sales by cashier this month. |
+| `held_bills` | How many bills are on hold at the till? |
+| `stock_movements_summary` | What stock moved today, and why? |
 | `business_summary` | How is my business doing? |
 
 Anything else gets an honest "I can only answer questions about the shop's own data", with examples.
@@ -129,7 +135,7 @@ All of them need the `ai.use` permission: **401** when not logged in, **403** fo
 ## Notes
 
 - Times use the shop's own day (`STORE_UTC_OFFSET_HOURS` in `backend/.env`, 6 for Bangladesh), so
-  "today" means today in the shop, not in UTC.
+  "today" means today in the shop, not in UTC, and times in answers read like the till receipts.
 - Money is shown with the currency from **Settings → Store**.
 - The assistant reads the real tables directly. It does **not** use `services/report_service.py`,
   which still returns sample numbers for parts of the dashboard.

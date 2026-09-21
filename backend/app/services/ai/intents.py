@@ -44,7 +44,7 @@ _INTENTS: list[dict] = [
     {
         "name": "low_stock",
         "function": "low_stock",
-        "strong": ["low stock", "running out", "out of stock", "reorder", "restock", "need to order"],
+        "strong": ["low stock", "low on stock", "running out", "out of stock", "reorder", "restock", "need to order"],
         "weak": ["stock", "inventory", "shelf"],
     },
     {
@@ -90,6 +90,42 @@ _INTENTS: list[dict] = [
         "weak": ["product", "price"],
     },
     {
+        "name": "recent_sales",
+        "function": "recent_sales",
+        "strong": ["recent sale", "last sale", "latest sale", "last few sales", "recent bills", "last transactions"],
+        "weak": ["recent", "latest"],
+    },
+    {
+        "name": "invoice_lookup",
+        "function": "invoice_lookup",
+        "strong": ["invoice number", "invoice inv", "show invoice", "find invoice", "invoice no", "bill number"],
+        "weak": ["invoice", "receipt", "bill"],
+    },
+    {
+        "name": "unpaid_sales",
+        "function": "unpaid_sales",
+        "strong": ["unpaid", "not paid", "not fully paid", "partially paid", "outstanding invoice", "pending payment"],
+        "weak": ["pending"],
+    },
+    {
+        "name": "sales_by_cashier",
+        "function": "sales_by_cashier",
+        "strong": ["by cashier", "which cashier", "who sold", "best cashier", "cashier performance", "sales per cashier"],
+        "weak": ["cashier", "staff", "counter"],
+    },
+    {
+        "name": "held_bills",
+        "function": "held_bills",
+        "strong": ["held bill", "on hold", "paused bill", "parked sale", "saved cart", "held cart"],
+        "weak": ["hold", "held", "paused"],
+    },
+    {
+        "name": "stock_movements_summary",
+        "function": "stock_movements_summary",
+        "strong": ["stock movement", "stock moved", "stock in and out", "goods movement", "stock activity"],
+        "weak": ["movement", "moved"],
+    },
+    {
         "name": "business_summary",
         "function": "business_summary",
         "strong": ["how is my business", "how is business", "business summary", "overview", "summary of", "how are we doing"],
@@ -110,6 +146,8 @@ EXAMPLE_QUESTIONS = [
     "What are the top selling products this month?",
     "Which products are low on stock?",
     "How much do customers owe us?",
+    "Which sales are still unpaid?",
+    "Who sold the most today?",
     "What is expiring in the next 30 days?",
     "How is my business doing?",
 ]
@@ -142,9 +180,19 @@ def _detect_product_name(question: str) -> str:
     return " ".join(words[:4]).strip()
 
 
+def _detect_invoice_number(question: str) -> str:
+    """The invoice someone asked about, e.g. "show invoice INV-2026-00125" -> "INV-2026-00125"."""
+    match = re.search(r"\b([a-z]{2,4}-[\w-]*\d+)\b", question)  # INV-2026-00125
+    if match:
+        return match.group(1).upper()
+    match = re.search(r"\b(?:invoice|bill|receipt)\s*(?:number|no\.?|#)?\s*(\d+)\b", question)
+    return match.group(1) if match else ""
+
+
 def _score(question: str, intent: dict) -> int:
-    score = sum(4 for word in intent["strong"] if word in question)
-    score += sum(1 for word in intent["weak"] if word in question)
+    """Longer phrases win, so "who sold the most" beats the plain word "sold"."""
+    score = sum(10 + len(word) for word in intent["strong"] if word in question)
+    score += sum(len(word) for word in intent["weak"] if word in question)
     return score
 
 
@@ -162,7 +210,7 @@ def detect_intent(question: str) -> tuple[str, str, dict] | None:
         return None
 
     name, function = best["name"], best["function"]
-    if name in ("sales_summary", "payment_methods"):
+    if name in ("sales_summary", "payment_methods", "sales_by_cashier", "stock_movements_summary"):
         return name, function, {"period": detect_period(text, "today")}
     if name in ("top_products", "purchases_summary"):
         return name, function, {"period": detect_period(text, "month")}
@@ -173,4 +221,10 @@ def detect_intent(question: str) -> tuple[str, str, dict] | None:
         if not product:
             return None  # "how many?" on its own isn't a question we can answer
         return name, function, {"name": product}
+    if name == "invoice_lookup":
+        number = _detect_invoice_number(text)
+        if not number:
+            # "show me the invoices" without a number - the latest sales answer that better
+            return "recent_sales", "recent_sales", {}
+        return name, function, {"number": number}
     return name, function, {}
