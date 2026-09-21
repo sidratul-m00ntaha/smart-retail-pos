@@ -16,7 +16,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import Base
 import app.models  # noqa: F401  (registers every table)
-from app.models import ActivityLog, Category, Product, TaxRate, Unit
+from app.models import ActivityLog, Category, Product, StoreSetting, TaxRate, Unit
 from app.models.customer import Customer, LoyaltyTier
 from app.models.sale import HeldCart, Invoice, Payment, Sale, SaleItem
 from app.models.stock import ProductStock, StockMovement
@@ -35,6 +35,8 @@ def _datetime2_on_sqlite(type_, compiler, **kw):
 def add_sample_products(db) -> None:
     """The products the tests sell, as real Product rows. Their ids follow insertion order: 1 Milk, 2 Rice, 3 Soap.
     They start with current_quantity 0; each test adds the stock it needs (a ProductStock row, or a quantity)."""
+    # like init_db, plus an address and phone so the invoice header can be checked
+    db.add(StoreSetting(store_setting_id=1, store_name="Smart Retail Store", address="12 Market Road, Dhaka", phone="01700000000", currency_code="BDT", invoice_prefix="INV"))
     category, unit = Category(name="Sample"), Unit(name="Piece")
     rates = {"5.00": TaxRate(name="VAT 5%", rate_percent=D("5.00")), "0.00": TaxRate(name="Zero VAT", rate_percent=D("0.00")), "15.00": TaxRate(name="VAT 15%", rate_percent=D("15.00"))}
     db.add_all([category, unit, *rates.values()])

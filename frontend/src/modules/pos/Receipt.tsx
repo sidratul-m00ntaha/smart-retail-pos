@@ -6,14 +6,10 @@ import { formatMoney, toHundredths } from './posMath.ts'
 import type { Paisa } from './posMath.ts'
 import styles from './Receipt.module.css'
 
-// TODO(module 1): read the store name and address from the store settings.
-const STORE_NAME = 'Smart Retail Store'
-
 type ReceiptProps = {
   sale: Sale
   /** Cash to hand back to the customer. The server doesn't return it: it only knows what was applied to the sale. */
   change: Paisa
-  customerName: string | null
   onNewSale: () => void
 }
 
@@ -21,7 +17,7 @@ const STATUS_TEXT: Record<string, string> = { PAID: 'Paid in full', PARTIALLY_PA
 const METHOD_TEXT: Record<string, string> = { cash: 'Cash', card: 'Card', digital: 'Digital' }
 
 /** The invoice of a completed sale. Printing shows only this receipt (the app behind it is hidden). */
-export default function Receipt({ sale, change, customerName, onNewSale }: ReceiptProps) {
+export default function Receipt({ sale, change, onNewSale }: ReceiptProps) {
   const newSaleRef = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     newSaleRef.current?.focus()
@@ -35,11 +31,14 @@ export default function Receipt({ sale, change, customerName, onNewSale }: Recei
     <div className={styles.overlay}>
       <section className={styles.card} role="dialog" aria-modal="true" aria-labelledby="receipt-title">
         <h2 className={styles.store} id="receipt-title">
-          {STORE_NAME}
+          {sale.store_name}
         </h2>
-        <p className={styles.sub}>{sale.invoice_number}</p>
+        {sale.store_address && <p className={styles.sub}>{sale.store_address}</p>}
+        {sale.store_phone && <p className={styles.sub}>Phone: {sale.store_phone}</p>}
+        <p className={`${styles.sub} ${styles.invoiceNo}`}>{sale.invoice_number}</p>
         <p className={styles.sub}>{formatDateTime(sale.created_at)}</p>
-        <p className={styles.sub}>Customer: {customerName ?? 'Guest'}</p>
+        {sale.cashier_name && <p className={styles.sub}>Cashier: {sale.cashier_name}</p>}
+        <p className={styles.sub}>Customer: {sale.customer_name ?? 'Guest'}</p>
 
         <hr className={styles.rule} />
         <ul className={styles.items}>

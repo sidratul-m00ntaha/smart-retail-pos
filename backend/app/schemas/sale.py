@@ -52,8 +52,18 @@ class PaymentOut(BaseModel):
 
 
 class SaleOut(BaseModel):
+    """A completed sale as an invoice document (PRD 5.17): the sale, its lines and payments, plus the header details."""
+
     sale_id: int
     invoice_number: str
+    # Header details. The store's details are read from the store settings (Module 1) each time the invoice is
+    # produced, so a reprint shows the store's current name, address and phone.
+    store_name: str
+    store_address: str | None
+    store_phone: str | None
+    cashier_name: str | None
+    customer_name: str | None  # None = guest
+    customer_phone: str | None
     customer_id: int | None
     cashier_id: int
     subtotal: Decimal
@@ -68,3 +78,38 @@ class SaleOut(BaseModel):
     created_at: UtcDateTime
     items: list[SaleItemOut]
     payments: list[PaymentOut]
+
+
+class SaleListItem(BaseModel):
+    """One row of the sales / invoices list."""
+
+    sale_id: int
+    invoice_number: str
+    created_at: UtcDateTime
+    customer_id: int | None
+    customer_name: str | None
+    customer_phone: str | None
+    cashier_name: str | None
+    item_count: Decimal  # units sold on the sale
+    total_amount: Decimal
+    paid_amount: Decimal
+    due_amount: Decimal
+    payment_status: str
+    status: str
+
+
+class SaleListTotals(BaseModel):
+    """Sums over ALL rows that match the filters, not just the page being shown."""
+
+    transactions: int
+    total_amount: Decimal
+    paid_amount: Decimal
+    due_amount: Decimal
+
+
+class SaleListPage(BaseModel):
+    items: list[SaleListItem]
+    total: int
+    page: int
+    page_size: int
+    totals: SaleListTotals
