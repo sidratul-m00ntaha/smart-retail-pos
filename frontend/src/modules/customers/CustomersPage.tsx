@@ -103,8 +103,8 @@ export default function CustomersPage() {
                 <td><input value={editDraft.name} onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })} style={{ padding: "4px", width: "100%" }} /></td>
                 <td><input value={editDraft.phone} onChange={(e) => setEditDraft({ ...editDraft, phone: e.target.value })} style={{ padding: "4px", width: "100%" }} /></td>
                 <td><input value={editDraft.credit_limit} onChange={(e) => setEditDraft({ ...editDraft, credit_limit: e.target.value })} type="number" step="0.01" style={{ padding: "4px", width: "100%" }} /></td>
-                <td>${c.outstanding_due}</td>
-                <td>${c.available_credit}</td>
+                <td>৳{c.outstanding_due}</td>
+                <td>৳{c.available_credit}</td>
                 <td>
                   <select value={editDraft.status} onChange={(e) => setEditDraft({ ...editDraft, status: e.target.value })}>
                     <option value="active">active</option>
@@ -120,9 +120,9 @@ export default function CustomersPage() {
               <tr key={c.customer_id}>
                 <td>{c.name}</td>
                 <td>{c.phone}</td>
-                <td>${c.credit_limit}</td>
-                <td style={{ color: c.outstanding_due !== "0.00" ? "red" : "black" }}>${c.outstanding_due}</td>
-                <td style={{ fontWeight: "bold" }}>${c.available_credit}</td>
+                <td>৳{c.credit_limit}</td>
+                <td style={{ color: c.outstanding_due !== "0.00" ? "red" : "black" }}>৳{c.outstanding_due}</td>
+                <td style={{ fontWeight: "bold" }}>৳{c.available_credit}</td>
                 <td>
                   <span style={{
                     padding: "4px 8px", borderRadius: "4px",
