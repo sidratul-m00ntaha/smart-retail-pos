@@ -59,6 +59,8 @@ app.include_router(tax_rates.router)
 app.include_router(units.router)
 
 # Module 3: Suppliers & Purchasing
+from app.routers import suppliers, purchases, supplier_payments
+app.include_router(supplier_payments.router)
 app.include_router(suppliers.router)
 app.include_router(purchases.router)
 
