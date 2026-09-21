@@ -5,7 +5,6 @@ commit. complete_sale commits once at the very end, or rolls everything back, so
 leaves nothing half-saved: no sale, no stock change, no due, no points, no invoice.
 """
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from decimal import Decimal
 
 from fastapi import HTTPException, status
@@ -13,8 +12,9 @@ from sqlalchemy.orm import Session
 
 from app.models.customer import Customer
 from app.models.sale import HeldCart, Invoice, Payment, Sale, SaleItem
-from app.schemas.sale import PaymentOut, SaleCreate, SaleItemOut, SaleLineIn, SaleOut
+from app.schemas.sale import SaleCreate, SaleLineIn, SaleOut
 from app.services.activity_log_service import log_activity
+from app.services import invoice_service
 from app.services.customer_service import add_due, add_points
 from app.services.sale_calculator import LineInput, calculate_sale, money, settle_payment
 from app.services.sale_dependencies import get_sellable_product
@@ -114,14 +114,14 @@ def _build_and_save_sale(db: Session, data: SaleCreate, cashier_id: int) -> Comp
     )
     db.add(sale)
     db.flush()  # gives the sale its id
-    invoice_number = f"INV-{datetime.now(timezone.utc).year}-{sale.sale_id:05d}"
+    invoice_number = invoice_service.make_invoice_number(db, sale.sale_id)  # the store's prefix, this year, the sale's id
 
     items = [
         SaleItem(
             sale_id=sale.sale_id,
             product_id=r.product_id,
             product_name=products[r.product_id].name,
-            quantity=r.quantity,
+            quantity=r.quantity.quantize(Decimal("0.001")),  # the column keeps 3 decimals: show the same on the receipt and on a reprint
             unit_price=r.unit_price,
             line_subtotal=r.line_subtotal,
             discount_amount=r.discount_amount,
@@ -166,27 +166,6 @@ def _build_and_save_sale(db: Session, data: SaleCreate, cashier_id: int) -> Comp
     db.flush()
 
     return CompletedSale(
-        sale=_to_sale_out(sale, invoice_number, items, payments),
+        sale=invoice_service.to_sale_out(db, sale, invoice_number, items, payments),
         customer_phone=customer.phone if customer is not None else None,
-    )
-
-
-def _to_sale_out(sale: Sale, invoice_number: str, items: list[SaleItem], payments: list[Payment]) -> SaleOut:
-    return SaleOut(
-        sale_id=sale.sale_id,
-        invoice_number=invoice_number,
-        customer_id=sale.customer_id,
-        cashier_id=sale.cashier_id,
-        subtotal=sale.subtotal,
-        discount_percent=sale.discount_percent,
-        discount_amount=sale.discount_amount,
-        tax_amount=sale.tax_amount,
-        total_amount=sale.total_amount,
-        paid_amount=sale.paid_amount,
-        due_amount=sale.due_amount,
-        payment_status=sale.payment_status,
-        status=sale.status,
-        created_at=sale.created_at,
-        items=[SaleItemOut.model_validate(item) for item in items],
-        payments=[PaymentOut.model_validate(payment) for payment in payments],
     )

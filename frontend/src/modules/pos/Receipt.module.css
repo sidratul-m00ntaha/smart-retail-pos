@@ -36,6 +36,12 @@
   color: var(--ink-soft);
 }
 
+.invoiceNo {
+  margin-top: 6px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
 .rule {
   border: none;
   border-top: 1px dashed #c7cbc0;

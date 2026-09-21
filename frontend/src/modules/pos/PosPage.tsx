@@ -17,7 +17,7 @@ import styles from './PosPage.module.css'
 
 type CartLine = { productId: number; quantity: number }
 type Notice = { kind: 'ok' | 'error'; text: string }
-type CompletedSale = { sale: Sale; change: Paisa; customerName: string | null }
+type CompletedSale = { sale: Sale; change: Paisa }
 /** A sale error belongs to the cart and payment it happened with; it disappears as soon as either changes. */
 type SaleError = { text: string; signature: string }
 
@@ -167,7 +167,7 @@ export default function PosPage() {
       })
       setHeldRefresh((key) => key + 1)
       reloadProducts()
-      setCompleted({ sale, change: settlement.change, customerName: selected?.customer.name ?? null })
+      setCompleted({ sale, change: settlement.change })
     } catch (error) {
       setSaleError({ text: saleErrorText(error), signature })
     } finally {
@@ -438,7 +438,7 @@ export default function PosPage() {
         </aside>
       </div>
       {completed && (
-        <Receipt sale={completed.sale} change={completed.change} customerName={completed.customerName} onNewSale={newSale} />
+        <Receipt sale={completed.sale} change={completed.change} onNewSale={newSale} />
       )}
     </>
   )

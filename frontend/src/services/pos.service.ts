@@ -51,6 +51,14 @@ export type SalePayment = {
 export type Sale = {
   sale_id: number
   invoice_number: string
+  /** Header details (PRD 5.17). The store's are read from the store settings each time, so a reprint shows the current ones. */
+  store_name: string
+  store_address: string | null
+  store_phone: string | null
+  cashier_name: string | null
+  /** null = guest */
+  customer_name: string | null
+  customer_phone: string | null
   customer_id: number | null
   cashier_id: number
   subtotal: string
