@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+from decimal import Decimal
 from app.database import get_db
 from app.core.dependencies import get_current_user, require_permission
 from app.models.customer import Customer, CustomerPayment, LoyaltyTier
+from app.models.sale import Sale  # read-only: used only to total each customer's past sales
 
 # Service layer imports (The Fix for the commit bug)
 from app.services.customer_service import check_credit_limit, add_due, add_points
@@ -22,7 +25,21 @@ def list_customers(
     db: Session = Depends(get_db), 
     user=Depends(get_current_user) # Cashiers need to read customers for POS
 ):
-    return db.query(Customer).all()
+    customers = db.query(Customer).all()
+
+    # One aggregate query for everyone, instead of one query per customer.
+    # Sales with status "returned" don't count as money the customer actually
+    # spent; "completed" and "partially_returned" do count at their full total.
+    totals = dict(
+        db.query(Sale.customer_id, func.sum(Sale.total_amount))
+        .filter(Sale.customer_id.isnot(None), Sale.status != "returned")
+        .group_by(Sale.customer_id)
+        .all()
+    )
+    for customer in customers:
+        customer.total_purchases = totals.get(customer.customer_id, Decimal("0.00"))
+
+    return customers
 
 @router.post("/", response_model=CustomerRead)
 def create_customer(

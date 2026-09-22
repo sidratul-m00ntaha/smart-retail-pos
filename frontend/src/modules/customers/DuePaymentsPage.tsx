@@ -2,6 +2,10 @@
 import { useEffect, useState } from "react";
 import { listCustomers, recordPayment, type Customer } from "../../services/customers";
 
+// ⚠️ PRE-FLIGHT CHECK: If this import gives a red error, delete this line and change 
+// `const [currencySymbol, setCurrencySymbol] = useState("");` to `const currencySymbol = "৳";` below.
+import { getStoreSettings } from "../../services/store-settings.service"; 
+
 export default function DuePaymentsPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | "">("");
@@ -9,6 +13,9 @@ export default function DuePaymentsPage() {
   const [method, setMethod] = useState("cash");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  
+  // Dynamic currency symbol from settings
+  const [currencySymbol, setCurrencySymbol] = useState("");
 
   const loadCustomers = async () => {
     try {
@@ -21,6 +28,8 @@ export default function DuePaymentsPage() {
 
   useEffect(() => {
     let isCurrent = true;
+    
+    // 1. Fetch customers
     listCustomers()
       .then((data) => {
         if (isCurrent) setCustomers(data);
@@ -28,6 +37,18 @@ export default function DuePaymentsPage() {
       .catch(() => {
         if (isCurrent) setMessage({ type: "error", text: "Failed to load customers." });
       });
+      
+    // 2. Fetch currency symbol from settings
+    getStoreSettings()
+      .then((settings: any) => {
+        if (isCurrent && settings?.currency_symbol) {
+          setCurrencySymbol(settings.currency_symbol);
+        }
+      })
+      .catch(() => {
+        // Fails silently to prevent page crash if settings aren't ready
+      });
+      
     return () => {
       isCurrent = false;
     };
@@ -60,7 +81,7 @@ export default function DuePaymentsPage() {
     }
   };
 
-  // Filter to only show customers who actually owe money (used for the table below)
+  // Filter to only show customers who actually owe money
   const customersWithDue = customers.filter(c => parseFloat(c.outstanding_due) > 0);
 
   return (
@@ -80,17 +101,16 @@ export default function DuePaymentsPage() {
               style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ccc", minWidth: "200px" }}
             >
               <option value="">Select a customer...</option>
-              {/* FIX: Map over ALL customers, not just customersWithDue */}
               {customers.map(c => (
                 <option key={c.customer_id} value={c.customer_id}>
-                  {c.name} {parseFloat(c.outstanding_due) > 0 ? `(Due: $${c.outstanding_due})` : '(No Due)'}
+                  {c.name} {parseFloat(c.outstanding_due) > 0 ? `(Due: ${currencySymbol}${c.outstanding_due})` : '(No Due)'}
                 </option>
               ))}
             </select>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <label style={{ marginBottom: "5px", fontSize: "14px", fontWeight: "bold" }}>Amount ($)</label>
+            <label style={{ marginBottom: "5px", fontSize: "14px", fontWeight: "bold" }}>Amount ({currencySymbol})</label>
             <input 
               type="number" 
               step="0.01" 
@@ -164,9 +184,9 @@ export default function DuePaymentsPage() {
               <tr key={c.customer_id}>
                 <td>{c.name}</td>
                 <td>{c.phone}</td>
-                <td>${c.credit_limit}</td>
-                <td style={{ fontWeight: "bold", color: "#dc3545" }}>${c.outstanding_due}</td>
-                <td>${c.available_credit}</td>
+                <td>{currencySymbol}{c.credit_limit}</td>
+                <td style={{ fontWeight: "bold", color: "#dc3545" }}>{currencySymbol}{c.outstanding_due}</td>
+                <td>{currencySymbol}{c.available_credit}</td>
               </tr>
             ))}
           </tbody>

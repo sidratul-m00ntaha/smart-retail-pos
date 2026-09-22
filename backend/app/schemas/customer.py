@@ -29,6 +29,11 @@ class CustomerRead(BaseModel):
     loyalty_points: int
     status: str
 
+    # Lifetime amount billed across all their sales. Set by the router
+    # (needs a query against the Sales table, so it can't be a @computed_field
+    # like available_credit, which only needs this row's own two columns).
+    total_purchases: Decimal = Decimal("0.00")
+
     # Computed field belongs HERE in CustomerRead
     @computed_field
     @property
@@ -52,6 +57,7 @@ class PaymentRead(BaseModel):
 
     class Config:
         from_attributes = True
+
 class PointsCalculation(BaseModel):
     sale_amount: Decimal
 
@@ -73,6 +79,7 @@ class LoyaltyTierRead(BaseModel):
 
     class Config:
         from_attributes = True
+
 class CheckCreditPayload(BaseModel):
     customer_id: int
     sale_amount: Decimal
