@@ -28,12 +28,14 @@ export default function MovementsPage() {
     getProducts().then(setProducts).catch(() => {})
   }, [])
 
-  const productNames = new Map<number, string>()
+  const productById = new Map<number, Product>()
   for (const p of products) {
-    productNames.set(p.product_id, p.name)
+    productById.set(p.product_id, p)
   }
   function nameFor(productId: number): string {
-    return productNames.get(productId) ?? `Product #${productId}`
+    const p = productById.get(productId)
+    if (!p) return `Product #${productId}`
+    return p.brand?.name ? `${p.name} (${p.brand.name})` : p.name
   }
 
   if (isLoading) return <MessagePanel title="Loading movements…" />

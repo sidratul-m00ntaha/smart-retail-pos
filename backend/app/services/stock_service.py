@@ -47,8 +47,7 @@ def _sync_product_current_quantity(db: Session, product_id: int, new_quantity: i
 
 
 def stock_in(db: Session, product_id: int, quantity: int, source: str, reference_id: int | None, user_id: int | None) -> StockMovement:
-    """Increases stock. Called by Purchases (Module 3) when a purchase is completed,
-    and by add_batch() below when a new expiry-tracked batch arrives.
+    """Increases stock. Called by Purchases (Module 3) when a purchase is completed.
 
     Does not commit - the caller (e.g. complete_purchase) commits once at the end.
     """
@@ -136,23 +135,15 @@ def create_adjustment(db: Session, data: StockAdjustmentCreate, user_id: int | N
 
 
 def add_batch(db: Session, data: StockBatchCreate, user_id: int | None = None) -> StockBatch:
-    """Records a new expiry-tracked batch AND increases stock to match (the batch's
-    quantity is new stock arriving, so it must flow into ProductStock/current_quantity
-    the same way a purchase or adjustment would).
+    """Records a new expiry-tracked batch for stock that has already arrived
+    (e.g. via a completed purchase). This is metadata only — it does NOT
+    increase ProductStock, since the stock increase already happened when
+    the purchase (or other stock-in event) was recorded. Adding a batch here
+    just tags which units expire when, for expiry alerts and write-offs.
     """
     batch = StockBatch(**data.model_dump())
     db.add(batch)
-    db.flush()  # so batch.stock_batch_id is available for the movement's reference_id
-
-    stock_in(
-        db,
-        product_id=data.product_id,
-        quantity=data.quantity,
-        source="batch",
-        reference_id=batch.stock_batch_id,
-        user_id=user_id,
-    )
-
+    db.flush()
     return batch
 
 
