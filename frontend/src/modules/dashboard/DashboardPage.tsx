@@ -37,7 +37,7 @@ export default function DashboardPage() {
   const salesChart = useRef<Chart | null>(null)
 
   function load() {
-    setIsLoading(true)
+    // setIsLoading(true)
     getDashboardData()
       .then((d) => { setData(d); setError(null) })
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Could not load the dashboard.'))
