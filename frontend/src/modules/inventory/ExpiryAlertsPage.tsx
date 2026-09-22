@@ -22,6 +22,10 @@ function agingColor(days: number, isExpired: boolean): string {
   return 'var(--success)'
 }
 
+function labelFor(p: Product): string {
+  return p.brand?.name ? `${p.name} (${p.brand.name})` : p.name
+}
+
 function printWriteOffSlip(batch: StockBatch, productName: string) {
   const win = window.open('', '_blank', 'width=400,height=500')
   if (!win) return
@@ -66,12 +70,13 @@ export default function ExpiryAlertsPage() {
     getProducts().then(setProducts).catch(() => {})
   }, [])
 
-  const productNames = new Map<number, string>()
+  const productById = new Map<number, Product>()
   for (const p of products) {
-    productNames.set(p.product_id, p.name)
+    productById.set(p.product_id, p)
   }
   function nameFor(productId: number): string {
-    return productNames.get(productId) ?? `Product #${productId}`
+    const p = productById.get(productId)
+    return p ? labelFor(p) : `Product #${productId}`
   }
 
   if (isLoading) return <MessagePanel title="Loading expiry alerts…" />
@@ -284,7 +289,7 @@ function NewBatchForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =
         <option value="">Select a product…</option>
         {products.map((p) => (
           <option key={p.product_id} value={p.product_id}>
-            {p.name}
+            {labelFor(p)}
           </option>
         ))}
       </select>
