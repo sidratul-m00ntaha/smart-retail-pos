@@ -1,6 +1,7 @@
 // frontend/src/modules/customers/CustomersPage.tsx
 import { useEffect, useState } from "react";
 import { listCustomers, createCustomer, updateCustomer, type Customer } from "../../services/customers";
+import { getStoreSettings } from "../../services/store-settings.service";
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -10,6 +11,10 @@ export default function CustomersPage() {
   const [editDraft, setEditDraft] = useState<{ name: string; phone: string; credit_limit: string; status: string }>({
     name: "", phone: "", credit_limit: "0.00", status: "active",
   });
+
+  // Whatever the Settings page has saved — ৳, $, ₹, etc. Starts blank so we
+  // never flash the wrong symbol before the real one loads.
+  const [currencySymbol, setCurrencySymbol] = useState("");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -22,6 +27,9 @@ export default function CustomersPage() {
     listCustomers()
       .then((data) => { if (isCurrent) setCustomers(data); })
       .catch(() => { if (isCurrent) setError("Failed to load customers. Are you logged in?"); });
+    getStoreSettings()
+      .then((settings) => { if (isCurrent) setCurrencySymbol(settings.currency_symbol); })
+      .catch(() => { /* if this fails, amounts just show without a symbol - not worth blocking the page for */ });
     return () => { isCurrent = false; };
   }, []);
 
@@ -93,7 +101,7 @@ export default function CustomersPage() {
       <table border={1} cellPadding="10" style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr style={{ backgroundColor: "#f4f4f4" }}>
-            <th>Customer</th><th>Phone</th><th>Credit Limit</th><th>Outstanding Due</th><th>Available Credit</th><th>Status</th><th></th>
+            <th>Customer</th><th>Phone</th><th>Total Purchases</th><th>Credit Limit</th><th>Outstanding Due</th><th>Available Credit</th><th>Status</th><th></th>
           </tr>
         </thead>
         <tbody>
@@ -102,9 +110,10 @@ export default function CustomersPage() {
               <tr key={c.customer_id}>
                 <td><input value={editDraft.name} onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })} style={{ padding: "4px", width: "100%" }} /></td>
                 <td><input value={editDraft.phone} onChange={(e) => setEditDraft({ ...editDraft, phone: e.target.value })} style={{ padding: "4px", width: "100%" }} /></td>
+                <td>{currencySymbol}{c.total_purchases}</td>
                 <td><input value={editDraft.credit_limit} onChange={(e) => setEditDraft({ ...editDraft, credit_limit: e.target.value })} type="number" step="0.01" style={{ padding: "4px", width: "100%" }} /></td>
-                <td>৳{c.outstanding_due}</td>
-                <td>৳{c.available_credit}</td>
+                <td>{currencySymbol}{c.outstanding_due}</td>
+                <td>{currencySymbol}{c.available_credit}</td>
                 <td>
                   <select value={editDraft.status} onChange={(e) => setEditDraft({ ...editDraft, status: e.target.value })}>
                     <option value="active">active</option>
@@ -120,9 +129,10 @@ export default function CustomersPage() {
               <tr key={c.customer_id}>
                 <td>{c.name}</td>
                 <td>{c.phone}</td>
-                <td>৳{c.credit_limit}</td>
-                <td style={{ color: c.outstanding_due !== "0.00" ? "red" : "black" }}>৳{c.outstanding_due}</td>
-                <td style={{ fontWeight: "bold" }}>৳{c.available_credit}</td>
+                <td>{currencySymbol}{c.total_purchases}</td>
+                <td>{currencySymbol}{c.credit_limit}</td>
+                <td style={{ color: c.outstanding_due !== "0.00" ? "red" : "black" }}>{currencySymbol}{c.outstanding_due}</td>
+                <td style={{ fontWeight: "bold" }}>{currencySymbol}{c.available_credit}</td>
                 <td>
                   <span style={{
                     padding: "4px 8px", borderRadius: "4px",

@@ -11,6 +11,7 @@ export interface Customer {
   loyalty_points: number;
   status: string;
   available_credit: string;
+  total_purchases: string;
 }
 
 export function listCustomers(): Promise<Customer[]> {
