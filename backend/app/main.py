@@ -72,7 +72,8 @@ app.include_router(stock_adjustments.router)
 app.include_router(expiry.router)
 
 # Module 5: POS, Sales & Invoices
-from app.routers import sales, held_carts, invoices
+from app.routers import sales, held_carts, invoices, sale_returns
 app.include_router(sales.router)
 app.include_router(held_carts.router)
 app.include_router(invoices.router)
+app.include_router(sale_returns.router)

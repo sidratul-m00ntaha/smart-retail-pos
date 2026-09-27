@@ -24,6 +24,7 @@ PERMISSIONS = {
     "loyalty.configure": "Loyalty tiers",
     "pos.sell": "Use the POS: sales, invoices, invoice SMS",
     "sales.view": "Sales history and invoices",
+    "sales.return": "Cancel or return items from a completed sale",
     "reports.view": "Dashboard, reports, expiry alerts",
     "ai.use": "AI Assistant",
 }

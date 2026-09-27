@@ -24,6 +24,7 @@ from app.models.stock import ProductStock, StockAdjustment, StockBatch, StockMov
 
 # ---- Module 5: POS, Sales & Invoices ----
 from app.models.sale import HeldCart, HeldCartItem, Invoice, Payment, Sale, SaleItem
+from app.models.sale_return import SaleReturn, SaleReturnItem
 
 # ---- Module 6: Customers, Dues & Loyalty ----
 from app.models.customer import Customer, CustomerPayment, LoyaltyTier, LoyaltyTransaction
@@ -38,7 +39,7 @@ __all__ = [
     # Module 4
     "ProductStock", "StockAdjustment", "StockBatch", "StockMovement",
     # Module 5
-    "HeldCart", "HeldCartItem", "Invoice", "Payment", "Sale", "SaleItem",
+    "HeldCart", "HeldCartItem", "Invoice", "Payment", "Sale", "SaleItem", "SaleReturn", "SaleReturnItem",
     # Module 6
     "Customer", "CustomerPayment", "LoyaltyTier", "LoyaltyTransaction",
 ]
