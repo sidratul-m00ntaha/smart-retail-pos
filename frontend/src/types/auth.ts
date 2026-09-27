@@ -15,6 +15,7 @@ export type PermissionCode =
   | 'loyalty.configure'
   | 'pos.sell'
   | 'sales.view'
+  | 'sales.return'
   | 'reports.view'
   | 'ai.use'
 
