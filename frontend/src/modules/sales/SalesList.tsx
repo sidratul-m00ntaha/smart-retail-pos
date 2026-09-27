@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import MessagePanel from '../../components/common/MessagePanel.tsx'
+import { useAuth } from '../../hooks/useAuth.ts'
 import { ApiError } from '../../services/api.ts'
 import { listInvoices, listSales } from '../../services/sales.service.ts'
 import type { PaymentStatusFilter, SaleListPage } from '../../services/sales.service.ts'
@@ -8,6 +9,7 @@ import { formatMoney, toHundredths } from '../pos/posMath.ts'
 import { PRESETS, presetRange } from './datePresets.ts'
 import type { DatePreset, PresetId } from './datePresets.ts'
 import InvoiceDialog from './InvoiceDialog.tsx'
+import ReturnDialog from './ReturnDialog.tsx'
 import styles from './SalesList.module.css'
 
 /** "sales": summary cards and every column. "invoices": fewer columns and a View button per row. */
@@ -25,6 +27,8 @@ const money = (value: string) => formatMoney(toHundredths(value))
 
 /** The sales / invoices list (PRD 5.15, 5.17, 5.19): date presets, payment status, search, pages, and the invoice on click. */
 export default function SalesList({ mode }: { mode: SalesListMode }) {
+  const { hasPermission } = useAuth()
+  const canReturn = mode === 'sales' && hasPermission('sales.return')
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [preset, setPreset] = useState<DatePreset>('all')
   const [searchInput, setSearchInput] = useState('')
@@ -35,6 +39,7 @@ export default function SalesList({ mode }: { mode: SalesListMode }) {
   const [error, setError] = useState<string | null>(null)
   const [loadedKey, setLoadedKey] = useState<string | null>(null)
   const [openInvoice, setOpenInvoice] = useState<string | null>(null)
+  const [returningSaleId, setReturningSaleId] = useState<number | null>(null)
 
   // Date picker values ("2026-09-17") can be compared as text
   const dateError =
@@ -224,6 +229,7 @@ export default function SalesList({ mode }: { mode: SalesListMode }) {
                 <th>Customer</th>
                 {mode === 'sales' && <th>Cashier</th>}
                 {mode === 'sales' && <th className={styles.num}>Items</th>}
+                {canReturn && <th />}
                 <th className={styles.num}>Total</th>
                 {mode === 'sales' && <th className={styles.num}>Paid</th>}
                 <th className={styles.num}>Due</th>
@@ -265,6 +271,15 @@ export default function SalesList({ mode }: { mode: SalesListMode }) {
                       </button>
                     </td>
                   )}
+                  {canReturn && (
+                    <td className={styles.num}>
+                      {row.status !== 'returned' && (
+                        <button type="button" className={styles.secondaryButton} aria-label={`Return items from ${row.invoice_number}`} onClick={() => setReturningSaleId(row.sale_id)}>
+                          Return
+                        </button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -290,6 +305,13 @@ export default function SalesList({ mode }: { mode: SalesListMode }) {
       </div>
 
       {openInvoice && <InvoiceDialog invoiceNumber={openInvoice} onClose={() => setOpenInvoice(null)} />}
+      {returningSaleId !== null && (
+        <ReturnDialog
+          saleId={returningSaleId}
+          onClose={() => setReturningSaleId(null)}
+          onDone={() => setRefreshCount((count) => count + 1)}
+        />
+      )}
     </>
   )
 }
