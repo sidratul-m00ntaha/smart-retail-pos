@@ -40,7 +40,7 @@ export default function DuePaymentsPage() {
       
     // 2. Fetch currency symbol from settings
     getStoreSettings()
-      .then((settings: any) => {
+      .then((settings) => {
         if (isCurrent && settings?.currency_symbol) {
           setCurrencySymbol(settings.currency_symbol);
         }
