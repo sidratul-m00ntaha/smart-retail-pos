@@ -96,7 +96,7 @@ erDiagram
 - **Invoice document.** `SaleOut` (`schemas/sale.py`) carries the header details alongside the sale: the store's name, address and phone (read fresh from `StoreSettings` each time, so a reprint shows the store's current details), the cashier's name, and the customer's name and phone (both `None` for a guest). `services/invoice_service.py` builds this from a `Sale` row plus its items and payments; `to_sale_out` is used both when a sale is completed and when an invoice is looked up later, so the two are always identical.
 - **`Sales.status`** is `completed` for now. `partially_returned` and `returned` are used by the planned return feature.
 - **Held carts** save only product and quantity. On resume, prices, VAT, discount and stock are re-checked against the current data. Stock is not reserved while a cart is held. A held cart becomes `completed` in the same transaction that completes its sale (`held_cart_id` on the sale request).
-- **`product_id`** in `SaleItems` and `HeldCartItems` is still a plain INT, not a foreign key. Module 2's `Products` table now exists on `main`, and Module 3 and Module 4 have already tightened their own product columns to `ForeignKey("Products.product_id")`, so ours should follow in a small follow-up PR.
+- **`product_id`** in `SaleItems` and `HeldCartItems` is a real `ForeignKey("Products.product_id")`, matching Module 3 and Module 4's product columns. This is an existing-table change, so it needs `python -m app.init_db --reset` (see the PR that added it).
 - Module 6 has a foreign key from `LoyaltyTransactions.sale_id` to `Sales.sale_id`, and `add_points` records each sale's points there (`sale_id`, `description`) so they show up in the loyalty history.
 
 ## Complete-sale transaction (single commit)

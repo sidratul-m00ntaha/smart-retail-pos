@@ -35,8 +35,7 @@ class SaleItem(Base):
 
     sale_item_id: Mapped[int] = mapped_column(primary_key=True)
     sale_id: Mapped[int] = mapped_column(ForeignKey("Sales.sale_id"), index=True)
-    # Plain INT for now: add ForeignKey("Products.product_id") once Module 2's Products model is merged.
-    product_id: Mapped[int] = mapped_column(index=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("Products.product_id"), index=True)
     product_name: Mapped[str] = mapped_column(Unicode(150))  # copy of the name at sale time, so invoices never change
     quantity: Mapped[Decimal] = mapped_column(Numeric(18, 3))
     unit_price: Mapped[Decimal] = mapped_column(Numeric(18, 2))
@@ -98,7 +97,7 @@ class HeldCartItem(Base):
 
     held_cart_item_id: Mapped[int] = mapped_column(primary_key=True)
     held_cart_id: Mapped[int] = mapped_column(ForeignKey("HeldCarts.held_cart_id"), index=True)
-    product_id: Mapped[int] = mapped_column()  # plain INT until the Products model is merged, like SaleItems
+    product_id: Mapped[int] = mapped_column(ForeignKey("Products.product_id"))
     quantity: Mapped[Decimal] = mapped_column(Numeric(18, 3))
     created_at: Mapped[datetime] = mapped_column(server_default=func.sysutcdatetime())
 
