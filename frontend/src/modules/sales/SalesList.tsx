@@ -230,8 +230,8 @@ export default function SalesList({ mode }: { mode: SalesListMode }) {
                 {mode === 'sales' && <th>Cashier</th>}
                 {mode === 'sales' && <th className={styles.num}>Items</th>}
                 <th className={styles.num}>Total</th>
-                {mode === 'sales' && <th className={styles.num}>Paid at sale</th>}
-                <th className={styles.num}>Due at sale</th>
+                {mode === 'sales' && <th className={styles.num}>Paid</th>}
+                <th className={styles.num}>Due</th>
                 <th>Status</th>
                 {mode === 'invoices' && <th />}
                 {canReturn && <th />}
