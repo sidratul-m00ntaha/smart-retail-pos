@@ -116,7 +116,7 @@
 
 .table th {
   padding: 11px 14px;
-  text-align: left;
+  text-align: center;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.04em;
@@ -130,16 +130,22 @@
   padding: 11px 14px;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
+  text-align: center;
 }
 
 .table tbody tr:last-child td {
   border-bottom: none;
+  text-align: center;
 }
 
 .num {
-  text-align: right;
+  text-align: center;
   font-family: var(--font-mono);
   white-space: nowrap;
+}
+
+.table th.num {
+  text-align: center;
 }
 
 .sub {
