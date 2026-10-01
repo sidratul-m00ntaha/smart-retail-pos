@@ -2,6 +2,9 @@
 
 Only make_invoice_number() and to_sale_out() are used while a sale is being completed (by sale_service). The
 rest is read-only: it never changes data and never commits.
+
+The saved Sale rows are never edited (the invoice is a snapshot of the moment of sale). The sales / invoices LIST
+shows each sale's CURRENT paid / due / status instead: see live_dues().
 """
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -11,8 +14,9 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models import User
-from app.models.customer import Customer
+from app.models.customer import Customer, CustomerPayment
 from app.models.sale import Invoice, Payment, Sale, SaleItem
+from app.models.sale_return import SaleReturn
 from app.schemas.sale import PaymentOut, SaleItemOut, SaleListItem, SaleListPage, SaleListTotals, SaleOut
 from app.services.store_setting_service import get_store_settings
 
@@ -75,6 +79,57 @@ def _load(db: Session, sale: Sale | None, not_found: str) -> SaleOut:
     return to_sale_out(db, sale, invoice.invoice_number, items, payments)
 
 
+def apply_credit(dues: list[tuple[int, Decimal]], credit: Decimal) -> dict[int, Decimal]:
+    """Spreads money already received over a customer's sales, oldest first.
+    `dues` is (sale_id, saved due) in oldest-first order. Returns sale_id -> due that is left."""
+    left: dict[int, Decimal] = {}
+    for sale_id, due in dues:
+        applied = min(due, credit)
+        credit -= applied
+        left[sale_id] = due - applied
+    return left
+
+
+def live_dues(db: Session) -> dict[int, Decimal]:
+    """The due each credit sale has NOW. The saved Sale rows are never edited (the invoice is a snapshot),
+    so later due payments (Module 6) and the due cleared by returns are applied here, oldest sale first.
+    Read-only. Only sales that were saved with a due are in the result."""
+    credit_sales = db.execute(
+        select(Sale.sale_id, Sale.customer_id, Sale.due_amount)
+        .where(Sale.customer_id.is_not(None), Sale.due_amount > 0)
+        .order_by(Sale.customer_id, Sale.created_at, Sale.sale_id)
+    ).all()
+    if not credit_sales:
+        return {}
+
+    received = {
+        cid: Decimal(str(total))
+        for cid, total in db.execute(
+            select(CustomerPayment.customer_id, func.sum(CustomerPayment.amount)).group_by(CustomerPayment.customer_id)
+        )
+    }
+    cleared_by_returns = {
+        cid: Decimal(str(total))
+        for cid, total in db.execute(
+            select(Sale.customer_id, func.sum(SaleReturn.due_reduced))
+            .select_from(SaleReturn)
+            .join(Sale, Sale.sale_id == SaleReturn.sale_id)
+            .where(Sale.customer_id.is_not(None))
+            .group_by(Sale.customer_id)
+        )
+    }
+
+    by_customer: dict[int, list[tuple[int, Decimal]]] = {}
+    for sale_id, customer_id, due in credit_sales:
+        by_customer.setdefault(customer_id, []).append((sale_id, due))
+
+    live: dict[int, Decimal] = {}
+    for customer_id, dues in by_customer.items():
+        credit = received.get(customer_id, Decimal("0")) + cleared_by_returns.get(customer_id, Decimal("0"))
+        live.update(apply_credit(dues, credit))
+    return live
+
+
 def list_sales(
     db: Session,
     *,
@@ -86,13 +141,13 @@ def list_sales(
     page: int = 1,
     page_size: int = 25,
 ) -> SaleListPage:
-    """One page of sales matching the filters, newest first, with the sums over every match."""
+    """One page of sales matching the filters, newest first, with the sums over every match.
+    Paid, due and payment status are the CURRENT ones (see live_dues), so the filter and the sums use them too.
+    All matching sales are loaded and paged in Python, because the live status can't be filtered in plain SQL."""
     if created_from and created_before and _as_utc(created_from) >= _as_utc(created_before):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "The start date must be before the end date.")
 
     conditions = []
-    if payment_status:
-        conditions.append(Sale.payment_status == payment_status)
     if customer_id is not None:
         conditions.append(Sale.customer_id == customer_id)
     if created_from:
@@ -110,19 +165,6 @@ def list_sales(
             )
         )
 
-    count, total_amount, paid_amount, due_amount = db.execute(
-        select(
-            func.count(),
-            func.coalesce(func.sum(Sale.total_amount), 0),
-            func.coalesce(func.sum(Sale.paid_amount), 0),
-            func.coalesce(func.sum(Sale.due_amount), 0),
-        )
-        .select_from(Sale)
-        .join(Invoice, Invoice.sale_id == Sale.sale_id)
-        .outerjoin(Customer, Customer.customer_id == Sale.customer_id)
-        .where(*conditions)
-    ).one()
-
     units = select(func.coalesce(func.sum(SaleItem.quantity), 0)).where(SaleItem.sale_id == Sale.sale_id).correlate(Sale).scalar_subquery()
     rows = db.execute(
         select(Sale, Invoice.invoice_number, Customer.name, Customer.phone, User.full_name, units)
@@ -132,37 +174,47 @@ def list_sales(
         .outerjoin(User, User.user_id == Sale.cashier_id)
         .where(*conditions)
         .order_by(Sale.created_at.desc(), Sale.sale_id.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-    )
-    items = [
-        SaleListItem(
-            sale_id=sale.sale_id,
-            invoice_number=invoice_number,
-            created_at=sale.created_at,
-            customer_id=sale.customer_id,
-            customer_name=customer_name,
-            customer_phone=customer_phone,
-            cashier_name=cashier_name,
-            item_count=Decimal(units_sold),
-            total_amount=sale.total_amount,
-            paid_amount=sale.paid_amount,
-            due_amount=sale.due_amount,
-            payment_status=sale.payment_status,
-            status=sale.status,
+    ).all()
+
+    live = live_dues(db)
+    matches: list[SaleListItem] = []
+    for sale, invoice_number, customer_name, customer_phone, cashier_name, units_sold in rows:
+        due = live.get(sale.sale_id, sale.due_amount)
+        paid = sale.paid_amount + (sale.due_amount - due)
+        status_now = sale.payment_status
+        if sale.sale_id in live:  # a credit sale: its status follows what is still owed
+            status_now = "PAID" if due == 0 else ("DUE" if paid == 0 else "PARTIALLY_PAID")
+        if payment_status and status_now != payment_status:
+            continue
+        matches.append(
+            SaleListItem(
+                sale_id=sale.sale_id,
+                invoice_number=invoice_number,
+                created_at=sale.created_at,
+                customer_id=sale.customer_id,
+                customer_name=customer_name,
+                customer_phone=customer_phone,
+                cashier_name=cashier_name,
+                item_count=Decimal(units_sold),
+                total_amount=sale.total_amount,
+                paid_amount=paid,
+                due_amount=due,
+                payment_status=status_now,
+                status=sale.status,
+            )
         )
-        for sale, invoice_number, customer_name, customer_phone, cashier_name, units_sold in rows
-    ]
+
+    start = (page - 1) * page_size
     return SaleListPage(
-        items=items,
-        total=count,
+        items=matches[start : start + page_size],
+        total=len(matches),
         page=page,
         page_size=page_size,
         totals=SaleListTotals(
-            transactions=count,
-            total_amount=Decimal(total_amount),
-            paid_amount=Decimal(paid_amount),
-            due_amount=Decimal(due_amount),
+            transactions=len(matches),
+            total_amount=sum((m.total_amount for m in matches), Decimal("0")),
+            paid_amount=sum((m.paid_amount for m in matches), Decimal("0")),
+            due_amount=sum((m.due_amount for m in matches), Decimal("0")),
         ),
     )
 
