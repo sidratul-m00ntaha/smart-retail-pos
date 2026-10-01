@@ -98,6 +98,7 @@ def record_payment(
         recorded_by=user.user_id # Links to the logged-in user
     )
     db.add(payment)
+    db.flush()  # gives the payment its id
 
     # 3. Safely reduce the outstanding due (Using Decimal math)
     customer.outstanding_due = customer.outstanding_due - payload.amount
@@ -107,7 +108,9 @@ def record_payment(
         customer.outstanding_due = 0
 
     # PRD 5.12: Log the activity to the activity log
-    log_activity(db, user.user_id, "Recorded due payment", "CustomerPayment", str(payment.customer_payment_id))
+    log_activity(db, user.user_id, "CREATE", "CustomerPayment",
+                 reference=str(payment.customer_payment_id),
+                 details=f"Received {payload.amount} from {customer.name} ({payload.method})")
 
     # 4. Save changes
     db.commit()
