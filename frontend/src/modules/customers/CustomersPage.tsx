@@ -12,8 +12,6 @@ export default function CustomersPage() {
     name: "", phone: "", credit_limit: "0.00", status: "active",
   });
 
-  // Whatever the Settings page has saved — ৳, $, ₹, etc. Starts blank so we
-  // never flash the wrong symbol before the real one loads.
   const [currencySymbol, setCurrencySymbol] = useState("");
 
   const [name, setName] = useState("");
@@ -101,7 +99,7 @@ export default function CustomersPage() {
       <table border={1} cellPadding="10" style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr style={{ backgroundColor: "#f4f4f4" }}>
-            <th>Customer</th><th>Phone</th><th>Total Purchases</th><th>Credit Limit</th><th>Outstanding Due</th><th>Available Credit</th><th>Status</th><th></th>
+            <th>Customer</th><th>Phone</th><th>Loyalty Points</th><th>Loyalty Tier</th><th>Total Purchases</th><th>Credit Limit</th><th>Outstanding Due</th><th>Available Credit</th><th>Status</th><th></th>
           </tr>
         </thead>
         <tbody>
@@ -110,6 +108,8 @@ export default function CustomersPage() {
               <tr key={c.customer_id}>
                 <td><input value={editDraft.name} onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })} style={{ padding: "4px", width: "100%" }} /></td>
                 <td><input value={editDraft.phone} onChange={(e) => setEditDraft({ ...editDraft, phone: e.target.value })} style={{ padding: "4px", width: "100%" }} /></td>
+                <td>{c.loyalty_points}</td>
+                <td>{c.loyalty_tier ? c.loyalty_tier.name : "—"}</td>
                 <td>{currencySymbol}{c.total_purchases}</td>
                 <td><input value={editDraft.credit_limit} onChange={(e) => setEditDraft({ ...editDraft, credit_limit: e.target.value })} type="number" step="0.01" style={{ padding: "4px", width: "100%" }} /></td>
                 <td>{currencySymbol}{c.outstanding_due}</td>
@@ -129,6 +129,8 @@ export default function CustomersPage() {
               <tr key={c.customer_id}>
                 <td>{c.name}</td>
                 <td>{c.phone}</td>
+                <td>{c.loyalty_points}</td>
+                <td>{c.loyalty_tier ? c.loyalty_tier.name : "—"}</td>
                 <td>{currencySymbol}{c.total_purchases}</td>
                 <td>{currencySymbol}{c.credit_limit}</td>
                 <td style={{ color: c.outstanding_due !== "0.00" ? "red" : "black" }}>{currencySymbol}{c.outstanding_due}</td>
