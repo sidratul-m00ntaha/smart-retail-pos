@@ -119,7 +119,14 @@ export default function PosPage() {
     if (code === '') return
     const product = products.find((item) => item.barcode === code || item.sku.toLowerCase() === code.toLowerCase())
     if (!product) {
-      setNotice({ kind: 'error', text: `No product found for "${code}".` })
+      // Only active products are loaded here, so a product that is inactive looks the same as one that doesn't exist.
+      // Fall back to the manual search (PRD 5.9): show the code in the search box so any partial match appears.
+      setNotice({
+        kind: 'error',
+        text: `No active product found for "${code}" (it may not exist or may be inactive). Showing a search instead.`,
+      })
+      setCategory('All')
+      setSearch(code)
     } else {
       const problem = addToCart(product)
       setNotice(problem ? { kind: 'error', text: problem } : { kind: 'ok', text: `Added ${product.name}.` })
