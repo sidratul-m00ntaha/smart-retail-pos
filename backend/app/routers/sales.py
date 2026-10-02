@@ -9,7 +9,7 @@ from app.core.dependencies import require_permission
 from app.database import get_db
 from app.schemas.sale import SaleCreate, SaleListPage, SaleOut
 from app.services import invoice_service
-from app.services.notification_service import notify_sale_completed
+from app.services.notification_service import notify_sale_completed, sms_is_enabled
 from app.services.sale_service import complete_sale
 
 router = APIRouter(prefix="/api/sales", tags=["sales"])
@@ -29,9 +29,11 @@ def create_sale(
     """
     completed = complete_sale(db, payload, cashier_id=user.user_id)
     # The sale is already committed, so a failing SMS can never undo or block it.
-    background_tasks.add_task(
-        notify_sale_completed, completed.customer_phone, completed.sale.invoice_number, completed.sale.total_amount
-    )
+    # The SMS is sent only when the store has SMS switched on in Settings (and the customer has a phone number).
+    if sms_is_enabled(db):
+        background_tasks.add_task(
+            notify_sale_completed, completed.customer_phone, completed.sale.invoice_number, completed.sale.total_amount
+        )
     return completed.sale
 
 
