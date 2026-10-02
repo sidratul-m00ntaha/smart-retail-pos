@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from decimal import Decimal
 from app.database import get_db
 from app.core.dependencies import get_current_user, require_permission
@@ -25,7 +25,9 @@ def list_customers(
     db: Session = Depends(get_db), 
     user=Depends(get_current_user) # Cashiers need to read customers for POS
 ):
-    customers = db.query(Customer).all()
+    # joinedload: fetch each customer's tier in the same query, not one
+    # extra query per customer when the response reads customer.loyalty_tier.
+    customers = db.query(Customer).options(joinedload(Customer.loyalty_tier)).all()
 
     # One aggregate query for everyone, instead of one query per customer.
     # Sales with status "returned" don't count as money the customer actually

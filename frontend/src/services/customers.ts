@@ -9,6 +9,7 @@ export interface Customer {
   credit_limit: string;
   outstanding_due: string;
   loyalty_points: number;
+  loyalty_tier: LoyaltyTier | null; // null until they qualify for a tier
   status: string;
   available_credit: string;
   total_purchases: string;

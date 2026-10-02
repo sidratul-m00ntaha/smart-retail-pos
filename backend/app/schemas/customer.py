@@ -18,6 +18,16 @@ class CustomerUpdate(BaseModel):
     credit_limit: Optional[Decimal] = None
     status: Optional[str] = None
 
+class LoyaltyTierRead(BaseModel):
+    loyalty_tier_id: int
+    name: str
+    required_points: int
+    discount_percent: Decimal
+
+    class Config:
+        from_attributes = True
+
+
 class CustomerRead(BaseModel):
     customer_id: int
     name: str
@@ -28,6 +38,11 @@ class CustomerRead(BaseModel):
     outstanding_due: Decimal
     loyalty_points: int
     status: str
+
+    # None until the customer earns enough points for a tier (loyalty_tier_id
+    # is nullable on the model) - the frontend should show something like
+    # "Regular" or "-" for that case, not crash on a missing object.
+    loyalty_tier: Optional[LoyaltyTierRead] = None
 
     # Lifetime amount billed across all their sales. Set by the router
     # (needs a query against the Sales table, so it can't be a @computed_field
@@ -70,15 +85,6 @@ class LoyaltyTierUpdate(BaseModel):
     name: Optional[str] = None
     required_points: Optional[int] = None
     discount_percent: Optional[Decimal] = None
-
-class LoyaltyTierRead(BaseModel):
-    loyalty_tier_id: int
-    name: str
-    required_points: int
-    discount_percent: Decimal
-
-    class Config:
-        from_attributes = True
 
 class CheckCreditPayload(BaseModel):
     customer_id: int
