@@ -417,13 +417,8 @@ export default function PosPage() {
             onPayFull={payFull}
           />
 
-          <div className={styles.actions}>
-            {visibleError && (
-              <p className={styles.saleError} role="alert">
-                {visibleError}
-              </p>
-            )}
-            {rows.length > 0 && (
+          {rows.length > 0 && (
+            <div className={styles.noteBox}>
               <input
                 className={styles.noteInput}
                 value={holdNote}
@@ -432,7 +427,19 @@ export default function PosPage() {
                 placeholder="Note for a held bill (optional)"
                 aria-label="Note for held bill"
               />
+            </div>
+          )}
+
+          <div className={styles.actions}>
+            {visibleError && (
+              <p className={styles.saleError} role="alert">
+                {visibleError}
+              </p>
             )}
+            <div className={styles.stickyTotal}>
+              <span>Total</span>
+              <span className={styles.stickyAmount}>{formatMoney(totals.total)}</span>
+            </div>
             <div className={styles.buttonRow}>
               <button type="button" className={styles.secondaryButton} disabled={rows.length === 0 || busy !== null} onClick={holdBill}>
                 {busy === 'hold' ? 'Holding…' : heldCartId !== null ? 'Hold again' : 'Hold'}
