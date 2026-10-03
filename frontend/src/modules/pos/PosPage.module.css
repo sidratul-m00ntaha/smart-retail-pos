@@ -1,9 +1,9 @@
 /* POS page (Module 5). Look copied from docs/prototype/pos.html; colours come from src/index.css. */
 
 .layout {
-  /* Space above the cart while it stays on screen: the sticky top bar of the app (about 90px) plus a gap.
+  /* Space above the cart while it stays on screen: the sticky top bar of the app (about 80px) plus a gap.
      If the cart ever sits under the top bar, or too far below it, change this one number. */
-  --pos-offset: 112px;
+  --pos-offset: 96px;
 
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
@@ -159,9 +159,9 @@
 }
 
 /* ---------- Right: the cart ----------
-   The cart stays on screen while the products scroll, and is never taller than the window:
-   the customer box is at the top, the cart lines scroll in the middle, and the totals, payment and the
-   Complete sale button stay in view. On a very short window the whole cart scrolls, and the buttons stay pinned. */
+   The cart stays on screen while the products scroll, and is never taller than the window. It is ONE scroll area:
+   the title stays at the top, and the Total with the Hold / Complete sale buttons stay at the bottom, so the
+   cashier only scrolls the cart (customer, lines, totals, payment) and never the whole page. */
 .cart {
   position: sticky;
   top: var(--pos-offset);
@@ -176,11 +176,15 @@
 }
 
 .cartHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
   padding: 16px 18px 8px;
+  background: var(--paper);
 }
 
 .cartTitle {
@@ -212,14 +216,10 @@
   margin: 0;
 }
 
-/* The cart lines are the part that grows and scrolls. */
 .lines {
   list-style: none;
   margin: 0;
   padding: 0 18px;
-  flex: 1 1 auto;
-  min-height: 150px;
-  overflow-y: auto;
 }
 
 .cartLine {
@@ -338,13 +338,31 @@
   border-top: 1px dashed var(--border);
 }
 
-/* Hold / Complete sale: pinned to the bottom of the cart, so they are always in view. */
+.noteBox {
+  padding: 0 18px 12px;
+}
+
+/* The Total and the Hold / Complete sale buttons: pinned to the bottom of the cart, so they are always in view. */
 .actions {
   position: sticky;
   bottom: 0;
-  padding: 12px 18px 18px;
+  padding: 12px 18px 16px;
   background: var(--paper);
   border-top: 1px solid var(--border);
+}
+
+.stickyTotal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.stickyAmount {
+  font-family: var(--font-mono);
 }
 
 .primaryButton {
@@ -381,10 +399,13 @@
     overflow: visible;
   }
 
+  .cartHeader {
+    position: static;
+  }
+
   .lines {
-    flex: none;
-    min-height: 0;
     max-height: 46vh;
+    overflow-y: auto;
   }
 
   .actions {
@@ -406,7 +427,7 @@
 
 .noteInput {
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 0;
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
