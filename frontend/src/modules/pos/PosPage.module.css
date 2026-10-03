@@ -1,6 +1,10 @@
 /* POS page (Module 5). Look copied from docs/prototype/pos.html; colours come from src/index.css. */
 
 .layout {
+  /* Space above the cart while it stays on screen: the sticky top bar of the app (about 90px) plus a gap.
+     If the cart ever sits under the top bar, or too far below it, change this one number. */
+  --pos-offset: 112px;
+
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
   gap: 20px;
@@ -154,16 +158,21 @@
   padding: 24px 0;
 }
 
-/* ---------- Right: the cart ---------- */
+/* ---------- Right: the cart ----------
+   The cart stays on screen while the products scroll, and is never taller than the window:
+   the customer box is at the top, the cart lines scroll in the middle, and the totals, payment and the
+   Complete sale button stay in view. On a very short window the whole cart scrolls, and the buttons stay pinned. */
 .cart {
   position: sticky;
-  top: 16px;
+  top: var(--pos-offset);
   display: flex;
   flex-direction: column;
+  max-height: calc(100vh - var(--pos-offset) - 16px);
   background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .cartHeader {
@@ -203,11 +212,13 @@
   margin: 0;
 }
 
+/* The cart lines are the part that grows and scrolls. */
 .lines {
   list-style: none;
   margin: 0;
   padding: 0 18px;
-  max-height: 46vh;
+  flex: 1 1 auto;
+  min-height: 150px;
   overflow-y: auto;
 }
 
@@ -327,8 +338,13 @@
   border-top: 1px dashed var(--border);
 }
 
+/* Hold / Complete sale: pinned to the bottom of the cart, so they are always in view. */
 .actions {
-  padding: 0 18px 18px;
+  position: sticky;
+  bottom: 0;
+  padding: 12px 18px 18px;
+  background: var(--paper);
+  border-top: 1px solid var(--border);
 }
 
 .primaryButton {
@@ -358,8 +374,23 @@
     grid-template-columns: 1fr;
   }
 
+  /* One column: the cart goes below the products and the page scrolls as before. */
   .cart {
     position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .lines {
+    flex: none;
+    min-height: 0;
+    max-height: 46vh;
+  }
+
+  .actions {
+    position: static;
+    border-top: none;
+    padding-top: 0;
   }
 
   .searchRow {
