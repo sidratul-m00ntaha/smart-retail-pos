@@ -77,7 +77,7 @@ export default function LoginPage() {
         </div>
 
         <div className={styles.receiptWrap} aria-hidden="true">
-          <div className={styles.receipt}>
+          <div className={styles.receipt} data-theme="light">
             <p className={styles.receiptTitle}>SMART RETAIL STORE</p>
             <p className={styles.receiptSub}>Terminal 03</p>
             <hr className={styles.rule} />

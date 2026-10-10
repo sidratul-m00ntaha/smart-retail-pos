@@ -17,8 +17,8 @@ function daysUntil(dateStr: string): number {
 function agingColor(days: number, isExpired: boolean): string {
   if (isExpired) return 'var(--danger)'
   if (days <= 3) return 'var(--danger)'
-  if (days <= 7) return 'var(--amber)'
-  if (days <= 14) return '#d8c341'
+  if (days <= 7) return 'var(--accent)'
+  if (days <= 14) return 'var(--warning)'
   return 'var(--success)'
 }
 

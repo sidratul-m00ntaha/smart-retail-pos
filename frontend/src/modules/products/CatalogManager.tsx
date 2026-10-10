@@ -109,7 +109,7 @@ export default function CatalogManager({
           role="alert"
           style={{
             margin: '12px 16px 0',
-            color: '#b42318',
+            color: 'var(--danger)',
             fontSize: '14px',
           }}
         >

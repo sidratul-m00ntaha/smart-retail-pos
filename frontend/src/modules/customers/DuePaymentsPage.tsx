@@ -1,6 +1,7 @@
 // frontend/src/modules/customers/DuePaymentsPage.tsx
 import { useEffect, useState } from "react";
 import { listCustomers, recordPayment, type Customer } from "../../services/customers";
+import styles from "./customers.module.css";
 
 // ⚠️ PRE-FLIGHT CHECK: If this import gives a red error, delete this line and change 
 // `const [currencySymbol, setCurrencySymbol] = useState("");` to `const currencySymbol = "৳";` below.
@@ -85,20 +86,20 @@ export default function DuePaymentsPage() {
   const customersWithDue = customers.filter(c => parseFloat(c.outstanding_due) > 0);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Due Payments</h2>
+    <div>
+      <h2 className={styles.heading}>Due Payments</h2>
 
       {/* Payment Form */}
-      <div style={{ backgroundColor: "#f9f9f9", padding: "20px", borderRadius: "8px", marginBottom: "30px" }}>
-        <h3>Record a Payment</h3>
-        <form onSubmit={handlePayment} style={{ display: "flex", gap: "15px", flexWrap: "wrap", alignItems: "flex-end" }}>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <label style={{ marginBottom: "5px", fontSize: "14px", fontWeight: "bold" }}>Customer</label>
-            <select 
-              value={selectedCustomerId} 
+      <div className={styles.card}>
+        <h3 className={styles.cardTitle}>Record a Payment</h3>
+        <form onSubmit={handlePayment} className={styles.form}>
+          <div className={styles.field}>
+            <label className={styles.label}>Customer</label>
+            <select
+              className={`${styles.select} ${styles.wide}`}
+              value={selectedCustomerId}
               onChange={e => setSelectedCustomerId(e.target.value === "" ? "" : Number(e.target.value))}
               required
-              style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ccc", minWidth: "200px" }}
             >
               <option value="">Select a customer...</option>
               {customers.map(c => (
@@ -109,26 +110,26 @@ export default function DuePaymentsPage() {
             </select>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <label style={{ marginBottom: "5px", fontSize: "14px", fontWeight: "bold" }}>Amount ({currencySymbol})</label>
-            <input 
-              type="number" 
-              step="0.01" 
+          <div className={styles.field}>
+            <label className={styles.label}>Amount ({currencySymbol})</label>
+            <input
+              className={`${styles.input} ${styles.w120}`}
+              type="number"
+              step="0.01"
               min="0.01"
-              value={amount} 
-              onChange={e => setAmount(e.target.value)} 
-              placeholder="0.00" 
-              required 
-              style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ccc", width: "120px" }}
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              placeholder="0.00"
+              required
             />
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <label style={{ marginBottom: "5px", fontSize: "14px", fontWeight: "bold" }}>Method</label>
-            <select 
-              value={method} 
+          <div className={styles.field}>
+            <label className={styles.label}>Method</label>
+            <select
+              className={`${styles.select} ${styles.w120}`}
+              value={method}
               onChange={e => setMethod(e.target.value)}
-              style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ccc", width: "120px" }}
             >
               <option value="cash">Cash</option>
               <option value="card">Card</option>
@@ -136,61 +137,51 @@ export default function DuePaymentsPage() {
             </select>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
+            className={styles.primaryButton}
             disabled={loading || !selectedCustomerId || !amount}
-            style={{ 
-              padding: "9px 20px", 
-              backgroundColor: loading ? "#ccc" : "#28a745", 
-              color: "white", 
-              border: "none", 
-              borderRadius: "4px", 
-              cursor: loading ? "not-allowed" : "pointer",
-              fontWeight: "bold"
-            }}
           >
             {loading ? "Processing..." : "Record Payment"}
           </button>
         </form>
 
         {message && (
-          <p style={{ 
-            marginTop: "15px", 
-            color: message.type === "success" ? "green" : "red", 
-            fontWeight: "bold" 
-          }}>
+          <p className={message.type === "success" ? styles.messageOk : styles.messageError}>
             {message.text}
           </p>
         )}
       </div>
 
       {/* Customers with Due Table */}
-      <h3>Customers with Outstanding Due</h3>
+      <h3 className={styles.subheading}>Customers with Outstanding Due</h3>
       {customersWithDue.length === 0 ? (
-        <p style={{ color: "#666" }}>Great news! No customers currently have an outstanding due.</p>
+        <p className={styles.empty}>Great news! No customers currently have an outstanding due.</p>
       ) : (
-        <table border={1} cellPadding="10" style={{ width: "100%", borderCollapse: "collapse", backgroundColor: "white" }}>
-          <thead>
-            <tr style={{ backgroundColor: "#f4f4f4" }}>
-              <th>Customer</th>
-              <th>Phone</th>
-              <th>Credit Limit</th>
-              <th style={{ color: "#dc3545" }}>Outstanding Due</th>
-              <th>Available Credit</th>
-            </tr>
-          </thead>
-          <tbody>
-            {customersWithDue.map(c => (
-              <tr key={c.customer_id}>
-                <td>{c.name}</td>
-                <td>{c.phone}</td>
-                <td>{currencySymbol}{c.credit_limit}</td>
-                <td style={{ fontWeight: "bold", color: "#dc3545" }}>{currencySymbol}{c.outstanding_due}</td>
-                <td>{currencySymbol}{c.available_credit}</td>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Credit Limit</th>
+                <th className={styles.dueHead}>Outstanding Due</th>
+                <th>Available Credit</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {customersWithDue.map(c => (
+                <tr key={c.customer_id}>
+                  <td>{c.name}</td>
+                  <td>{c.phone}</td>
+                  <td>{currencySymbol}{c.credit_limit}</td>
+                  <td className={styles.due}>{currencySymbol}{c.outstanding_due}</td>
+                  <td>{currencySymbol}{c.available_credit}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

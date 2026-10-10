@@ -7,7 +7,7 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(20, 35, 30, 0.45);
+  background: rgba(9, 9, 11, 0.55);
   z-index: 50;
 }
 
@@ -16,9 +16,9 @@
   max-height: 90vh;
   overflow-y: auto;
   padding: 22px 22px 20px;
-  background: #fff;
+  /* The card is white like real paper in both themes (data-theme="light" is set in InvoiceModal.tsx). */
+  background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-mono);
   border-radius: 6px;
   outline: none;
 }
@@ -48,15 +48,14 @@
   flex: 1;
   padding: 10px 0;
   border-radius: 8px;
-  font-family: var(--font-sans);
   font-size: 13px;
   cursor: pointer;
 }
 
 .primary {
   border: none;
-  background: var(--teal);
-  color: #fff;
+  background: var(--primary);
+  color: var(--on-primary);
 }
 
 .secondary {

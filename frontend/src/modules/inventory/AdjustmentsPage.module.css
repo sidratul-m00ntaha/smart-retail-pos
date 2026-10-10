@@ -1,7 +1,7 @@
 .addButton {
   padding: 10px 16px;
-  background: var(--amber);
-  color: #3a2606;
+  background: var(--primary);
+  color: var(--on-primary);
   border: none;
   border-radius: 9px;
   font-size: 13.5px;
@@ -12,10 +12,7 @@
   gap: 7px;
 }
 
-.addButton:hover {
-  background: var(--amber-dark);
-  color: #fff;
-}
+.addButton:hover { opacity: 0.88; }
 
 .formLabel {
   display: block;
@@ -41,8 +38,8 @@
 
 .formInput:focus {
   outline: none;
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .formError {
@@ -65,8 +62,8 @@
 }
 
 .saveButton {
-  background: var(--amber);
-  color: #3a2606;
+  background: var(--primary);
+  color: var(--on-primary);
   border: none;
   border-radius: 9px;
   padding: 10px 16px;
@@ -75,10 +72,7 @@
   cursor: pointer;
 }
 
-.saveButton:hover:not(:disabled) {
-  background: var(--amber-dark);
-  color: #fff;
-}
+.saveButton:hover:not(:disabled) { opacity: 0.88; }
 
 .saveButton:disabled {
   opacity: 0.6;
@@ -117,13 +111,13 @@
 .dirTab.decActive {
   background: var(--danger);
   border-color: var(--danger);
-  color: #fff;
+  color: var(--on-danger);
 }
 
 .dirTab.incActive {
   background: var(--success);
   border-color: var(--success);
-  color: #fff;
+  color: var(--on-primary);
 }
 
 .readonlyBox {
@@ -131,16 +125,15 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 9px 11px;
-  font-family: var(--font-mono);
   font-size: 13px;
 }
 
 .previewBox {
-  background: var(--teal-tint);
+  background: var(--primary-tint);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 12.5px;
-  color: var(--teal-dark);
+  color: var(--ink);
   margin-top: 4px;
 }
 
@@ -173,8 +166,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--teal-tint);
-  color: var(--teal-dark);
+  background: var(--primary-tint);
+  color: var(--ink);
   border-radius: 9px;
   padding: 10px 14px;
   font-size: 13px;
@@ -184,7 +177,7 @@
 .undoLink {
   background: none;
   border: none;
-  color: var(--teal-dark);
+  color: var(--ink);
   font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
@@ -225,11 +218,10 @@
 
 .barFill {
   height: 100%;
-  background: var(--teal);
+  background: var(--primary);
   border-radius: 4px;
 }
 
 .reasonCount {
-  font-family: var(--font-mono);
   text-align: right;
 }

@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { findSection, NAV_SECTIONS, visibleItems } from '../../config/navigation.ts'
 import { useAuth } from '../../hooks/useAuth.ts'
 import { initials } from '../../utils/text.ts'
+import ThemeToggle from '../../theme/ThemeToggle.tsx'
 import styles from './AppLayout.module.css'
 import { NavIcon } from './icons.tsx'
 
@@ -19,8 +20,10 @@ export default function AppLayout() {
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <span className={styles.eyebrow}>Smart Retail</span>
-          <span className={styles.brandTitle}>Point of Sale</span>
+          <span className={styles.logo} aria-hidden="true">
+            S
+          </span>
+          <span className={styles.srOnly}>Smart Retail Point of Sale</span>
         </div>
 
         <nav className={styles.nav} aria-label="Main">
@@ -34,15 +37,15 @@ export default function AppLayout() {
                 to={firstPage.path}
                 className={isActive ? `${styles.navItem} ${styles.active}` : styles.navItem}
                 aria-current={isActive ? 'page' : undefined}
+                data-tooltip={section.label}
               >
                 <NavIcon name={section.icon} />
-                {section.label}
+                {/* The label is hidden on screen (the sidebar shows icons only) but screen readers still read it. */}
+                <span className={styles.srOnly}>{section.label}</span>
               </Link>
             )
           })}
         </nav>
-
-        <div className={styles.sidebarFooter}>Signed in as {user.username}</div>
       </aside>
 
       <div className={styles.main}>
@@ -52,8 +55,9 @@ export default function AppLayout() {
             <p className={styles.date}>{formatToday()}</p>
           </div>
           <div className={styles.topRight}>
+            <ThemeToggle />
             <span className={styles.rolePill}>{user.role}</span>
-            <span className={styles.avatar} title={user.full_name} aria-hidden="true">
+            <span className={styles.avatar} title={`${user.full_name} (${user.username})`} aria-hidden="true">
               {initials(user.full_name)}
             </span>
             <button type="button" className={styles.logoutButton} onClick={() => logout()}>

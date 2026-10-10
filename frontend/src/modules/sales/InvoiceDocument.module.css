@@ -22,7 +22,7 @@
 
 .rule {
   border: none;
-  border-top: 1px dashed #c7cbc0;
+  border-top: 1px dashed var(--border);
   margin: 12px 0;
 }
 
@@ -79,7 +79,7 @@
   padding: 6px;
   text-align: center;
   font-size: 12px;
-  color: var(--teal-dark);
-  background: var(--teal-tint);
+  color: var(--ink);
+  background: var(--primary-tint);
   border-radius: 6px;
 }

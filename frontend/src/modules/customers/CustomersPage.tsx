@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { listCustomers, createCustomer, updateCustomer, type Customer } from "../../services/customers";
 import { getStoreSettings } from "../../services/store-settings.service";
+import styles from "./customers.module.css";
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -68,88 +69,88 @@ export default function CustomersPage() {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Customers</h2>
+    <div>
+      <h2 className={styles.heading}>Customers</h2>
 
-      <div style={{ display: "flex", gap: "10px", marginBottom: "16px", alignItems: "center" }}>
+      <div className={styles.toolbar}>
         <input
+          className={`${styles.input} ${styles.search}`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name or phone…"
-          style={{ padding: "8px", flex: 1, maxWidth: "320px" }}
         />
-        <button type="button" onClick={() => setShowAddForm((v) => !v)} style={{ padding: "8px 16px", cursor: "pointer" }}>
+        <button type="button" className={styles.primaryButton} onClick={() => setShowAddForm((v) => !v)}>
           {showAddForm ? "Cancel" : "+ Add customer"}
         </button>
       </div>
 
       {showAddForm && (
-        <form onSubmit={handleAdd} style={{ marginBottom: "20px", display: "flex", gap: "10px" }}>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Customer Name" required style={{ padding: "8px" }} />
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone (e.g., 017...)" required style={{ padding: "8px" }} />
-          <input value={creditLimit} onChange={(e) => setCreditLimit(e.target.value)} placeholder="Credit Limit" type="number" step="0.01" style={{ padding: "8px" }} />
-          <button type="submit" disabled={loading} style={{ padding: "8px 16px", cursor: "pointer" }}>
+        <form onSubmit={handleAdd} className={styles.addForm}>
+          <input className={styles.input} value={name} onChange={(e) => setName(e.target.value)} placeholder="Customer Name" required />
+          <input className={styles.input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone (e.g., 017...)" required />
+          <input className={styles.input} value={creditLimit} onChange={(e) => setCreditLimit(e.target.value)} placeholder="Credit Limit" type="number" step="0.01" />
+          <button type="submit" disabled={loading} className={styles.primaryButton}>
             {loading ? "Adding..." : "Save"}
           </button>
         </form>
       )}
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p className={styles.messageError}>{error}</p>}
 
-      <table border={1} cellPadding="10" style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ backgroundColor: "#f4f4f4" }}>
-            <th>Customer</th><th>Phone</th><th>Loyalty Points</th><th>Loyalty Tier</th><th>Total Purchases</th><th>Credit Limit</th><th>Outstanding Due</th><th>Available Credit</th><th>Status</th><th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map((c) =>
-            editingId === c.customer_id ? (
-              <tr key={c.customer_id}>
-                <td><input value={editDraft.name} onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })} style={{ padding: "4px", width: "100%" }} /></td>
-                <td><input value={editDraft.phone} onChange={(e) => setEditDraft({ ...editDraft, phone: e.target.value })} style={{ padding: "4px", width: "100%" }} /></td>
-                <td>{c.loyalty_points}</td>
-                <td>{c.loyalty_tier ? c.loyalty_tier.name : "—"}</td>
-                <td>{currencySymbol}{c.total_purchases}</td>
-                <td><input value={editDraft.credit_limit} onChange={(e) => setEditDraft({ ...editDraft, credit_limit: e.target.value })} type="number" step="0.01" style={{ padding: "4px", width: "100%" }} /></td>
-                <td>{currencySymbol}{c.outstanding_due}</td>
-                <td>{currencySymbol}{c.available_credit}</td>
-                <td>
-                  <select value={editDraft.status} onChange={(e) => setEditDraft({ ...editDraft, status: e.target.value })}>
-                    <option value="active">active</option>
-                    <option value="inactive">inactive</option>
-                  </select>
-                </td>
-                <td style={{ whiteSpace: "nowrap" }}>
-                  <button onClick={() => saveEdit(c.customer_id)} style={{ marginRight: "6px" }}>Save</button>
-                  <button onClick={() => setEditingId(null)}>Cancel</button>
-                </td>
-              </tr>
-            ) : (
-              <tr key={c.customer_id}>
-                <td>{c.name}</td>
-                <td>{c.phone}</td>
-                <td>{c.loyalty_points}</td>
-                <td>{c.loyalty_tier ? c.loyalty_tier.name : "—"}</td>
-                <td>{currencySymbol}{c.total_purchases}</td>
-                <td>{currencySymbol}{c.credit_limit}</td>
-                <td style={{ color: c.outstanding_due !== "0.00" ? "red" : "black" }}>{currencySymbol}{c.outstanding_due}</td>
-                <td style={{ fontWeight: "bold" }}>{currencySymbol}{c.available_credit}</td>
-                <td>
-                  <span style={{
-                    padding: "4px 8px", borderRadius: "4px",
-                    backgroundColor: c.status === "active" ? "#d4edda" : "#f8d7da",
-                    color: c.status === "active" ? "#155724" : "#721c24",
-                  }}>
-                    {c.status}
-                  </span>
-                </td>
-                <td><button onClick={() => startEdit(c)}>Edit</button></td>
-              </tr>
-            )
-          )}
-        </tbody>
-      </table>
+      <div className={styles.tableWrap}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Customer</th><th>Phone</th><th>Loyalty Points</th><th>Loyalty Tier</th><th>Total Purchases</th><th>Credit Limit</th><th>Outstanding Due</th><th>Available Credit</th><th>Status</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((c) =>
+              editingId === c.customer_id ? (
+                <tr key={c.customer_id}>
+                  <td><input className={`${styles.input} ${styles.cellInput}`} value={editDraft.name} onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })} /></td>
+                  <td><input className={`${styles.input} ${styles.cellInput}`} value={editDraft.phone} onChange={(e) => setEditDraft({ ...editDraft, phone: e.target.value })} /></td>
+                  <td>{c.loyalty_points}</td>
+                  <td>{c.loyalty_tier ? c.loyalty_tier.name : "—"}</td>
+                  <td>{currencySymbol}{c.total_purchases}</td>
+                  <td><input className={`${styles.input} ${styles.cellInput}`} value={editDraft.credit_limit} onChange={(e) => setEditDraft({ ...editDraft, credit_limit: e.target.value })} type="number" step="0.01" /></td>
+                  <td>{currencySymbol}{c.outstanding_due}</td>
+                  <td>{currencySymbol}{c.available_credit}</td>
+                  <td>
+                    <select className={styles.select} value={editDraft.status} onChange={(e) => setEditDraft({ ...editDraft, status: e.target.value })}>
+                      <option value="active">active</option>
+                      <option value="inactive">inactive</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div className={styles.rowButtons}>
+                      <button type="button" className={styles.smallButton} onClick={() => saveEdit(c.customer_id)}>Save</button>
+                      <button type="button" className={styles.smallButton} onClick={() => setEditingId(null)}>Cancel</button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                <tr key={c.customer_id}>
+                  <td>{c.name}</td>
+                  <td>{c.phone}</td>
+                  <td>{c.loyalty_points}</td>
+                  <td>{c.loyalty_tier ? c.loyalty_tier.name : "—"}</td>
+                  <td>{currencySymbol}{c.total_purchases}</td>
+                  <td>{currencySymbol}{c.credit_limit}</td>
+                  <td className={c.outstanding_due !== "0.00" ? styles.due : undefined}>{currencySymbol}{c.outstanding_due}</td>
+                  <td className={styles.strong}>{currencySymbol}{c.available_credit}</td>
+                  <td>
+                    <span className={`${styles.status} ${c.status === "active" ? styles.statusActive : styles.statusInactive}`}>
+                      {c.status}
+                    </span>
+                  </td>
+                  <td><button type="button" className={styles.smallButton} onClick={() => startEdit(c)}>Edit</button></td>
+                </tr>
+              )
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
