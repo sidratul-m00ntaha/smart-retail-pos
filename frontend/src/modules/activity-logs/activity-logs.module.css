@@ -48,8 +48,8 @@
 .search input:focus,
 .select:focus,
 .dateField input:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .dateRange {
@@ -94,7 +94,7 @@
   padding: 8px 4px;
   border: none;
   background: none;
-  color: var(--teal-dark);
+  color: var(--ink);
   font-size: 13px;
   text-decoration: underline;
   cursor: pointer;
@@ -102,7 +102,7 @@
 
 .secondaryButton:focus-visible,
 .linkButton:focus-visible {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -110,7 +110,7 @@
 .noticeError {
   margin: 0 0 14px;
   padding: 10px 14px;
-  border: 1px solid #f0cfc9;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
   border-radius: 9px;
   background: var(--danger-tint);
   color: var(--danger);
@@ -157,7 +157,7 @@
 }
 
 .table tbody tr:hover {
-  background: #fafbf9;
+  background: var(--primary-tint);
 }
 
 .emptyRow {
@@ -168,7 +168,6 @@
 }
 
 .mono {
-  font-family: var(--font-mono);
   font-size: 12.5px;
   white-space: nowrap;
 }
@@ -182,7 +181,6 @@
 .userSub {
   margin: 2px 0 0;
   color: var(--ink-soft);
-  font-family: var(--font-mono);
   font-size: 11.5px;
 }
 
@@ -204,15 +202,14 @@
   border-radius: 20px;
   background: var(--bg);
   color: var(--ink-soft);
-  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
 }
 
 /* Colours for the actions listed in docs/database/module-1-auth-admin.md; others stay grey */
 .actionLOGIN {
-  background: var(--teal-tint);
-  color: var(--teal-dark);
+  background: var(--primary-tint);
+  color: var(--ink);
 }
 
 .actionCREATE {
@@ -221,8 +218,8 @@
 }
 
 .actionUPDATE {
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
 }
 
 .actionDELETE {
@@ -231,8 +228,8 @@
 }
 
 .actionPAYMENT {
-  background: #efeaf9;
-  color: #5b3fa0;
+  background: var(--info-tint);
+  color: var(--info);
 }
 
 /* ---------- Pages ---------- */
@@ -248,7 +245,6 @@
 }
 
 .pageNumber {
-  font-family: var(--font-mono);
   font-size: 12px;
 }
 

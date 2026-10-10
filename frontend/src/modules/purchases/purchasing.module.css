@@ -21,14 +21,13 @@
 }
 
 .statChip b {
-  font-family: var(--font-mono);
   font-weight: 500;
 }
 
 .statChip.statWarn {
-  border-color: #efd7a6;
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
 }
 
 .toolbar {
@@ -75,8 +74,8 @@
 
 .search input:focus,
 .select:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .statusTabs {
@@ -120,8 +119,8 @@
   padding: 10px 16px;
   border: none;
   border-radius: 9px;
-  background: var(--amber);
-  color: #3a2606;
+  background: var(--primary);
+  color: var(--on-primary);
   font-size: 13.5px;
   font-weight: 600;
   text-decoration: none;
@@ -130,10 +129,7 @@
 
 .primaryButton:hover,
 .saveButton:hover:not(:disabled),
-.confirmButton:hover:not(:disabled) {
-  background: var(--amber-dark);
-  color: #fff;
-}
+.confirmButton:hover:not(:disabled) { opacity: 0.88; }
 
 .saveButton {
   flex: 1.4;
@@ -170,7 +166,7 @@
   padding: 4px 0;
   border: none;
   background: none;
-  color: var(--teal-dark);
+  color: var(--ink);
   font-size: 12.5px;
   text-decoration: underline;
   cursor: pointer;
@@ -194,7 +190,7 @@
 .removeButton:focus-visible,
 .backLink:focus-visible,
 .inlineLink:focus-visible {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -203,7 +199,7 @@
 .notice {
   margin: 0 0 14px;
   padding: 10px 14px;
-  border: 1px solid #c9e0d0;
+  border: 1px solid color-mix(in srgb, var(--success) 40%, transparent);
   border-radius: 9px;
   background: var(--success-tint);
   color: var(--success);
@@ -211,7 +207,7 @@
 }
 
 .notice.noticeError {
-  border-color: #f0cfc9;
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
   background: var(--danger-tint);
   color: var(--danger);
 }
@@ -255,7 +251,7 @@
 }
 
 .table tbody tr:hover {
-  background: #fafbf9;
+  background: var(--primary-tint);
 }
 
 .table th.right,
@@ -271,7 +267,6 @@
 }
 
 .mono {
-  font-family: var(--font-mono);
   font-size: 12.5px;
   white-space: nowrap;
 }
@@ -298,9 +293,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  background: var(--teal);
-  color: #fff;
-  font-family: var(--font-mono);
+  background: var(--primary);
+  color: var(--on-primary);
   font-size: 11px;
   font-weight: 500;
 }
@@ -313,19 +307,18 @@
 .nameSub {
   margin: 2px 0 0;
   color: var(--ink-soft);
-  font-family: var(--font-mono);
   font-size: 11.5px;
 }
 
 .inlineLink {
-  color: var(--teal-dark);
+  color: var(--ink);
 }
 
 .cellLink {
   padding: 0;
   border: none;
   background: none;
-  color: var(--teal-dark);
+  color: var(--ink);
   cursor: pointer;
   text-decoration: underline;
 }
@@ -350,8 +343,8 @@
 }
 
 .pillPart {
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
 }
 
 .pillDue {
@@ -379,8 +372,8 @@
 }
 
 .iconButton:hover:not(:disabled) {
-  border-color: var(--teal);
-  color: var(--teal);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .iconButton:disabled {
@@ -393,7 +386,7 @@
 .formError {
   margin: 0 0 14px;
   padding: 10px 12px;
-  border: 1px solid #f0cfc9;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
   border-radius: 8px;
   background: var(--danger-tint);
   color: var(--danger);
@@ -437,8 +430,8 @@
 .wideSelect:focus,
 .pickerInput:focus,
 .lineInput:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .hasError input,
@@ -505,7 +498,7 @@
   position: absolute;
   inset: 0;
   border-radius: 22px;
-  background: var(--border);
+  background: var(--ink-soft);
   transition: background 0.15s;
   pointer-events: none;
 }
@@ -518,12 +511,12 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--paper);
   transition: transform 0.15s;
 }
 
 .switch input:checked + .slider {
-  background: var(--teal);
+  background: var(--primary);
 }
 
 .switch input:checked + .slider::before {
@@ -531,7 +524,7 @@
 }
 
 .switch input:focus-visible + .slider {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -539,8 +532,8 @@
   margin-bottom: 16px;
   padding: 14px 16px;
   border-radius: 10px;
-  background: var(--teal-tint);
-  color: var(--teal-dark);
+  background: var(--primary-tint);
+  color: var(--ink);
 }
 
 .summaryTitle {
@@ -557,15 +550,14 @@
 }
 
 .summaryLine span:last-child {
-  font-family: var(--font-mono);
 }
 
 .previewBox {
   margin: 4px 0 8px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: var(--teal-tint);
-  color: var(--teal-dark);
+  background: var(--primary-tint);
+  color: var(--ink);
   font-size: 12.5px;
 }
 
@@ -604,7 +596,6 @@
 
 .detailHeading {
   margin: 0 0 6px;
-  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 600;
 }
@@ -632,7 +623,6 @@
 .itemSub {
   margin: 2px 0 0;
   color: var(--ink-soft);
-  font-family: var(--font-mono);
   font-size: 11.5px;
 }
 
@@ -656,7 +646,6 @@
 }
 
 .totalRow dd {
-  font-family: var(--font-mono);
   color: var(--ink);
 }
 
@@ -670,7 +659,6 @@
   padding-top: 8px;
   border-top: 1px dashed var(--border);
   color: var(--ink);
-  font-family: var(--font-display);
   font-size: 16px;
   font-weight: 600;
 }
@@ -713,14 +701,12 @@
 
 .cardTitle {
   margin: 0 0 12px;
-  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 600;
 }
 
 .subTitle {
   margin: 4px 0 8px;
-  font-family: var(--font-display);
   font-size: 14px;
   font-weight: 600;
 }
@@ -764,12 +750,11 @@
 }
 
 .result:hover {
-  background: var(--teal-tint);
+  background: var(--primary-tint);
 }
 
 .resultMeta {
   color: var(--ink-soft);
-  font-family: var(--font-mono);
   font-size: 11.5px;
 }
 
@@ -777,8 +762,8 @@
   margin-left: 8px;
   padding: 1px 7px;
   border-radius: 10px;
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
   font-size: 10.5px;
 }
 
@@ -845,8 +830,8 @@
   gap: 12px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
   font-size: 12px;
 }
 
@@ -902,7 +887,7 @@
 .summaryError {
   margin: 0 0 10px;
   padding: 9px 11px;
-  border: 1px solid #f0cfc9;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
   border-radius: 8px;
   background: var(--danger-tint);
   color: var(--danger);
@@ -966,14 +951,13 @@
 }
 
 .statChip b {
-  font-family: var(--font-mono);
   font-weight: 500;
 }
 
 .statChip.statWarn {
-  border-color: #efd7a6;
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
 }
 
 .toolbar {
@@ -1020,8 +1004,8 @@
 
 .search input:focus,
 .select:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .statusTabs {
@@ -1064,8 +1048,8 @@
   padding: 10px 16px;
   border: none;
   border-radius: 9px;
-  background: var(--amber);
-  color: #3a2606;
+  background: var(--primary);
+  color: var(--on-primary);
   font-size: 13.5px;
   font-weight: 600;
   text-decoration: none;
@@ -1074,10 +1058,7 @@
 
 .primaryButton:hover,
 .saveButton:hover:not(:disabled),
-.confirmButton:hover:not(:disabled) {
-  background: var(--amber-dark);
-  color: #fff;
-}
+.confirmButton:hover:not(:disabled) { opacity: 0.88; }
 
 .saveButton {
   flex: 1.4;
@@ -1114,7 +1095,7 @@
   padding: 4px 0;
   border: none;
   background: none;
-  color: var(--teal-dark);
+  color: var(--ink);
   font-size: 12.5px;
   text-decoration: underline;
   cursor: pointer;
@@ -1138,7 +1119,7 @@
 .removeButton:focus-visible,
 .backLink:focus-visible,
 .inlineLink:focus-visible {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -1146,7 +1127,7 @@
 .notice {
   margin: 0 0 14px;
   padding: 10px 14px;
-  border: 1px solid #c9e0d0;
+  border: 1px solid color-mix(in srgb, var(--success) 40%, transparent);
   border-radius: 9px;
   background: var(--success-tint);
   color: var(--success);
@@ -1154,7 +1135,7 @@
 }
 
 .notice.noticeError {
-  border-color: #f0cfc9;
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
   background: var(--danger-tint);
   color: var(--danger);
 }
@@ -1197,7 +1178,7 @@
 }
 
 .table tbody tr:hover {
-  background: #fafbf9;
+  background: var(--primary-tint);
 }
 
 .table th.right,
@@ -1213,7 +1194,6 @@
 }
 
 .mono {
-  font-family: var(--font-mono);
   font-size: 12.5px;
   white-space: nowrap;
 }
@@ -1240,9 +1220,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 9px;
-  background: var(--teal);
-  color: #fff;
-  font-family: var(--font-mono);
+  background: var(--primary);
+  color: var(--on-primary);
   font-size: 11px;
   font-weight: 500;
 }
@@ -1255,19 +1234,18 @@
 .nameSub {
   margin: 2px 0 0;
   color: var(--ink-soft);
-  font-family: var(--font-mono);
   font-size: 11.5px;
 }
 
 .inlineLink {
-  color: var(--teal-dark);
+  color: var(--ink);
 }
 
 .cellLink {
   padding: 0;
   border: none;
   background: none;
-  color: var(--teal-dark);
+  color: var(--ink);
   cursor: pointer;
   text-decoration: underline;
 }
@@ -1292,8 +1270,8 @@
 }
 
 .pillPart {
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
 }
 
 .pillDue {
@@ -1321,8 +1299,8 @@
 }
 
 .iconButton:hover:not(:disabled) {
-  border-color: var(--teal);
-  color: var(--teal);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .iconButton:disabled {
@@ -1334,7 +1312,7 @@
 .formError {
   margin: 0 0 14px;
   padding: 10px 12px;
-  border: 1px solid #f0cfc9;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
   border-radius: 8px;
   background: var(--danger-tint);
   color: var(--danger);
@@ -1378,8 +1356,8 @@
 .wideSelect:focus,
 .pickerInput:focus,
 .lineInput:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .hasError input,
@@ -1446,7 +1424,7 @@
   position: absolute;
   inset: 0;
   border-radius: 22px;
-  background: var(--border);
+  background: var(--ink-soft);
   transition: background 0.15s;
   pointer-events: none;
 }
@@ -1459,12 +1437,12 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--paper);
   transition: transform 0.15s;
 }
 
 .switch input:checked + .slider {
-  background: var(--teal);
+  background: var(--primary);
 }
 
 .switch input:checked + .slider::before {
@@ -1472,7 +1450,7 @@
 }
 
 .switch input:focus-visible + .slider {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -1480,8 +1458,8 @@
   margin-bottom: 16px;
   padding: 14px 16px;
   border-radius: 10px;
-  background: var(--teal-tint);
-  color: var(--teal-dark);
+  background: var(--primary-tint);
+  color: var(--ink);
 }
 
 .summaryTitle {
@@ -1498,15 +1476,14 @@
 }
 
 .summaryLine span:last-child {
-  font-family: var(--font-mono);
 }
 
 .previewBox {
   margin: 4px 0 8px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: var(--teal-tint);
-  color: var(--teal-dark);
+  background: var(--primary-tint);
+  color: var(--ink);
   font-size: 12.5px;
 }
 
@@ -1544,7 +1521,6 @@
 
 .detailHeading {
   margin: 0 0 6px;
-  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 600;
 }
@@ -1572,7 +1548,6 @@
 .itemSub {
   margin: 2px 0 0;
   color: var(--ink-soft);
-  font-family: var(--font-mono);
   font-size: 11.5px;
 }
 
@@ -1596,7 +1571,6 @@
 }
 
 .totalRow dd {
-  font-family: var(--font-mono);
   color: var(--ink);
 }
 
@@ -1610,7 +1584,6 @@
   padding-top: 8px;
   border-top: 1px dashed var(--border);
   color: var(--ink);
-  font-family: var(--font-display);
   font-size: 16px;
   font-weight: 600;
 }
@@ -1652,14 +1625,12 @@
 
 .cardTitle {
   margin: 0 0 12px;
-  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 600;
 }
 
 .subTitle {
   margin: 4px 0 8px;
-  font-family: var(--font-display);
   font-size: 14px;
   font-weight: 600;
 }
@@ -1703,12 +1674,11 @@
 }
 
 .result:hover {
-  background: var(--teal-tint);
+  background: var(--primary-tint);
 }
 
 .resultMeta {
   color: var(--ink-soft);
-  font-family: var(--font-mono);
   font-size: 11.5px;
 }
 
@@ -1716,8 +1686,8 @@
   margin-left: 8px;
   padding: 1px 7px;
   border-radius: 10px;
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
   font-size: 10.5px;
 }
 
@@ -1784,8 +1754,8 @@
   gap: 12px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
   font-size: 12px;
 }
 
@@ -1841,7 +1811,7 @@
 .summaryError {
   margin: 0 0 10px;
   padding: 9px 11px;
-  border: 1px solid #f0cfc9;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
   border-radius: 8px;
   background: var(--danger-tint);
   color: var(--danger);

@@ -4,10 +4,7 @@ import styles from './DashboardPage.module.css'
 import { ApiError } from '../../services/api'
 import { getDashboardData } from '../../services/dashboard.service'
 import type { DashboardData } from '../../services/dashboard.service'
-
-const TEAL = '#1F5D4E'
-const AMBER = '#E2A63B'
-const GRAY = '#C7CCC4'
+import { applyChartDefaults, chartColors, useThemeName, withAlpha } from '../../theme/chartTheme'
 
 type Range = 'week' | 'month' | 'quarter'
 
@@ -29,6 +26,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [range, setRange] = useState<Range>('month')
+  const theme = useThemeName() // charts are redrawn when this changes
 
   const salesCanvas = useRef<HTMLCanvasElement>(null)
   const paymentCanvas = useRef<HTMLCanvasElement>(null)
@@ -64,21 +62,23 @@ export default function DashboardPage() {
       salesChart.current.update()
       return
     }
+    applyChartDefaults()
+    const c = chartColors()
     salesChart.current = new Chart(salesCanvas.current, {
       type: 'line',
       data: {
         labels,
-        datasets: [{ data: values, borderColor: TEAL, backgroundColor: 'rgba(31,93,78,0.08)', fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: TEAL }],
+        datasets: [{ data: values, borderColor: c.primary, backgroundColor: withAlpha(c.primary, 0.08), fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: c.primary }],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: { y: { grid: { color: '#EDEFE9' }, ticks: { callback: (v) => `Tk ${v}k` } }, x: { grid: { display: false } } },
+        scales: { y: { grid: { color: c.grid }, ticks: { callback: (v) => `Tk ${v}k` } }, x: { grid: { display: false } } },
       },
     })
     return () => { salesChart.current?.destroy(); salesChart.current = null }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data])
+  }, [data, theme])
 
   useEffect(() => {
     if (!salesChart.current || !data) return
@@ -90,49 +90,55 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!data || !paymentCanvas.current) return
+    applyChartDefaults()
+    const c = chartColors()
     const chart = new Chart(paymentCanvas.current, {
       type: 'doughnut',
       data: {
         labels: data.sales_by_payment_method.map((m) => m.label),
-        datasets: [{ data: data.sales_by_payment_method.map((m) => m.value), backgroundColor: [TEAL, AMBER, GRAY], borderWidth: 0 }],
+        datasets: [{ data: data.sales_by_payment_method.map((m) => m.value), backgroundColor: [c.primary, c.accent, c.muted], borderWidth: 0 }],
       },
       options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14 } } } },
     })
     return () => chart.destroy()
-  }, [data])
+  }, [data, theme])
 
   useEffect(() => {
     if (!data || !pvsCanvas.current) return
+    applyChartDefaults()
+    const c = chartColors()
     const chart = new Chart(pvsCanvas.current, {
       type: 'bar',
       data: {
         labels: data.purchases_vs_sales.labels,
         datasets: [
-          { label: 'Purchases', data: data.purchases_vs_sales.purchases, backgroundColor: GRAY, borderRadius: 4 },
-          { label: 'Sales', data: data.purchases_vs_sales.sales, backgroundColor: TEAL, borderRadius: 4 },
+          { label: 'Purchases', data: data.purchases_vs_sales.purchases, backgroundColor: c.muted, borderRadius: 4 },
+          { label: 'Sales', data: data.purchases_vs_sales.sales, backgroundColor: c.primary, borderRadius: 4 },
         ],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14 } } },
-        scales: { y: { grid: { color: '#EDEFE9' }, ticks: { callback: (v) => `Tk ${v}k` } }, x: { grid: { display: false } } },
+        scales: { y: { grid: { color: c.grid }, ticks: { callback: (v) => `Tk ${v}k` } }, x: { grid: { display: false } } },
       },
     })
     return () => chart.destroy()
-  }, [data])
+  }, [data, theme])
 
   useEffect(() => {
     if (!data || !loyaltyCanvas.current) return
+    applyChartDefaults()
+    const c = chartColors()
     const chart = new Chart(loyaltyCanvas.current, {
       type: 'doughnut',
       data: {
         labels: data.loyalty_distribution.map((l) => l.label),
-        datasets: [{ data: data.loyalty_distribution.map((l) => l.value), backgroundColor: [GRAY, AMBER, TEAL], borderWidth: 0 }],
+        datasets: [{ data: data.loyalty_distribution.map((l) => l.value), backgroundColor: [c.muted, c.accent, c.primary], borderWidth: 0 }],
       },
       options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14 } } } },
     })
     return () => chart.destroy()
-  }, [data])
+  }, [data, theme])
 
   if (isLoading) return <p>Loading…</p>
   if (error) return <p>{error}</p>

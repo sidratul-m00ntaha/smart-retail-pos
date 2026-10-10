@@ -22,7 +22,6 @@
 
 .card dd {
   margin: 0;
-  font-family: var(--font-display);
   font-size: 20px;
   font-weight: 600;
 }
@@ -56,13 +55,13 @@
 }
 
 .chip:hover {
-  border-color: var(--teal);
+  border-color: var(--ink);
 }
 
 .chipActive {
-  background: var(--teal);
-  border-color: var(--teal);
-  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
 }
 
 .field {
@@ -88,8 +87,8 @@
 .field input:focus,
 .field select:focus,
 .search:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .search {
@@ -140,7 +139,6 @@
 
 .num {
   text-align: center;
-  font-family: var(--font-mono);
   white-space: nowrap;
 }
 
@@ -153,7 +151,6 @@
   margin-top: 2px;
   font-size: 11.5px;
   color: var(--ink-soft);
-  font-family: var(--font-mono);
 }
 
 .guest {
@@ -164,9 +161,8 @@
   padding: 0;
   border: none;
   background: none;
-  font-family: var(--font-mono);
   font-size: 12.5px;
-  color: var(--teal-dark);
+  color: var(--ink);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -180,13 +176,13 @@
 }
 
 .paid {
-  background: var(--teal-tint);
-  color: var(--teal-dark);
+  background: var(--success-tint);
+  color: var(--success);
 }
 
 .partly {
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  background: var(--warning-tint);
+  color: var(--warning);
 }
 
 .dueStatus {
@@ -224,7 +220,6 @@
 }
 
 .pageNumber {
-  font-family: var(--font-mono);
 }
 
 .secondaryButton {
@@ -238,8 +233,8 @@
 }
 
 .secondaryButton:hover:not(:disabled) {
-  border-color: var(--teal);
-  color: var(--teal-dark);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .secondaryButton:disabled {
@@ -252,7 +247,7 @@
   border: none;
   background: none;
   font-size: 12.5px;
-  color: var(--teal-dark);
+  color: var(--ink);
   text-decoration: underline;
   cursor: pointer;
 }

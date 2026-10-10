@@ -20,7 +20,6 @@
 }
 
 .statChip b {
-  font-family: var(--font-mono);
   font-weight: 500;
 }
 
@@ -67,8 +66,8 @@
 
 .search input:focus,
 .select:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .statusTabs {
@@ -107,18 +106,15 @@
   padding: 10px 16px;
   border: none;
   border-radius: 9px;
-  background: var(--amber);
-  color: #3a2606;
+  background: var(--primary);
+  color: var(--on-primary);
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .primaryButton:hover,
-.saveButton:hover:not(:disabled) {
-  background: var(--amber-dark);
-  color: #fff;
-}
+.saveButton:hover:not(:disabled) { opacity: 0.88; }
 
 .saveButton {
   flex: 1.4;
@@ -150,7 +146,7 @@
 .statusTab:focus-visible,
 .iconButton:focus-visible,
 .roleOption:focus-visible {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -158,7 +154,7 @@
 .notice {
   margin: 0 0 14px;
   padding: 10px 14px;
-  border: 1px solid #c9e0d0;
+  border: 1px solid color-mix(in srgb, var(--success) 40%, transparent);
   border-radius: 9px;
   background: var(--success-tint);
   color: var(--success);
@@ -166,7 +162,7 @@
 }
 
 .notice.noticeError {
-  border-color: #f0cfc9;
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
   background: var(--danger-tint);
   color: var(--danger);
 }
@@ -208,7 +204,7 @@
 }
 
 .table tbody tr:hover {
-  background: #fafbf9;
+  background: var(--primary-tint);
 }
 
 .emptyRow {
@@ -219,7 +215,6 @@
 }
 
 .mono {
-  font-family: var(--font-mono);
   font-size: 12.5px;
   white-space: nowrap;
 }
@@ -238,9 +233,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--teal);
-  color: #fff;
-  font-family: var(--font-mono);
+  background: var(--primary);
+  color: var(--on-primary);
   font-size: 11px;
   font-weight: 500;
 }
@@ -253,7 +247,6 @@
 .userSub {
   margin: 2px 0 0;
   color: var(--ink-soft);
-  font-family: var(--font-mono);
   font-size: 11.5px;
 }
 
@@ -293,21 +286,21 @@
 
 /* Role colours, used by the table pills and the form's role buttons */
 .roleAdmin {
-  background: #efeaf9;
-  border-color: #5b3fa0;
-  color: #5b3fa0;
+  background: var(--info-tint);
+  border-color: var(--info);
+  color: var(--info);
 }
 
 .roleManager {
-  background: var(--teal-tint);
-  border-color: var(--teal);
-  color: var(--teal-dark);
+  background: var(--primary-tint);
+  border-color: var(--primary);
+  color: var(--ink);
 }
 
 .roleCashier {
-  background: var(--amber-tint);
-  border-color: var(--amber);
-  color: var(--amber-dark);
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent-dark);
 }
 
 .rowActions {
@@ -330,8 +323,8 @@
 }
 
 .iconButton:hover:not(:disabled) {
-  border-color: var(--teal);
-  color: var(--teal);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .iconButton:disabled {
@@ -350,7 +343,7 @@
 .formError {
   margin: 0 0 14px;
   padding: 10px 12px;
-  border: 1px solid #f0cfc9;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
   border-radius: 8px;
   background: var(--danger-tint);
   color: var(--danger);
@@ -382,8 +375,8 @@
 }
 
 .formRow input:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .hasError input {
@@ -425,7 +418,7 @@
 }
 
 .roleOption:hover:not(:disabled) {
-  border-color: var(--teal);
+  border-color: var(--primary);
 }
 
 .roleOption:disabled {
@@ -502,12 +495,12 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--paper);
   transition: transform 0.15s;
 }
 
 .switch input:checked + .slider {
-  background: var(--teal);
+  background: var(--primary);
 }
 
 .switch input:checked + .slider::before {
@@ -515,7 +508,7 @@
 }
 
 .switch input:focus-visible + .slider {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 

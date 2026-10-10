@@ -34,7 +34,7 @@
 }
 
 .table tbody tr:hover {
-  background: #fafbf9;
+  background: var(--primary-tint);
 }
 
 .statusPill {
@@ -51,8 +51,8 @@
 }
 
 .statusPill.low {
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
 }
 
 .qtyIn {
@@ -81,18 +81,17 @@
 }
 
 .statChip .n {
-  font-family: var(--font-mono);
   font-weight: 500;
 }
 
 .statChip.warn {
-  border-color: #efd7a6;
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
 }
 
 .statChip.bad {
-  border-color: #efc5bd;
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
   background: var(--danger-tint);
   color: var(--danger);
 }
@@ -117,8 +116,8 @@
 
 .searchField:focus {
   outline: none;
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .checkField {
@@ -136,8 +135,8 @@
 
 .addButton {
   padding: 10px 16px;
-  background: var(--amber);
-  color: #3a2606;
+  background: var(--primary);
+  color: var(--on-primary);
   border: none;
   border-radius: 9px;
   font-size: 13.5px;
@@ -145,10 +144,7 @@
   cursor: pointer;
 }
 
-.addButton:hover {
-  background: var(--amber-dark);
-  color: #fff;
-}
+.addButton:hover { opacity: 0.88; }
 
 .iconBtnSm {
   width: 28px;
@@ -166,8 +162,8 @@
 }
 
 .iconBtnSm:hover {
-  border-color: var(--teal);
-  color: var(--teal);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .formLabel {
@@ -212,8 +208,8 @@
 }
 
 .saveButton {
-  background: var(--amber);
-  color: #3a2606;
+  background: var(--primary);
+  color: var(--on-primary);
   border: none;
   border-radius: 9px;
   padding: 10px 16px;
@@ -239,23 +235,22 @@
   font-size: 11px;
   padding: 3px 9px;
   border-radius: 6px;
-  font-family: var(--font-mono);
   display: inline-block;
 }
 
 .typePill.purchase {
-  background: var(--teal-tint);
-  color: var(--teal-dark);
+  background: var(--primary-tint);
+  color: var(--ink);
 }
 
 .typePill.sale {
-  background: #efeaf9;
-  color: #5b3fa0;
+  background: var(--info-tint);
+  color: var(--info);
 }
 
 .typePill.adjustment {
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
 }
 .statusPill.bad {
   background: var(--danger-tint);

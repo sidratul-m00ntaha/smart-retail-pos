@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Chart from 'chart.js/auto'
+import { applyChartDefaults, chartColors, useThemeName, withAlpha } from '../../theme/chartTheme'
 import styles from './ReportsPage.module.css'
 import { ApiError } from '../../services/api'
 import {
@@ -9,9 +10,6 @@ import type {
   SalesReport, PurchaseReport, InventoryReport, ExpiryRow, CustomerReport,
 } from '../../services/report.service'
 
-const TEAL = '#1F5D4E'
-const AMBER = '#E2A63B'
-const GRAY = '#C7CCC4'
 
 type Tab = 'sales' | 'purchases' | 'inventory' | 'expiry' | 'customers'
 type SalesRange = 'today' | 'yesterday' | 'week' | 'month' | 'custom'
@@ -53,6 +51,7 @@ function SalesPanel() {
   const [error, setError] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const chartRef = useRef<Chart | null>(null)
+  const theme = useThemeName() // the chart is redrawn when this changes
 
   useEffect(() => {
     getSalesReport(range).then(setData).catch((err) => setError(err instanceof ApiError ? err.message : 'Could not load the sales report.'))
@@ -66,19 +65,21 @@ function SalesPanel() {
       chartRef.current.update()
       return
     }
+    applyChartDefaults()
+    const c = chartColors()
     chartRef.current = new Chart(canvasRef.current, {
       type: 'line',
-      data: { labels: data.chart.labels, datasets: [{ data: data.chart.data, borderColor: TEAL, backgroundColor: 'rgba(31,93,78,0.08)', fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: TEAL }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#EDEFE9' }, ticks: { callback: (v) => `Tk ${v}k` } }, x: { grid: { display: false } } } },
+      data: { labels: data.chart.labels, datasets: [{ data: data.chart.data, borderColor: c.primary, backgroundColor: withAlpha(c.primary, 0.08), fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: c.primary }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: c.grid }, ticks: { callback: (v) => `Tk ${v}k` } }, x: { grid: { display: false } } } },
     })
     return () => { chartRef.current?.destroy(); chartRef.current = null }
-  }, [data])
+  }, [data, theme])
 
   if (error) return <p>{error}</p>
   if (!data) return <p>Loading…</p>
 
   const totalPayments = data.payment_methods.reduce((s, p) => s + p.value, 0)
-  const colors = [TEAL, AMBER, GRAY]
+  const colors = ['var(--primary)', 'var(--accent)', 'var(--ink-soft)']
 
   return (
     <div>
@@ -294,6 +295,7 @@ function CustomersPanel() {
   const [data, setData] = useState<CustomerReport | null>(null)
   const [error, setError] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const theme = useThemeName() // the chart is redrawn when this changes
 
   useEffect(() => {
     getCustomerReport().then(setData).catch((err) => setError(err instanceof ApiError ? err.message : 'Could not load customer data.'))
@@ -301,13 +303,15 @@ function CustomersPanel() {
 
   useEffect(() => {
     if (!data || !canvasRef.current) return
+    applyChartDefaults()
+    const c = chartColors()
     const chart = new Chart(canvasRef.current, {
       type: 'doughnut',
-      data: { labels: data.loyalty_distribution.map((l) => l.label), datasets: [{ data: data.loyalty_distribution.map((l) => l.value), backgroundColor: [GRAY, AMBER, TEAL], borderWidth: 0 }] },
+      data: { labels: data.loyalty_distribution.map((l) => l.label), datasets: [{ data: data.loyalty_distribution.map((l) => l.value), backgroundColor: [c.muted, c.accent, c.primary], borderWidth: 0 }] },
       options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14 } } } },
     })
     return () => chart.destroy()
-  }, [data])
+  }, [data, theme])
 
   if (error) return <p>{error}</p>
   if (!data) return <p>Loading…</p>

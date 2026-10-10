@@ -31,7 +31,15 @@ export default function InvoiceModal({ label, children, actions, focusRef, onEsc
       className={styles.overlay}
       onKeyDown={onEscape ? (event) => event.key === 'Escape' && onEscape() : undefined}
     >
-      <section ref={cardRef} tabIndex={-1} className={styles.card} role="dialog" aria-modal="true" aria-label={label}>
+      <section
+        ref={cardRef}
+        tabIndex={-1}
+        className={styles.card}
+        data-theme="light"
+        role="dialog"
+        aria-modal="true"
+        aria-label={label}
+      >
         {children}
         <div className={`${styles.actions} ${styles.noPrint}`}>{actions}</div>
       </section>

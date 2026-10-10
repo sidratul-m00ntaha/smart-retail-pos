@@ -1,25 +1,102 @@
-/* Colours, fonts and base styles for the whole app (taken from docs/prototype).
-   Styles for one component go in a *.module.css file next to that component. */
-:root {
-  --bg: #f5f6f2;
+/* Colours, fonts and base styles for the whole app.
+   Theme: Graphite + Manrope, with light and dark modes.
+   Styles for one component go in a *.module.css file next to that component.
+
+   Rules for using colours in component CSS:
+   - Always use these variables, never a hard-coded hex or rgb value,
+     otherwise that part of the screen will not change in dark mode.
+   - Text on a --primary background uses --on-primary. */
+
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  /* Surfaces and text */
+  --bg: #f4f4f5;
   --paper: #ffffff;
-  --ink: #16231f;
-  --ink-soft: #5b655f;
-  --teal: #1f5d4e;
-  --teal-dark: #123a30;
-  --teal-tint: #e7f0eb;
-  --amber: #e2a63b;
-  --amber-tint: #fbf0da;
-  --amber-dark: #8a5a16;
-  --border: #dcdfd5;
-  --danger: #b54f45;
-  --danger-tint: #fbedeb;
-  --success: #2f7a4d;
-  --success-tint: #e4f0e7;
-  --radius: 12px;
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-sans: 'Work Sans', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', Consolas, monospace;
+  --ink: #18181b;
+  --ink-soft: #71717a;
+  --border: #e4e4e7;
+
+  /* Main buttons, active menu item, selected chips */
+  --primary: #18181b;
+  --on-primary: #ffffff;
+  --primary-tint: #f4f4f5;
+
+  /* Things that need attention (low stock, highlights) */
+  --accent: #ea580c;
+  --accent-tint: #ffedd5;
+  --accent-dark: #9a3412;
+
+  /* Status colours: PAID, PARTIALLY_PAID, DUE, errors */
+  --success: #15803d;
+  --success-tint: #dcfce7;
+  --warning: #b45309;
+  --warning-tint: #fef3c7;
+  --danger: #b91c1c;
+  --danger-tint: #fee2e2;
+  --on-danger: #ffffff;
+
+  /* Violet badges (roles, movement types) */
+  --info: #5b3fa0;
+  --info-tint: #efeaf9;
+
+  /* Soft ring around a focused input */
+  --focus-ring: rgba(24, 24, 27, 0.12);
+
+  /* Sidebar background (stays dark in both themes until the sidebar is redesigned) */
+  --sidebar: #18181b;
+
+  --radius: 10px;
+  --font-sans: 'Manrope', system-ui, sans-serif;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #09090b;
+  --paper: #18181b;
+  --ink: #fafafa;
+  --ink-soft: #a1a1aa;
+  --border: #27272a;
+
+  --primary: #fafafa;
+  --on-primary: #18181b;
+  --primary-tint: #27272a;
+
+  --accent: #fb923c;
+  --accent-tint: #3a1f0b;
+  --accent-dark: #fdba74;
+
+  --success: #4ade80;
+  --success-tint: #12301f;
+  --warning: #fbbf24;
+  --warning-tint: #3a2a0a;
+  --danger: #f87171;
+  --danger-tint: #3b1717;
+  --on-danger: #18181b;
+
+  --info: #c4b5fd;
+  --info-tint: #2a2150;
+
+  --focus-ring: rgba(250, 250, 250, 0.2);
+
+  --sidebar: #0f0f12;
+}
+
+/* Old variable names, kept so existing component CSS keeps working.
+   Replace them with the new names over time, then delete this block.
+   The [data-theme] part makes them follow a section that sets its own theme (see below). */
+:root,
+[data-theme] {
+  --teal: var(--primary);
+  --teal-dark: var(--ink);
+  --teal-tint: var(--primary-tint);
+  --amber: var(--accent);
+  --amber-tint: var(--accent-tint);
+  --amber-dark: var(--accent-dark);
+  --font-display: var(--font-sans);
+  --font-mono: var(--font-sans);
 }
 
 *,
@@ -31,6 +108,7 @@
 body {
   margin: 0;
   font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums; /* keeps prices and totals aligned */
   background: var(--bg);
   color: var(--ink);
 }
@@ -42,6 +120,35 @@ textarea {
   font: inherit;
 }
 
+/* A part of the page that sets its own theme, for example <div data-theme="light"> around a receipt,
+   uses that theme's colours even when the rest of the app is dark. */
+:not(html)[data-theme] {
+  color: var(--ink);
+}
+
 a {
-  color: var(--teal-dark);
+  color: var(--ink);
+}
+
+a:hover {
+  color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Invoices and other printouts are always light, even in dark mode. */
+@media print {
+  [data-theme='dark'] {
+    color-scheme: light;
+    --bg: #ffffff;
+    --paper: #ffffff;
+    --ink: #18181b;
+    --ink-soft: #71717a;
+    --border: #e4e4e7;
+    --primary: #18181b;
+    --on-primary: #ffffff;
+  }
 }

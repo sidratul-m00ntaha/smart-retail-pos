@@ -1,4 +1,4 @@
-/* POS page (Module 5). Look copied from docs/prototype/pos.html; colours come from src/index.css. */
+/* POS page (Module 5). Graphite theme; colours come from src/index.css. */
 
 .layout {
   /* Space above the cart while it stays on screen: the sticky top bar of the app (about 80px) plus a gap.
@@ -29,12 +29,13 @@
   border-radius: 9px;
   font-size: 13.5px;
   background: var(--paper);
+  color: var(--ink);
   outline: none;
 }
 
 .input:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .notice {
@@ -69,13 +70,13 @@
 }
 
 .chip:hover {
-  border-color: var(--teal);
+  border-color: var(--ink);
 }
 
 .chipActive {
-  background: var(--teal);
-  border-color: var(--teal);
-  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
 }
 
 .grid {
@@ -91,6 +92,7 @@
   position: relative;
   text-align: left;
   background: var(--paper);
+  color: var(--ink);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px;
@@ -99,7 +101,7 @@
 }
 
 .card:hover:not(:disabled) {
-  border-color: var(--teal);
+  border-color: var(--ink);
 }
 
 .card:disabled {
@@ -112,14 +114,14 @@
   top: 8px;
   right: 8px;
   font-size: 10px;
-  font-family: var(--font-mono);
+  font-weight: 600;
   padding: 2px 6px;
   border-radius: 5px;
 }
 
 .badgeLow {
-  background: var(--amber-tint);
-  color: var(--amber-dark);
+  background: var(--accent-tint);
+  color: var(--accent-dark);
 }
 
 .badgeOut {
@@ -141,9 +143,9 @@
 }
 
 .price {
-  font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--teal-dark);
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .stock {
@@ -188,7 +190,6 @@
 }
 
 .cartTitle {
-  font-family: var(--font-display);
   font-weight: 600;
   font-size: 15px;
   margin: 0;
@@ -244,7 +245,6 @@
 .linePrice {
   font-size: 11.5px;
   color: var(--ink-soft);
-  font-family: var(--font-mono);
   margin: 2px 0 0;
 }
 
@@ -268,8 +268,8 @@
 }
 
 .qtyButton:hover:not(:disabled) {
-  border-color: var(--teal);
-  color: var(--teal);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .qtyButton:disabled {
@@ -278,14 +278,12 @@
 }
 
 .qtyValue {
-  font-family: var(--font-mono);
   font-size: 13px;
   min-width: 20px;
   text-align: center;
 }
 
 .lineTotal {
-  font-family: var(--font-mono);
   font-size: 13px;
   min-width: 78px;
   text-align: right;
@@ -324,15 +322,10 @@
   margin: 0;
 }
 
-.totalRow dd {
-  font-family: var(--font-mono);
-}
-
 .grandTotal {
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
-  font-family: var(--font-display);
   margin: 8px 0 0;
   padding-top: 8px;
   border-top: 1px dashed var(--border);
@@ -356,20 +349,19 @@
   align-items: baseline;
   justify-content: space-between;
   margin-bottom: 10px;
-  font-family: var(--font-display);
   font-weight: 600;
   font-size: 16px;
 }
 
 .stickyAmount {
-  font-family: var(--font-mono);
+  font-weight: 700;
 }
 
 .primaryButton {
   width: 100%;
   padding: 12px 0;
-  background: var(--amber);
-  color: #3a2606;
+  background: var(--primary);
+  color: var(--on-primary);
   border: none;
   border-radius: 9px;
   font-size: 14.5px;
@@ -378,8 +370,7 @@
 }
 
 .primaryButton:hover:not(:disabled) {
-  background: var(--amber-dark);
-  color: #fff;
+  opacity: 0.88;
 }
 
 .primaryButton:disabled {
@@ -433,12 +424,13 @@
   border-radius: 8px;
   font-size: 12.5px;
   background: var(--paper);
+  color: var(--ink);
   outline: none;
 }
 
 .noteInput:focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(31, 93, 78, 0.1);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .buttonRow {
@@ -454,17 +446,17 @@
 
 .secondaryButton {
   padding: 12px 0;
-  border: 1px solid var(--teal);
+  border: 1px solid var(--border);
   border-radius: 9px;
   background: var(--paper);
-  color: var(--teal-dark);
+  color: var(--ink);
   font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .secondaryButton:hover:not(:disabled) {
-  background: var(--teal-tint);
+  background: var(--primary-tint);
 }
 
 .secondaryButton:disabled {
