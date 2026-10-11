@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import Chart from 'chart.js/auto'
+import { isWallet, WALLET_COLORS } from '../utils/paymentMethods.ts'
 
 /** The colours charts use, read from the theme variables in index.css so they match light and dark mode. */
 export function chartColors() {
@@ -11,6 +12,13 @@ export function chartColors() {
     muted: read('--ink-soft'),
     grid: read('--border'),
   }
+}
+
+/** One colour for each payment method: the wallets keep their brand colours, the rest follow the theme. */
+export function paymentMethodColor(method: string, colors: ReturnType<typeof chartColors>, index: number): string {
+  if (isWallet(method)) return WALLET_COLORS[method]
+  const byMethod: Record<string, string> = { cash: colors.primary, card: colors.accent, digital: colors.muted }
+  return byMethod[method] ?? [colors.primary, colors.accent, colors.muted][index % 3]
 }
 
 /** Sets the default text and line colours for every chart created afterwards. Call it before `new Chart(...)`. */

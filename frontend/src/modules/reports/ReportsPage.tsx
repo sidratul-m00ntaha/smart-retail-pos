@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Chart from 'chart.js/auto'
 import { applyChartDefaults, chartColors, useThemeName, withAlpha } from '../../theme/chartTheme'
+import { methodLabel, WALLET_COLORS } from '../../utils/paymentMethods.ts'
 import styles from './ReportsPage.module.css'
 import { ApiError } from '../../services/api'
 import {
@@ -79,7 +80,7 @@ function SalesPanel() {
   if (!data) return <p>Loading…</p>
 
   const totalPayments = data.payment_methods.reduce((s, p) => s + p.value, 0)
-  const colors = ['var(--primary)', 'var(--accent)', 'var(--ink-soft)']
+  const colors: Record<string, string> = { cash: 'var(--primary)', card: 'var(--accent)', digital: 'var(--ink-soft)', ...WALLET_COLORS }
 
   return (
     <div>
@@ -108,10 +109,10 @@ function SalesPanel() {
         </div>
         <div className={styles.card}>
           <h3>Payment methods</h3>
-          {data.payment_methods.map((p, i) => (
+          {data.payment_methods.map((p) => (
             <div className={styles.pmRow} key={p.label}>
-              <span className={styles.pmLabel}>{p.label}</span>
-              <div className={styles.pmTrack}><div className={styles.pmFill} style={{ width: `${Math.round((p.value / totalPayments) * 100)}%`, background: colors[i % colors.length] }} /></div>
+              <span className={styles.pmLabel}>{methodLabel(p.label)}</span>
+              <div className={styles.pmTrack}><div className={styles.pmFill} style={{ width: `${Math.round((p.value / totalPayments) * 100)}%`, background: colors[p.label] ?? 'var(--ink-soft)' }} /></div>
               <span className={styles.pmValue}>Tk {p.value.toLocaleString()}</span>
             </div>
           ))}

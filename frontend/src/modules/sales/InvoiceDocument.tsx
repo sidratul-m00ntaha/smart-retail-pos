@@ -1,23 +1,26 @@
-import type { Sale } from '../../services/pos.service.ts'
+import type { InvoiceData } from '../../services/pos.service.ts'
 import { formatDateTime } from '../../utils/date.ts'
 import { formatMoney, toHundredths } from '../pos/posMath.ts'
 import type { Paisa } from '../pos/posMath.ts'
+import { methodLabel } from '../../utils/paymentMethods.ts'
+import InvoiceQr from './InvoiceQr.tsx'
 import styles from './InvoiceDocument.module.css'
 
 type InvoiceDocumentProps = {
-  sale: Sale
+  sale: InvoiceData
+  /** Adds the QR code that opens this invoice on a phone. Left out on the public page itself. */
+  shareCode?: string
   /** Cash handed back to the customer. Only the POS knows it, so a reprint from the Invoices page leaves it out. */
   change?: Paisa
 }
 
 const STATUS_TEXT: Record<string, string> = { PAID: 'Paid in full', PARTIALLY_PAID: 'Partly paid', DUE: 'On due' }
-const METHOD_TEXT: Record<string, string> = { cash: 'Cash', card: 'Card', digital: 'Digital' }
 
 /**
  * The invoice (PRD 5.17): store, invoice number, date, cashier, customer, lines, totals, payments and due.
  * The POS receipt and the Invoices / Sales pages all show it with this one component.
  */
-export default function InvoiceDocument({ sale, change = 0 }: InvoiceDocumentProps) {
+export default function InvoiceDocument({ sale, shareCode, change = 0 }: InvoiceDocumentProps) {
   const money = (value: string) => formatMoney(toHundredths(value))
   const discount = toHundredths(sale.discount_amount)
   const due = toHundredths(sale.due_amount)
@@ -73,7 +76,10 @@ export default function InvoiceDocument({ sale, change = 0 }: InvoiceDocumentPro
       <dl className={styles.summary}>
         {sale.payments.map((payment) => (
           <div key={payment.payment_id} className={styles.row}>
-            <dt>{METHOD_TEXT[payment.method] ?? payment.method}</dt>
+            <dt>
+              {methodLabel(payment.method)}
+              {payment.reference && <span className={styles.detail}>Trx ID {payment.reference}</span>}
+            </dt>
             <dd>{money(payment.amount)}</dd>
           </div>
         ))}
@@ -91,6 +97,7 @@ export default function InvoiceDocument({ sale, change = 0 }: InvoiceDocumentPro
         )}
       </dl>
       <p className={styles.status}>{STATUS_TEXT[sale.payment_status] ?? sale.payment_status}</p>
+      {shareCode && <InvoiceQr shareCode={shareCode} />}
     </>
   )
 }

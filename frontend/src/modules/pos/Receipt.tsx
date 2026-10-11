@@ -30,7 +30,7 @@ export default function Receipt({ sale, change, onNewSale }: ReceiptProps) {
         </>
       }
     >
-      <InvoiceDocument sale={sale} change={change} />
+      <InvoiceDocument sale={sale} shareCode={sale.share_code} change={change} />
     </InvoiceModal>
   )
 }

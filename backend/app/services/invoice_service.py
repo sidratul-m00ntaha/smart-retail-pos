@@ -17,7 +17,8 @@ from app.models import User
 from app.models.customer import Customer, CustomerPayment
 from app.models.sale import Invoice, Payment, Sale, SaleItem
 from app.models.sale_return import SaleReturn
-from app.schemas.sale import PaymentOut, SaleItemOut, SaleListItem, SaleListPage, SaleListTotals, SaleOut
+from app.schemas.sale import PaymentOut, PublicInvoiceOut, SaleItemOut, SaleListItem, SaleListPage, SaleListTotals, SaleOut
+from app.services import invoice_link
 from app.services.store_setting_service import get_store_settings
 
 
@@ -56,6 +57,7 @@ def to_sale_out(db: Session, sale: Sale, invoice_number: str, items: list[SaleIt
         created_at=sale.created_at,
         items=[SaleItemOut.model_validate(item) for item in items],
         payments=[PaymentOut.model_validate(payment) for payment in payments],
+        share_code=invoice_link.make_code(invoice_number),
     )
 
 
@@ -66,6 +68,15 @@ def get_sale(db: Session, sale_id: int) -> SaleOut:
 def get_invoice(db: Session, invoice_number: str) -> SaleOut:
     sale = db.scalar(select(Sale).join(Invoice, Invoice.sale_id == Sale.sale_id).where(Invoice.invoice_number == invoice_number))
     return _load(db, sale, "Invoice not found.")
+
+
+def get_public_invoice(db: Session, code: str) -> PublicInvoiceOut:
+    """The invoice for the page the QR code opens. A wrong or changed code is "not found", the same as a missing invoice."""
+    invoice_number = invoice_link.read_code(code)
+    if invoice_number is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Invoice not found.")
+    invoice = get_invoice(db, invoice_number)
+    return PublicInvoiceOut(**invoice.model_dump(include=set(PublicInvoiceOut.model_fields)))
 
 
 def _load(db: Session, sale: Sale | None, not_found: str) -> SaleOut:

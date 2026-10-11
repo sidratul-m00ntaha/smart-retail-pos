@@ -1,10 +1,10 @@
 """Request and response shapes for returns (cancelling an item after the invoice)."""
 from decimal import Decimal
-from typing import Literal
 
 from pydantic import BaseModel, Field
 
 from app.schemas.common import UtcDateTime
+from app.schemas.sale import PaymentMethod
 
 
 class ReturnLineIn(BaseModel):
@@ -17,7 +17,7 @@ class SaleReturnCreate(BaseModel):
     reason: str = Field(min_length=1, max_length=255)
     items: list[ReturnLineIn] = Field(min_length=1)
     # Only asked for the part not covered by reducing the customer's due; omit for a guest sale.
-    refund_method: Literal["cash", "card", "digital"] | None = None
+    refund_method: PaymentMethod | None = None
 
 
 class SaleReturnItemOut(BaseModel):

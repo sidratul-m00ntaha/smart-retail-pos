@@ -1,8 +1,9 @@
 """Request and response shapes for Module 5 sales."""
+import re
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.schemas.common import UtcDateTime
 
@@ -14,11 +15,31 @@ class SaleLineIn(BaseModel):
     quantity: Decimal = Field(gt=0, max_digits=15, decimal_places=3)
 
 
+# "digital" stays as the general digital payment (PRD 5.15). The three mobile wallets are listed separately so the
+# sales reports can show how much came in through each one.
+PaymentMethod = Literal["cash", "card", "digital", "bkash", "nagad", "rocket"]
+WALLET_METHODS = ("bkash", "nagad", "rocket")
+_TRANSACTION_ID = re.compile(r"[A-Za-z0-9_-]{4,50}")
+
+
 class PaymentIn(BaseModel):
     """Money received. A due amount is not sent: the server works it out as total - paid."""
 
-    method: Literal["cash", "card", "digital"]
+    method: PaymentMethod
     amount: Decimal = Field(gt=0, max_digits=16, decimal_places=2)
+    # Mobile wallets need the transaction ID from the customer's payment message; other methods have none.
+    reference: str | None = Field(default=None, max_length=50)
+
+    @model_validator(mode="after")
+    def check_reference(self):
+        reference = self.reference.strip().upper() if self.reference else None
+        if self.method in WALLET_METHODS:
+            if not reference or not _TRANSACTION_ID.fullmatch(reference):
+                raise ValueError("Enter the transaction ID of the mobile wallet payment (4 to 50 letters, numbers, - or _).")
+            self.reference = reference
+        else:
+            self.reference = None  # a transaction ID only means something for a mobile wallet
+        return self
 
 
 class SaleCreate(BaseModel):
@@ -49,6 +70,7 @@ class PaymentOut(BaseModel):
     payment_id: int
     method: str
     amount: Decimal
+    reference: str | None = None  # mobile wallet transaction ID
 
 
 class SaleOut(BaseModel):
@@ -66,6 +88,30 @@ class SaleOut(BaseModel):
     customer_phone: str | None
     customer_id: int | None
     cashier_id: int
+    subtotal: Decimal
+    discount_percent: Decimal
+    discount_amount: Decimal
+    tax_amount: Decimal
+    total_amount: Decimal
+    paid_amount: Decimal
+    due_amount: Decimal
+    payment_status: str
+    status: str
+    created_at: UtcDateTime
+    items: list[SaleItemOut]
+    payments: list[PaymentOut]
+    # Goes into the QR code on the invoice: the customer opens it on their phone to see the invoice (no login).
+    share_code: str
+
+
+class PublicInvoiceOut(BaseModel):
+    """What the customer sees after scanning the QR code: the invoice, without the cashier, the customer's phone or any ids."""
+
+    invoice_number: str
+    store_name: str
+    store_address: str | None
+    store_phone: str | None
+    customer_name: str | None  # None = guest
     subtotal: Decimal
     discount_percent: Decimal
     discount_amount: Decimal

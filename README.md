@@ -162,6 +162,7 @@ Open http://localhost:5173 – you should see the **Sign in** page with **● Se
 | any `.env.example` | compare it with your `.env` and copy over any new settings |
 | new files in `backend/app/models/` | in `backend`, with `.venv` active: `python -m app.init_db` |
 | `backend/app/core/permissions.py` | in `backend`, with `.venv` active: `python -m app.init_db` (adds new permissions) |
+| `backend/app/schema_updates.py` (a new column on an existing table) | in `backend`, with `.venv` active: `python -m app.init_db` (adds the column and keeps your data) |
 | an **existing** table was changed (the PR will say so) | `python -m app.init_db --reset` – ⚠️ deletes your local data |
 
 ## 5. Adding a new package

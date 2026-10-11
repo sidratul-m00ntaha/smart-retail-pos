@@ -15,6 +15,7 @@ from app.core.permissions import PERMISSIONS, ROLES
 from app.core.security import hash_password
 from app.database import Base, SessionLocal, engine
 from app.models import Permission, Role, StoreSetting, User
+from app.schema_updates import add_missing_columns
 
 def seed_roles_and_permissions(db: Session) -> None:
     permissions = {}
@@ -86,6 +87,8 @@ def main() -> None:
 
     Base.metadata.create_all(engine)
     print("Tables are ready:", ", ".join(sorted(Base.metadata.tables)))
+    for column in add_missing_columns(engine):
+        print(f"Added the new column {column} to an existing table.")
 
     with SessionLocal() as db:
         seed_roles_and_permissions(db)

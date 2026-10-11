@@ -10,6 +10,10 @@
  * server recalculates everything from its own prices and checks the same rules when the sale is completed.
  */
 
+import { isValidTransactionId, isWallet, PAYMENT_METHODS } from '../../utils/paymentMethods.ts'
+import type { PaymentMethod, WalletMethod } from '../../utils/paymentMethods.ts'
+
+export type { PaymentMethod }
 export type Paisa = number
 
 export type CartLineInput = {
@@ -28,7 +32,6 @@ export type LineTotals = {
 
 export type CartTotals = LineTotals & { lines: LineTotals[] }
 
-export type PaymentMethod = 'cash' | 'card' | 'digital'
 export type PaymentAmounts = Record<PaymentMethod, Paisa>
 /** What the cashier typed in each payment box */
 export type PaymentTexts = Record<PaymentMethod, string>
@@ -96,7 +99,7 @@ export function calculateCart(lines: CartLineInput[], discountHundredths: number
 /**
  * Works out paid, due, change and status, and applies the server's payment rules
  * (backend settle_payment): a guest must pay in full, and a due can't pass the available credit.
- * Only cash can produce change; card and digital payments can't be more than the total.
+ * Only cash can produce change; card, digital and mobile wallet payments can't be more than the total.
  */
 export function settlePayment(
   total: Paisa,
@@ -104,15 +107,15 @@ export function settlePayment(
   isRegisteredCustomer: boolean,
   availableCredit: Paisa,
 ): Settlement {
-  const nonCash = entered.card + entered.digital
+  const nonCash = PAYMENT_METHODS.reduce((sum, method) => (method === 'cash' ? sum : sum + entered[method]), 0)
   if (nonCash > total) {
     return {
       paid: total,
       due: 0,
       change: 0,
       status: 'PAID',
-      applied: { cash: 0, card: entered.card, digital: entered.digital },
-      error: 'Card and digital payments are more than the total.',
+      applied: { ...entered, cash: 0 },
+      error: 'Card, digital and wallet payments are more than the total.',
     }
   }
   const cash = Math.min(entered.cash, total - nonCash)
@@ -130,7 +133,7 @@ export function settlePayment(
     due,
     change: entered.cash - cash,
     status,
-    applied: { cash, card: entered.card, digital: entered.digital },
+    applied: { ...entered, cash },
     error,
   }
 }
@@ -140,9 +143,34 @@ export function settlePayment(
  * exact decimal strings ("189.00"). Cash is already reduced by the change, so the total always matches.
  * A due is not sent: the server works it out as total - paid.
  */
-export function buildPayments(applied: PaymentAmounts): { method: PaymentMethod; amount: string }[] {
-  const methods: PaymentMethod[] = ['cash', 'card', 'digital']
-  return methods.filter((method) => applied[method] > 0).map((method) => ({ method, amount: toInputText(applied[method]) }))
+export function buildPayments(
+  applied: PaymentAmounts,
+  references: Record<WalletMethod, string>,
+): { method: PaymentMethod; amount: string; reference?: string }[] {
+  return PAYMENT_METHODS.filter((method) => applied[method] > 0).map((method) => ({
+    method,
+    amount: toInputText(applied[method]),
+    ...(isWallet(method) ? { reference: references[method].trim() } : {}),
+  }))
+}
+
+/** Every payment box as an amount, or null while a box holds text that isn't an amount. */
+export function parseAmounts(texts: PaymentTexts): PaymentAmounts | null {
+  const amounts = {} as PaymentAmounts
+  for (const method of PAYMENT_METHODS) {
+    const amount = parseAmount(texts[method])
+    if (amount === null) return null
+    amounts[method] = amount
+  }
+  return amounts
+}
+
+/** The first mobile wallet that is being used without a valid transaction ID, or null when all are fine. */
+export function walletMissingId(applied: PaymentAmounts, references: Record<WalletMethod, string>): WalletMethod | null {
+  for (const method of PAYMENT_METHODS) {
+    if (isWallet(method) && applied[method] > 0 && !isValidTransactionId(references[method])) return method
+  }
+  return null
 }
 
 /** 123456 -> "Tk 1,234.56" and -5025 -> "-Tk 50.25" */

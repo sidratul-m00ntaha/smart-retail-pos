@@ -6,6 +6,8 @@ import { createReturn, getSale } from '../../services/sales.service.ts'
 import type { ReturnLineIn, SaleReturn } from '../../services/sales.service.ts'
 import { formatMoney, toHundredths } from '../pos/posMath.ts'
 import styles from './ReturnDialog.module.css'
+import { methodLabel, PAYMENT_METHODS } from '../../utils/paymentMethods.ts'
+import type { PaymentMethod } from '../../utils/paymentMethods.ts'
 
 type ReturnDialogProps = {
   saleId: number
@@ -17,11 +19,7 @@ type ReturnDialogProps = {
 type Selection = { checked: boolean; quantity: string; restock: boolean }
 type State = { status: 'loading' } | { status: 'ready'; sale: Sale } | { status: 'error'; message: string }
 
-const METHODS: { value: 'cash' | 'card' | 'digital'; label: string }[] = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'card', label: 'Card' },
-  { value: 'digital', label: 'Digital' },
-]
+const METHODS = PAYMENT_METHODS.map((value) => ({ value, label: methodLabel(value) }))
 
 /**
  * Cancelling some or all of an item after the invoice. The exact quantity still returnable isn't shown here
@@ -32,7 +30,7 @@ export default function ReturnDialog({ saleId, onClose, onDone }: ReturnDialogPr
   const [state, setState] = useState<State>({ status: 'loading' })
   const [selected, setSelected] = useState<Record<number, Selection>>({})
   const [reason, setReason] = useState('')
-  const [refundMethod, setRefundMethod] = useState<'' | 'cash' | 'card' | 'digital'>('')
+  const [refundMethod, setRefundMethod] = useState<'' | PaymentMethod>('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<SaleReturn | null>(null)

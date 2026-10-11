@@ -1,4 +1,5 @@
 import type { NavSection } from '../../types/navigation.ts'
+import DayClosePage from './DayClosePage.tsx'
 import InvoicesPage from './InvoicesPage.tsx'
 import SalesPage from './SalesPage.tsx'
 
@@ -11,5 +12,6 @@ export const salesSection: NavSection = {
   items: [
     { label: 'Sales', path: '/sales', permission: 'sales.view', page: SalesPage },
     { label: 'Invoices', path: '/sales/invoices', permission: 'sales.view', page: InvoicesPage },
+    { label: 'Day Close', path: '/sales/day-close', permission: 'sales.view', page: DayClosePage },
   ],
 }

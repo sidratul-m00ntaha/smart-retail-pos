@@ -1,0 +1,41 @@
+/* The page the QR code on an invoice opens (Module 5). Made for a phone screen. Colours come from src/index.css. */
+
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 24px 16px;
+  background: var(--bg);
+}
+
+.card {
+  width: 100%;
+  max-width: 380px;
+  padding: 24px 22px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.message {
+  margin: 8px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.error {
+  margin: 8px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.thanks {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
