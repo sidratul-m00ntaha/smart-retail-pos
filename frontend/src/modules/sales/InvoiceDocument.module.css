@@ -83,3 +83,16 @@
   background: var(--primary-tint);
   border-radius: 6px;
 }
+
+/* The QR code under the invoice */
+.qr {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.qr img {
+  display: block;
+  margin: 0 auto 6px;
+}

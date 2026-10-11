@@ -6,12 +6,15 @@ import { homePathFor, NAV_SECTIONS } from './config/navigation.ts'
 import { useAuth } from './hooks/useAuth.ts'
 import LoginPage from './modules/auth/LoginPage.tsx'
 import RequireAuth from './modules/auth/RequireAuth.tsx'
+import PublicInvoicePage from './modules/sales/PublicInvoicePage.tsx'
 
 // Page routes are built from each module's navigation.ts - add your pages there, not here.
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      {/* Opened from the QR code on an invoice. No login. */}
+      <Route path="/i/:code" element={<PublicInvoicePage />} />
 
       <Route
         element={

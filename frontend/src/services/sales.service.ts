@@ -1,5 +1,6 @@
 import type { Sale } from './pos.service.ts'
 import { apiRequest } from './api.ts'
+import type { PaymentMethod } from '../utils/paymentMethods.ts'
 
 export type PaymentStatusFilter = '' | 'PAID' | 'PARTIALLY_PAID' | 'DUE'
 
@@ -84,7 +85,7 @@ export type SaleReturnCreate = {
   reason: string
   items: ReturnLineIn[]
   /** Only required for the part not covered by reducing the customer's due; omit for a guest sale. */
-  refund_method?: 'cash' | 'card' | 'digital'
+  refund_method?: PaymentMethod
 }
 
 export type SaleReturnItem = { sale_item_id: number; product_name: string; quantity: string; amount: string; restocked: boolean }

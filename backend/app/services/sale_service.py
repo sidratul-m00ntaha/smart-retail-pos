@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.customer import Customer
@@ -90,6 +91,13 @@ def _build_and_save_sale(db: Session, data: SaleCreate, cashier_id: int) -> Comp
     except ValueError as err:  # includes PaymentError; the messages are safe to show the cashier
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(err)) from err
 
+    # 4b. A mobile wallet transaction ID can pay for one sale only (it stops the same payment being used twice).
+    for payment in data.payments:
+        if payment.reference is not None and db.scalar(
+            select(Payment.payment_id).where(Payment.method == payment.method, Payment.reference == payment.reference)
+        ):
+            raise HTTPException(status.HTTP_409_CONFLICT, f"The transaction ID {payment.reference} was already used for another sale.")
+
     # 5. A resumed bill must still be on hold, so the same bill can't be completed twice.
     held_cart: HeldCart | None = None
     if data.held_cart_id is not None:
@@ -131,7 +139,7 @@ def _build_and_save_sale(db: Session, data: SaleCreate, cashier_id: int) -> Comp
         )
         for r in totals.lines
     ]
-    payments = [Payment(sale_id=sale.sale_id, method=p.method, amount=money(p.amount)) for p in data.payments]
+    payments = [Payment(sale_id=sale.sale_id, method=p.method, amount=money(p.amount), reference=p.reference) for p in data.payments]
     db.add_all(items + payments)
 
     # 7. Take the items out of stock (Module 4). Sorted by product so two cashiers lock in the same order.

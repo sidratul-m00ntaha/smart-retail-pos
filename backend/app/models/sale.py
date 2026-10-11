@@ -56,8 +56,10 @@ class Payment(Base):
 
     payment_id: Mapped[int] = mapped_column(primary_key=True)
     sale_id: Mapped[int] = mapped_column(ForeignKey("Sales.sale_id"), index=True)
-    method: Mapped[str] = mapped_column(Unicode(20))  # cash / card / digital
+    method: Mapped[str] = mapped_column(Unicode(20))  # cash / card / digital / bkash / nagad / rocket
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 2))
+    # The mobile wallet transaction ID (bKash / Nagad / Rocket). None for cash, card and digital.
+    reference: Mapped[str | None] = mapped_column(Unicode(50), default=None)
     created_at: Mapped[datetime] = mapped_column(server_default=func.sysutcdatetime())
 
     sale: Mapped["Sale"] = relationship(back_populates="payments")

@@ -134,6 +134,9 @@ export default function DuePaymentsPage() {
               <option value="cash">Cash</option>
               <option value="card">Card</option>
               <option value="digital">Digital</option>
+              <option value="bkash">bKash</option>
+              <option value="nagad">Nagad</option>
+              <option value="rocket">Rocket</option>
             </select>
           </div>
 

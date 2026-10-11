@@ -69,7 +69,7 @@ export default function InvoiceDialog({ invoiceNumber, onClose }: InvoiceDialogP
           {state.message}
         </p>
       )}
-      {state.status === 'ready' && <InvoiceDocument sale={state.sale} />}
+      {state.status === 'ready' && <InvoiceDocument sale={state.sale} shareCode={state.sale.share_code} />}
     </InvoiceModal>
   )
 }

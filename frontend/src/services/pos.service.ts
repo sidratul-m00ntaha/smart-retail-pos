@@ -1,4 +1,5 @@
 import { apiRequest } from './api.ts'
+import type { PaymentMethod } from '../utils/paymentMethods.ts'
 
 /** Same shape as the answer of GET /api/customers/{id}/loyalty-status (Module 6). */
 export type LoyaltyStatus = {
@@ -22,7 +23,7 @@ export type SaleRequest = {
   /** Only the product and the quantity. The server takes prices and VAT from its own database. */
   items: { product_id: number; quantity: number }[]
   /** Money received, e.g. { method: 'cash', amount: '189.00' }. Leave a method out if it is 0. */
-  payments: { method: 'cash' | 'card' | 'digital'; amount: string }[]
+  payments: { method: PaymentMethod; amount: string; reference?: string }[]
   /** Set when the bill was resumed from a held bill: the server marks it completed together with the sale. */
   held_cart_id?: number
 }
@@ -45,7 +46,30 @@ export type SalePayment = {
   payment_id: number
   method: string
   amount: string
+  /** Mobile wallet transaction ID; null for cash, card and digital */
+  reference: string | null
 }
+
+/** What an invoice shows. A Sale has all of it, and so does the public page the QR code opens (PublicInvoiceOut). */
+export type InvoiceData = Pick<
+  Sale,
+  | 'invoice_number'
+  | 'store_name'
+  | 'store_address'
+  | 'store_phone'
+  | 'customer_name'
+  | 'subtotal'
+  | 'discount_percent'
+  | 'discount_amount'
+  | 'tax_amount'
+  | 'total_amount'
+  | 'paid_amount'
+  | 'due_amount'
+  | 'payment_status'
+  | 'created_at'
+  | 'items'
+  | 'payments'
+> & { cashier_name?: string | null }
 
 /** Same shape as SaleOut in backend/app/schemas/sale.py. */
 export type Sale = {
@@ -73,6 +97,8 @@ export type Sale = {
   created_at: string
   items: SaleLine[]
   payments: SalePayment[]
+  /** Goes into the QR code on the invoice (see PublicInvoicePage) */
+  share_code: string
 }
 
 /** Completes a sale in one all-or-nothing transaction. Throws ApiError with the server's message when it refuses. */

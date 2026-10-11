@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import CustomerPanel from './CustomerPanel.tsx'
 import type { SelectedCustomer } from './CustomerPanel.tsx'
@@ -9,8 +9,10 @@ import { ApiError } from '../../services/api.ts'
 import { listCustomers } from '../../services/customers.ts'
 import { createSale, getLoyaltyStatus, holdCart, resumeHeldCart, updateHeldCart } from '../../services/pos.service.ts'
 import type { HeldCartSave, Sale } from '../../services/pos.service.ts'
-import { buildPayments, calculateCart, formatMoney, parseAmount, settlePayment, toHundredths, toInputText } from './posMath.ts'
+import { buildPayments, calculateCart, formatMoney, parseAmount, parseAmounts, settlePayment, toHundredths, toInputText, walletMissingId } from './posMath.ts'
 import type { Paisa, PaymentMethod, PaymentTexts } from './posMath.ts'
+import { PAYMENT_METHODS } from '../../utils/paymentMethods.ts'
+import type { WalletMethod } from '../../utils/paymentMethods.ts'
 import type { PosProduct } from './posProducts.ts'
 import { usePosProducts } from './usePosProducts.ts'
 import styles from './PosPage.module.css'
@@ -21,7 +23,19 @@ type CompletedSale = { sale: Sale; change: Paisa }
 /** A sale error belongs to the cart and payment it happened with; it disappears as soon as either changes. */
 type SaleError = { text: string; signature: string }
 
-const NO_PAYMENT: PaymentTexts = { cash: '', card: '', digital: '' }
+const NO_PAYMENT: PaymentTexts = { cash: '', card: '', digital: '', bkash: '', nagad: '', rocket: '' }
+const NO_REFERENCES: Record<WalletMethod, string> = { bkash: '', nagad: '', rocket: '' }
+
+/** What the Esc, F2 ... F9 keys do. The key listener is added once and always calls the latest version of these. */
+type Shortcuts = {
+  /** true while the receipt is open: the keys must not change the bill behind it */
+  locked: boolean
+  focusScan: () => void
+  focusSearch: () => void
+  hold: () => void
+  complete: () => void
+  escape: () => void
+}
 
 function saleErrorText(error: unknown): string {
   if (!(error instanceof ApiError)) return 'Could not complete the sale.'
@@ -41,6 +55,7 @@ export default function PosPage() {
   const [notice, setNotice] = useState<Notice | null>(null)
   const [selected, setSelected] = useState<SelectedCustomer | null>(null)
   const [payTexts, setPayTexts] = useState<PaymentTexts>(NO_PAYMENT)
+  const [references, setReferences] = useState(NO_REFERENCES) // mobile wallet transaction IDs
   const [completed, setCompleted] = useState<CompletedSale | null>(null)
   const [busy, setBusy] = useState<'sale' | 'hold' | null>(null)
   const [heldCartId, setHeldCartId] = useState<number | null>(null) // the held bill loaded on screen, if any
@@ -49,6 +64,8 @@ export default function PosPage() {
   const [saleError, setSaleError] = useState<SaleError | null>(null)
   const busyRef = useRef(false) // blocks a double click before the state has updated
   const scanRef = useRef<HTMLInputElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const shortcuts = useRef<Shortcuts | null>(null)
 
   const term = search.trim().toLowerCase()
   const activeCategory = categories.includes(category) ? category : 'All' // the chosen category may vanish after a reload
@@ -76,21 +93,16 @@ export default function PosPage() {
   const itemCount = cart.reduce((count, line) => count + line.quantity, 0)
 
   // Payment: the boxes hold text; the amounts are only used when every box is a valid amount.
-  const cash = parseAmount(payTexts.cash)
-  const card = parseAmount(payTexts.card)
-  const digital = parseAmount(payTexts.digital)
-  const invalid = { cash: cash === null, card: card === null, digital: digital === null }
+  const amounts = parseAmounts(payTexts)
+  const invalid = Object.fromEntries(PAYMENT_METHODS.map((method) => [method, parseAmount(payTexts[method]) === null])) as Record<PaymentMethod, boolean>
   const settlement =
-    cash === null || card === null || digital === null
+    amounts === null
       ? null
-      : settlePayment(
-          totals.total,
-          { cash, card, digital },
-          selected !== null,
-          selected ? toHundredths(selected.customer.available_credit) : 0,
-        )
-  const ready = rows.length > 0 && settlement !== null && settlement.error === null
-  const signature = JSON.stringify([selected?.customer.customer_id ?? null, cart, payTexts])
+      : settlePayment(totals.total, amounts, selected !== null, selected ? toHundredths(selected.customer.available_credit) : 0)
+  // A mobile wallet payment needs its transaction ID before the sale can be completed.
+  const missingId = settlement !== null && settlement.error === null ? walletMissingId(settlement.applied, references) : null
+  const ready = rows.length > 0 && settlement !== null && settlement.error === null && missingId === null
+  const signature = JSON.stringify([selected?.customer.customer_id ?? null, cart, payTexts, references])
   const visibleError = saleError !== null && saleError.signature === signature ? saleError.text : null
   // Resuming a bill replaces the screen, so it is only allowed while the screen is empty.
   const canResume = cart.length === 0 && heldCartId === null
@@ -157,6 +169,7 @@ export default function PosPage() {
     setCart([])
     setSelected(null)
     setPayTexts(NO_PAYMENT)
+    setReferences(NO_REFERENCES)
     setHeldCartId(null)
     setHoldNote('')
   }
@@ -169,7 +182,7 @@ export default function PosPage() {
       const sale = await createSale({
         customer_id: selected?.customer.customer_id ?? null,
         items: rows.map(({ line, product }) => ({ product_id: product.productId, quantity: line.quantity })),
-        payments: buildPayments(settlement.applied),
+        payments: buildPayments(settlement.applied, references),
         held_cart_id: heldCartId ?? undefined, // the server completes the held bill in the same transaction
       })
       setHeldRefresh((key) => key + 1)
@@ -248,6 +261,7 @@ export default function PosPage() {
     setCart(lines)
     setSelected(customer)
     setPayTexts(NO_PAYMENT)
+    setReferences(NO_REFERENCES)
     setHeldCartId(resumed.held_cart_id)
     setHoldNote(resumed.note ?? '')
     setNotice(changes.length > 0 ? { kind: 'error', text: `Bill resumed with changes: ${changes.join(' ')}` } : { kind: 'ok', text: 'Bill resumed.' })
@@ -256,11 +270,68 @@ export default function PosPage() {
   function newSale() {
     clearSale()
     setCompleted(null)
+    window.setTimeout(() => scanRef.current?.focus(), 0) // ready for the next customer's first scan
   }
 
   function payFull(method: PaymentMethod) {
     setPayTexts({ ...NO_PAYMENT, [method]: toInputText(totals.total) })
   }
+
+  // ---- Keyboard shortcuts: F2 scan, F3 search, F8 hold, F9 complete the sale, Esc clear ----
+
+  /** F9. The same as clicking "Complete sale", but it says why when the sale isn't ready. */
+  function completeFromKeyboard() {
+    if (busyRef.current) return
+    if (rows.length === 0) setNotice({ kind: 'error', text: 'Add items to the cart before completing the sale.' })
+    else if (settlement === null) setNotice({ kind: 'error', text: 'Fix the payment amounts first.' })
+    else if (settlement.error !== null) setNotice({ kind: 'error', text: settlement.error })
+    else if (missingId !== null) setNotice({ kind: 'error', text: 'Enter the mobile wallet transaction ID first.' })
+    else void completeSale()
+  }
+
+  /** Esc. First it clears the search boxes and the message; pressed again it offers to clear the whole sale. */
+  function escapeFromKeyboard() {
+    if (scanText !== '' || search !== '' || notice !== null) {
+      setScanText('')
+      setSearch('')
+      setNotice(null)
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    } else if (cart.length > 0 && window.confirm('Clear the whole sale?')) {
+      clearSale()
+    }
+  }
+
+  // The listener is added once; this keeps it pointing at the latest version of the functions above.
+  useEffect(() => {
+    shortcuts.current = {
+      locked: completed !== null,
+      focusScan: () => scanRef.current?.focus(),
+      focusSearch: () => searchRef.current?.focus(),
+      hold: () => void holdBill(),
+      complete: completeFromKeyboard,
+      escape: escapeFromKeyboard,
+    }
+  })
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const actions = shortcuts.current
+      if (actions === null || actions.locked || event.ctrlKey || event.metaKey || event.altKey) return
+      const run: Record<string, () => void> = {
+        F2: actions.focusScan,
+        F3: actions.focusSearch,
+        F8: actions.hold,
+        F9: actions.complete,
+        Escape: actions.escape,
+      }
+      const action = run[event.key]
+      if (!action) return
+      event.preventDefault() // F3 would otherwise open the browser's find box
+      action()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   return (
     <>
@@ -276,16 +347,36 @@ export default function PosPage() {
                 onChange={(event) => setScanText(event.target.value)}
                 placeholder="Scan barcode or type SKU, then Enter"
                 aria-label="Scan barcode or SKU"
+                title="Shortcut: F2"
               />
             </form>
             <input
+              ref={searchRef}
               className={styles.input}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search by name, SKU or barcode"
               aria-label="Search products"
+              title="Shortcut: F3"
             />
           </div>
+          <p className={styles.shortcuts}>
+            <span>
+              <kbd>F2</kbd> Scan
+            </span>
+            <span>
+              <kbd>F3</kbd> Search
+            </span>
+            <span>
+              <kbd>F8</kbd> Hold
+            </span>
+            <span>
+              <kbd>F9</kbd> Complete sale
+            </span>
+            <span>
+              <kbd>Esc</kbd> Clear
+            </span>
+          </p>
           <p className={`${styles.notice} ${notice?.kind === 'error' ? styles.noticeError : styles.noticeOk}`} role="status">
             {notice?.text}
           </p>
@@ -412,8 +503,11 @@ export default function PosPage() {
             total={totals.total}
             texts={payTexts}
             invalid={invalid}
+            references={references}
+            missingId={missingId}
             settlement={settlement}
             onChange={(method, text) => setPayTexts((texts) => ({ ...texts, [method]: text }))}
+            onReferenceChange={(method, text) => setReferences((current) => ({ ...current, [method]: text }))}
             onPayFull={payFull}
           />
 
@@ -441,10 +535,10 @@ export default function PosPage() {
               <span className={styles.stickyAmount}>{formatMoney(totals.total)}</span>
             </div>
             <div className={styles.buttonRow}>
-              <button type="button" className={styles.secondaryButton} disabled={rows.length === 0 || busy !== null} onClick={holdBill}>
+              <button type="button" className={styles.secondaryButton} disabled={rows.length === 0 || busy !== null} onClick={holdBill} title="Shortcut: F8">
                 {busy === 'hold' ? 'Holding…' : heldCartId !== null ? 'Hold again' : 'Hold'}
               </button>
-              <button type="button" className={styles.primaryButton} disabled={!ready || busy !== null} onClick={completeSale}>
+              <button type="button" className={styles.primaryButton} disabled={!ready || busy !== null} onClick={completeSale} title="Shortcut: F9">
                 {busy === 'sale' ? 'Saving…' : 'Complete sale'}
               </button>
             </div>

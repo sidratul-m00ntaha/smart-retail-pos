@@ -4,7 +4,8 @@ import styles from './DashboardPage.module.css'
 import { ApiError } from '../../services/api'
 import { getDashboardData } from '../../services/dashboard.service'
 import type { DashboardData } from '../../services/dashboard.service'
-import { applyChartDefaults, chartColors, useThemeName, withAlpha } from '../../theme/chartTheme'
+import { applyChartDefaults, chartColors, paymentMethodColor, useThemeName, withAlpha } from '../../theme/chartTheme'
+import { methodLabel } from '../../utils/paymentMethods.ts'
 
 type Range = 'week' | 'month' | 'quarter'
 
@@ -95,8 +96,14 @@ export default function DashboardPage() {
     const chart = new Chart(paymentCanvas.current, {
       type: 'doughnut',
       data: {
-        labels: data.sales_by_payment_method.map((m) => m.label),
-        datasets: [{ data: data.sales_by_payment_method.map((m) => m.value), backgroundColor: [c.primary, c.accent, c.muted], borderWidth: 0 }],
+        labels: data.sales_by_payment_method.map((m) => methodLabel(m.label)),
+        datasets: [
+          {
+            data: data.sales_by_payment_method.map((m) => m.value),
+            backgroundColor: data.sales_by_payment_method.map((m, i) => paymentMethodColor(m.label, c, i)),
+            borderWidth: 0,
+          },
+        ],
       },
       options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14 } } } },
     })

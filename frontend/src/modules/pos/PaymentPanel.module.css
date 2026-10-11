@@ -99,3 +99,54 @@
   color: var(--success);
   margin: 8px 0 0;
 }
+
+.groupTitle {
+  margin: 12px 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+}
+
+/* The transaction ID box under a wallet's amount */
+.referenceRow {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  align-items: center;
+  gap: 8px;
+  margin: -2px 0 8px;
+}
+
+.referenceInput {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  background: var(--paper);
+  color: var(--ink);
+  outline: none;
+}
+
+.referenceInput::placeholder {
+  text-transform: none;
+}
+
+.referenceInput:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.referenceInput.inputInvalid {
+  border-color: var(--danger);
+}
